@@ -1,0 +1,2 @@
+# smallest_maximizer_criterion
+Smallest Maximizer Criterion
