@@ -33,7 +33,7 @@ tests/result_images/
 # Data files
 */data/*
 */cache/*
-*/tmp/*
+tmp/
 
 
 # Sphinx stuff
