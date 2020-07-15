@@ -1,0 +1,49 @@
+*.py[co]
+__pycache__
+
+__pycache__
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+
+# Installer logs
+pip-log.txt
+
+# Unit test / coverage reports
+.coverage
+.tox
+tests/result_images/
+
+#Translations
+*.mo
+
+#Mr Developer
+.mr.developer.cfg
+
+# Data files
+*/data/*
+*/cache/*
+*/tmp/*
+
+
+# Sphinx stuff
+docs/generated/
+docs/_build/
+docs/auto_examples/
+
+# Testing and checkpoints
+.ipynb_checkpoints
+.coverage.*
+
+#IDE
+.sublime/
