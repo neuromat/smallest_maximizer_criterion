@@ -32,7 +32,8 @@ tests/result_images/
 
 # Data files
 */data/*
-*/cache/*
+**/cache/*
+**/cache/
 tmp/
 
 

@@ -18,7 +18,8 @@ Bibtex version:
 
 ```
 @article{article,
-author = {Galves, Antonio and Galves, Charlotte and Garcia, Jesus and Garcia, Nancy and Leonardi, Florencia},
+author = {Galves, Antonio and Galves, Charlotte and Garcia,
+          Jesus and Garcia, Nancy and Leonardi, Florencia},
 year = {2009},
 month = {02},
 pages = {},
@@ -38,7 +39,10 @@ This implementation was produced as part of the activities of FAPESP Research, I
 
 
 Universidade de São Paulo
+
 Instituto de Matemática e Estatística
+
 Research, Innovation and Dissemination Center for Neuromathematics - [NeuroMat](https://neuromat.numec.prp.usp.br/)
+
 2020
 

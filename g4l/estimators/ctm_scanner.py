@@ -3,6 +3,7 @@ import pandas as pd
 from g4l.estimators.base import Base
 from g4l.estimators.ctm import CTM
 from datetime import datetime
+import logging
 
 class CTMScanner():
   def __init__(self, penalty_interval=(0.1, 400), epsilon=0.01):
@@ -20,7 +21,7 @@ class CTMScannerEstimator(Base):
 
   def execute(self, min_c, max_c, epsilon):
     self.intervals = None
-    print("Start:", datetime.now())
+    logging.debug('Starting CTM Scanner')
 
     tree_a = self.__calc_bic(min_c)
     tree_b = tree_f = self.__calc_bic(max_c)
@@ -50,7 +51,8 @@ class CTMScannerEstimator(Base):
 
       b = max_c
       tree_b = tree_f
-    print("End:", datetime.now())
+
+    logging.debug('Finished CTM Scanner')
     return champion_trees
 
   def __calc_bic(self, c):
@@ -60,7 +62,7 @@ class CTMScannerEstimator(Base):
 
   def strategy1(self, c):
     bic =  self.__calc_bic(c)
-    print("** c=", round(c, 4), '\t\t==>', bic.to_str())
+    logging.debug('c=%s; \t\tt=%s' % (round(c, 4), bic.to_str()))
     return bic
 
   #### Verificar se cabe utilizar estratégia com caching

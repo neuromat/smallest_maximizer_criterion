@@ -1,29 +1,32 @@
 import pandas as pd
+import logging
+from scipy import stats
 
 class TTest():
+  results = None
+  best_tree_idx = None
+
   def __init__(self, resample_set_1, resample_set_2, alpha=0.01):
     self.resample_set_1 = resample_set_1
     self.resample_set_2 = resample_set_2
     self.alpha = alpha
     self.results = None
+    self.best_tree_idx = None
 
   def evaluate(self, champion_trees):
+    logging.debug("Evaluating using T-test")
     df = pd.DataFrame(columns=['sample_idx', 'tree_idx', 'c', 'resample_label', 'num_contexts', 'tree', 'lml', 'lml_next', 'lml_delta', 'lml_delta_div_n'])
     self.add_resamples_to_dataframe(self.resample_set_1, 'SET1', df, champion_trees)
     self.add_resamples_to_dataframe(self.resample_set_2, 'SET2', df, champion_trees)
     self.results = self.apply_t_test(df, 'SET1', 'SET2')
-    return self.results
-    import code; code.interact(local=dict(globals(), **locals()))
-    tree_idx = int(list(x[x.pvalue < self.alpha].tree_idx)[0])
-    return champion_trees[tree_idx]
+    self.best_tree_idx = int(list(self.results[self.results.pvalue < self.alpha].tree_idx)[0])
 
   def add_resamples_to_dataframe(self, resample_set, label, df, champion_trees):
     for resample_idx, resample in resample_set.generate():
       for tree_idx, t in enumerate(champion_trees):
         log_likelihood = t.evaluate_sample(resample).log_likelihood()
-      self.__add_row(df, resample_idx, tree_idx, t, resample_set.size, log_likelihood)
+        self.__add_row(df, resample_idx, tree_idx, t, label, log_likelihood)
     self.calc_delta(df, label, resample_set.size)
-
 
   def calc_delta(self, df, resample_label, sample_length):
     df.sort_values(['resample_label', 'sample_idx', 'c'], inplace=True)
@@ -34,7 +37,7 @@ class TTest():
       df.loc[condition, 'lml_delta_div_n'] = df.loc[condition].lml_delta / sample_length**0.9
 
   def apply_t_test(self, df, resample_set_1_lbl, resample_set_2_lbl):
-    df2 = pd.DataFrame(columns=['tree_idx', 'tvalue','pvalue', 'sd_sm', 'sd_lg'])
+    df2 = pd.DataFrame(columns=['tree_idx', 'tvalue','pvalue', 'sd_set1', 'sd_set2'])
     for tree_idx in df[df.lml_delta_div_n.notnull()].tree_idx.unique():
       delta_lml_sm = df.loc[(df.resample_label==resample_set_1_lbl) & (df.tree_idx == tree_idx)].lml_delta_div_n
       delta_lml_lg = df.loc[(df.resample_label==resample_set_2_lbl) & (df.tree_idx == tree_idx)].lml_delta_div_n
@@ -42,9 +45,10 @@ class TTest():
       df2.loc[len(df2)] = [tree_idx, ttest.statistic, ttest.pvalue, delta_lml_sm.std(), delta_lml_lg.std()]
     return df2
 
-  def __add_row(self, df, resample_idx, tree_idx, t, resample_size, log_likelihood):
-      tree_str = t.to_str()
-      print("Adding row", resample_idx, tree_str, log_likelihood)
-      df.loc[len(df)] = [resample_idx, tree_idx, t.chosen_penalty,
-                         resample_size, len(tree_str.split(' ')),
-                         tree_str, log_likelihood, None, None, None]
+  def __add_row(self, df, resample_idx, tree_idx, t, resample_label, log_likelihood):
+    tree_str = t.to_str()
+    num_contexts = t.num_contexts()
+    logging.debug("Adding row [%s; %s; %s; %s]" %  (resample_idx, resample_label, num_contexts, log_likelihood))
+    df.loc[len(df)] = [resample_idx, tree_idx, t.chosen_penalty,
+                       resample_label, num_contexts,
+                       tree_str, log_likelihood, None, None, None]

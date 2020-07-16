@@ -27,9 +27,9 @@ class ContextTree():
     df_file = '%s/%s.df.pkl' % (file_path, file_name)
 
     hf = h5py.File(metadata_file, 'r')
-    sample = g4l.data.Sample(hf['sample.filename'][()], hf['sample.A'][()])
-    max_depth = hf['max_depth'][()]
-    chosen_penalty = hf['chosen_penalty'][()]
+    sample = g4l.data.Sample(hf.attrs['sample.filename'], hf.attrs['sample.A'])
+    max_depth = hf.attrs['max_depth']
+    chosen_penalty = hf.attrs['chosen_penalty']
     df = pd.read_pickle(df_file)
     hf.close()
     return ContextTree(sample, max_depth, df, chosen_penalty)
@@ -40,11 +40,10 @@ class ContextTree():
 
     self.df.to_pickle(df_file)
     hf = h5py.File(metadata_file, 'w')
-    hf['sample.filename'] = self.sample.filename
-    hf['sample.A'] = self.sample.A
-    hf['max_depth'] = self.max_depth
-    hf['chosen_penalty'] = self.chosen_penalty
-
+    hf.attrs['sample.filename'] = self.sample.filename
+    hf.attrs['sample.A'] = self.sample.A
+    hf.attrs['max_depth'] = self.max_depth
+    hf.attrs['chosen_penalty'] = (self.chosen_penalty or -1)
     hf.close()
 
   def evaluate_sample(self, data):
@@ -61,6 +60,9 @@ class ContextTree():
   # TODO: add `reverse=False` parameter to display contexts as root->leaf
   def to_str(self):
     return ' '.join(self.leaves())
+
+  def num_contexts(self):
+    return len(self.leaves())
 
   def log_likelihood(self):
     return self.df.lps.sum()
