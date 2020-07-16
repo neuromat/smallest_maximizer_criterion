@@ -24,7 +24,7 @@ logging.basicConfig(
 )
 
 # Create a sample object instance
-X = Sample('examples/example1/folha_small.txt', [0, 1, 2, 3, 4])
+X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
 
 # Define the champion trees strategy to be used
 #ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
@@ -33,11 +33,11 @@ ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
 
 # Instantiates SMC by passing the strategies that will
 # be used to generate the candidate trees
-smc = SmallestMaximizerCriterion(ctm_scan, max_depth=3, read_cache_dir='examples/example1/cache', write_cache_dir='examples/example1/cache')
+smc = SmallestMaximizerCriterion(ctm_scan, max_depth=4, read_cache_dir='examples/example1/cache', write_cache_dir='examples/example1/cache')
 
 
 # Define the champion trees strategy to be used
-num_resamples = 50
+num_resamples = 200
 bootstrap = Bootstrap(X, partition_string='4')
 small_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.3)
 large_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.9)
