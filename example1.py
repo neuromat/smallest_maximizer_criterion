@@ -10,6 +10,7 @@ Usage: ./example1.py
 
 from g4l import SmallestMaximizerCriterion
 from g4l.estimators.ctm_scanner import CTMScanner
+from g4l.estimators.prune import Prune
 from g4l.evaluation.bootstrap import Bootstrap
 from g4l.evaluation.t_test import TTest
 from g4l.data import Sample
@@ -33,7 +34,9 @@ ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
 
 # Instantiates SMC by passing the strategies that will
 # be used to generate the candidate trees
-smc = SmallestMaximizerCriterion(ctm_scan, max_depth=4, read_cache_dir='examples/example1/cache', write_cache_dir='examples/example1/cache')
+cache_dir = 'examples/example1/cache'
+smc = SmallestMaximizerCriterion(ctm_scan, max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
+#smc = SmallestMaximizerCriterion(Prune(), max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
 
 
 # Define the champion trees strategy to be used
@@ -45,6 +48,7 @@ t_test = TTest(small_resamples, large_resamples, alpha=0.01)
 
 # Run estimator
 smc.fit(X, t_test, processors=3)
+smc.save(cache_dir)
 
 # Returns the best tree
 logging.info('best tree: %s' % smc.best_tree().to_str())

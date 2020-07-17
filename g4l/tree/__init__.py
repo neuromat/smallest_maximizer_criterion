@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import re
+from collections import defaultdict
 import g4l
 import h5py
 import tables
@@ -75,16 +76,21 @@ class ContextTree():
 
   def initial_dataframe(self):
     df = self.empty_frame()
+    node_idx = 0
+    parent_node_indexes = defaultdict(lambda: None)
     for tree_length in range(1, self.max_depth + 1):
       # gets all leaves for trees of size 1 to max_depth
-      for node_idx, node in enumerate(self.all_leaves(tree_length)):
+      for node in self.all_leaves(tree_length):
+        parent_node_indexes[node] = node_idx
+
+        # retrieve parent node idx from dictionary
+        parent_idx = parent_node_indexes[node[1:]]
+
         # check how many occurrences of node exist in data
         node_freq = self.calc_node_frequency(node)
         # calculate child nodes' probs
-
         # TODO: remover abaixo
         ps = node_freq / (len(self.sample.data) - tree_length + 1)
-
 
         # frequencia da passagem pai -> filho
         child_freqs, child_probs = self.calc_transition_probs(node, node_freq)
@@ -93,7 +99,9 @@ class ContextTree():
         # Creates a new row for tree table
         # - last 2 fields will be further populated
         # - lpmls is the initial value, will be updated later
-        row = [tree_length, node_idx, node, node_freq, log_max_likelihood, ps, child_probs, 0, 0]
+
+        row = [tree_length, node_idx, parent_idx, node, node_freq, log_max_likelihood, ps, child_probs, 0, 0]
+        node_idx += 1
         df.loc[len(df)] = row
     #TODO: implement calculate_node_frequency()
     #TODO: implement calculate_node_prob()
@@ -102,7 +110,7 @@ class ContextTree():
 
   def empty_frame(self):
     return pd.DataFrame(
-      columns=['l', 'node_idx',
+      columns=['l', 'node_idx', 'parent_idx',
                'node', 'node_freq',
                'lps', 'ps',
                'child_probs', 'flag', 'final'])

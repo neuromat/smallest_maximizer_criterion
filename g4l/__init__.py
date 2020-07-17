@@ -7,6 +7,7 @@ from . import display
 import hashlib
 import logging
 import h5py
+import os
 import numpy as np
 import pandas as pd
 import pathlib
@@ -34,8 +35,9 @@ class SmallestMaximizerCriterion():
     else:
       try:
         self.read_cache(self.read_cache_dir)
-      except OSError:
-        logging.warning("Cache file not found - skipping...")
+      except OSError as e:
+        logging.warning("Cache file not found - skipping cache\n %s" % self.read_cache_dir)
+        logging.warning(e)
         self.__create_champion_trees(X)
 
     if self.best_tree_idx < 0:
@@ -67,14 +69,16 @@ class SmallestMaximizerCriterion():
 
   def save(self, cache_folder_path):
     cache_hash = self.cache_filename()
-    cache_folder = "%s/%s" % (cache_folder_path, cache_hash)
+    cache_folder = os.path.abspath("%s/%s" % (cache_folder_path, cache_hash))
     logging.debug("Writing cache to %s" % cache_folder)
     pathlib.Path(cache_folder).mkdir(parents=True, exist_ok=True)
     file = '%s/smc.h5' % cache_folder
     try:
       hf = h5py.File(file, 'w')
     except:
-      import code; code.interact(local=dict(globals(), **locals()))
+      logging.warning("Can't create cache files at %s" % cache_folder)
+      #import code; code.interact(local=dict(globals(), **locals()))
+      return
     hf.attrs['champion_trees_len'] = len(self.champion_trees)
     hf.attrs['best_tree_idx'] = self.best_tree_idx
     hf.attrs['max_depth'] = self.max_depth
@@ -88,8 +92,9 @@ class SmallestMaximizerCriterion():
 
   def read_cache(self, cache_folder_path):
     logging.debug("Reading cache from %s" % cache_folder_path)
+    #import code; code.interact(local=dict(globals(), **locals()))
     cache_hash = self.cache_filename()
-    cache_folder = "%s/%s" % (cache_folder_path, cache_hash)
+    cache_folder = os.path.abspath("%s/%s" % (cache_folder_path, cache_hash))
     file = '%s/smc.h5' % cache_folder
     hf = h5py.File(file, 'r')
     self.best_tree_idx = hf.attrs['best_tree_idx']
@@ -106,7 +111,8 @@ class SmallestMaximizerCriterion():
     hf.close()
 
   def cache_filename(self):
-    return hashlib.md5(self.X.filename.encode('utf-8')).hexdigest()
+    filename = os.path.abspath(self.X.filename)
+    return hashlib.md5(filename.encode('utf-8')).hexdigest()
 
   def __create_champion_trees(self, X):
     self.initial_tree = tree.ContextTree(X, max_depth=self.max_depth)
