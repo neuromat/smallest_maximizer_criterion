@@ -42,8 +42,8 @@ class CTM(Base):
           # Locate all child nodes of current node
           rows = df[df.l==l+1]
           rows = rows[rows.node_freq > 1]
-          rows = rows[rows.node_idx >= m]
-          rows = rows[rows.node_idx < m+alphabet_len]
+          rows = rows[rows.len_idx >= m]
+          rows = rows[rows.len_idx < m+alphabet_len]
           child_nodes_log_likelihood = rows.lps.sum()
 
           # poda
@@ -65,7 +65,7 @@ class CTM(Base):
           if row.flag==0:
             subnodes_str = [node[-(tree_length - m):] for m in range(1, tree_length)]
             subnodes = df[df['node'].isin(subnodes_str)]
-            if subnodes['flag'].product() == 1 and row.ps > 0:
+            if subnodes['flag'].product() == 1 and row.node_freq > 0:
               df.loc[(df.node==node), 'final'] = 1
 
   def final_tree(self, df):
@@ -75,11 +75,12 @@ class CTM(Base):
     return selected_nodes
 
   def __locate_row(self, df, l, node_idx):
-    filtered_row = df[(df['l']==l) & (df['node_idx']==node_idx)]
+    # len_idx is the node index in the list of all nodes with same length
+    filtered_row = df[(df['l']==l) & (df['len_idx']==node_idx)]
     return filtered_row.iloc[0]
 
   def __update_row(self, df, l, node_idx, field_name, value):
-    df.loc[(df['l']==l) & (df['node_idx']==node_idx), field_name] = value
+    df.loc[(df['l']==l) & (df['len_idx']==node_idx), field_name] = value
 
   def __update_summary(self, summary, node, field_name, value):
     summary.loc[(summary['node']==node), field_name] = value

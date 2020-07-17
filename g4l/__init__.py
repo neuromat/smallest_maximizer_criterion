@@ -42,7 +42,7 @@ class SmallestMaximizerCriterion():
 
     if self.best_tree_idx < 0:
       self.perform_evaluation()
-    return self
+    return self.copy()
 
   def perform_evaluation(self):
     self.best_tree_idx = -1
@@ -109,6 +109,15 @@ class SmallestMaximizerCriterion():
       ch = tree.ContextTree.load(cache_folder, 'champion_tree_%s' % i)
       self.champion_trees.append(ch)
     hf.close()
+
+  def copy(self):
+    cp = SmallestMaximizerCriterion(self.tree_generation_method, self.max_depth, self.read_cache_dir, self.write_cache_dir)
+    cp.champion_trees = self.champion_trees
+    cp.best_tree_idx = self.best_tree_idx
+    cp.initial_tree = self.initial_tree
+    cp.X = self.X
+    cp.evaluation_results = self.evaluation_results
+    return cp
 
   def cache_filename(self):
     filename = os.path.abspath(self.X.filename)

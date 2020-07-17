@@ -51,8 +51,8 @@ class ContextTree():
     sample = g4l.data.Sample('', self.sample.A, data=data)
     new_tree = ContextTree(sample, max_depth=self.max_depth, source_data_frame=self.df)
     new_tree.df.node_freq = new_tree.df.lps = new_tree.df.ps = 0
-    new_tree.df.child_probs = None
-    new_tree.df['child_probs'] = self.df['child_probs'].astype('object')
+    new_tree.df.transition_probs = None
+    new_tree.df['transition_probs'] = self.df['transition_probs'].astype('object')
     new_tree.df.reset_index(drop=True, inplace=True)
     new_tree.calculate_node_frequency()
     new_tree.calculate_node_prob()
@@ -80,7 +80,7 @@ class ContextTree():
     parent_node_indexes = defaultdict(lambda: None)
     for tree_length in range(1, self.max_depth + 1):
       # gets all leaves for trees of size 1 to max_depth
-      for node in self.all_leaves(tree_length):
+      for len_idx, node in enumerate(self.all_leaves(tree_length)):
         parent_node_indexes[node] = node_idx
 
         # retrieve parent node idx from dictionary
@@ -90,17 +90,18 @@ class ContextTree():
         node_freq = self.calc_node_frequency(node)
         # calculate child nodes' probs
         # TODO: remover abaixo
-        ps = node_freq / (len(self.sample.data) - tree_length + 1)
+        #ps = node_freq / (len(self.sample.data) - tree_length + 1)
 
         # frequencia da passagem pai -> filho
-        child_freqs, child_probs = self.calc_transition_probs(node, node_freq)
+        child_freqs, transition_probs = self.calc_transition_probs(node, node_freq)
 
-        log_max_likelihood = self.calc_lpmls(child_freqs, child_probs)
+        log_max_likelihood = self.calc_lpmls(child_freqs, transition_probs)
         # Creates a new row for tree table
         # - last 2 fields will be further populated
         # - lpmls is the initial value, will be updated later
+        transition_sum_log_probs = np.log(transition_probs[transition_probs > 0]).sum()
 
-        row = [tree_length, node_idx, parent_idx, node, node_freq, log_max_likelihood, ps, child_probs, 0, 0]
+        row = [tree_length, node_idx, len_idx, parent_idx, node, node_freq, log_max_likelihood, transition_probs, transition_sum_log_probs, 0, 0]
         node_idx += 1
         df.loc[len(df)] = row
     #TODO: implement calculate_node_frequency()
@@ -110,10 +111,10 @@ class ContextTree():
 
   def empty_frame(self):
     return pd.DataFrame(
-      columns=['l', 'node_idx', 'parent_idx',
+      columns=['l', 'node_idx', 'len_idx', 'parent_idx',
                'node', 'node_freq',
-               'lps', 'ps',
-               'child_probs', 'flag', 'final'])
+               'lps',
+               'transition_probs', 'transition_sum_log_probs', 'flag', 'final'])
 
   def calculate_node_frequency(self):
     for i, row in self.df.iterrows():
@@ -121,13 +122,13 @@ class ContextTree():
 
   def calculate_node_prob(self):
     sample_len = len(self.sample.data)
-    child_probs_idx = self.df.columns.get_loc('child_probs')
+    transition_probs_idx = self.df.columns.get_loc('transition_probs')
     # calculates prob of occurrence for each node
-    self.df.ps = self.df.node_freq / (sample_len - self.df.l + 1)
+    # self.df.ps = self.df.node_freq / (sample_len - self.df.l + 1)
     # calculates child nodes' probs
     for i, row in self.df.iterrows():
       fr, pb = self.children_freq_prob(row.node, row.node_freq)
-      self.df.at[i, 'child_probs'] = list(pb)
+      self.df.at[i, 'transition_probs'] = list(pb)
       self.df.at[i, 'lps'] = self.calc_lpmls(fr, pb)
 
 
@@ -144,15 +145,15 @@ class ContextTree():
   # calculates $LPMLS = $LPMLS + @NSa[$j] * log( @PSa[$j] );
 
   # Logaritmo da máxima verossimilhança
-  def calc_lpmls(self, child_freqs, child_probs):
-    return np.sum(child_freqs[child_freqs > 0] * np.log(child_probs[child_freqs > 0]))
+  def calc_lpmls(self, child_freqs, transition_probs):
+    return np.sum(child_freqs[child_freqs > 0] * np.log(transition_probs[child_freqs > 0]))
 
   def calc_transition_probs(self, node, node_freq):
     if node_freq > 0:
-      child_freqs, child_probs = self.children_freq_prob(node, node_freq) # ([10, 30, 60], [0.1, 0.3, 0.6])
+      child_freqs, transition_probs = self.children_freq_prob(node, node_freq) # ([10, 30, 60], [0.1, 0.3, 0.6])
     else:
-      child_freqs, child_probs = (np.zeros(len(self.sample.A)), np.zeros(len(self.sample.A)))
-    return child_freqs, child_probs
+      child_freqs, transition_probs = (np.zeros(len(self.sample.A)), np.zeros(len(self.sample.A)))
+    return child_freqs, transition_probs
 
   def all_leaves(self, depth):
     return np.array([''.join(x)[::-1] for x in self._all_leaves_by_len(depth)])

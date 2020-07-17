@@ -25,7 +25,7 @@ logging.basicConfig(
 )
 
 # Create a sample object instance
-X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
+X = Sample('examples/example1/publico.txt', [0, 1, 2, 3, 4])
 
 # Define the champion trees strategy to be used
 #ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
@@ -35,7 +35,7 @@ ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
 # Instantiates SMC by passing the strategies that will
 # be used to generate the candidate trees
 cache_dir = 'examples/example1/cache'
-smc = SmallestMaximizerCriterion(ctm_scan, max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
+smc = SmallestMaximizerCriterion(ctm_scan, max_depth=4, write_cache_dir=cache_dir)
 #smc = SmallestMaximizerCriterion(Prune(), max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
 
 
@@ -48,7 +48,6 @@ t_test = TTest(small_resamples, large_resamples, alpha=0.01)
 
 # Run estimator
 smc.fit(X, t_test, processors=3)
-smc.save(cache_dir)
 
 # Returns the best tree
 logging.info('best tree: %s' % smc.best_tree().to_str())
