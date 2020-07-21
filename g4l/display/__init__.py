@@ -22,13 +22,13 @@ def log_likelihood_per_leaves(smc_instances, labels):
     plt.grid()
     plt.legend()
 
-def draw_tree(tree):
+def draw_tree(tree, size='10,10'):
     if isinstance(tree, str):
       t = tree
     else:
       t = tree.to_str()
     dot = Digraph(engine='dot', name=t)
-    dot.attr(size='10,10')
+    dot.attr(size=size)
     dot.attr('node', shape='circle')
     contexts = t.split(' ')
     d = []
