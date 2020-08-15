@@ -9,12 +9,12 @@ Usage: ./example1.py
 # https://scikit-learn.org/stable/developers/develop.html
 
 from g4l import SmallestMaximizerCriterion
-from g4l.estimators.ctm_scanner import CTMScanner
 from g4l.estimators.prune import Prune
 from g4l.evaluation.bootstrap import Bootstrap
 from g4l.evaluation.t_test import TTest
-import g4l.tree.generation as gen
 from g4l.data import Sample
+import g4l.tree.generation as gen
+
 import logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -27,17 +27,9 @@ logging.basicConfig(
 
 # Create a sample object instance
 X = Sample('examples/example1/publico.txt', [0, 1, 2, 3, 4])
-
-# Define the champion trees strategy to be used
-#ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
-ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
-
-
-# Instantiates SMC by passing the strategies that will
-# be used to generate the candidate trees
 cache_dir = 'examples/example1/cache'
-smc = SmallestMaximizerCriterion(ctm_scan, tree_initialization_method=gen.original_strategy, max_depth=4, write_cache_dir=cache_dir)
-#smc = SmallestMaximizerCriterion(Prune(), max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
+
+smc = SmallestMaximizerCriterion(Prune(), tree_initialization_method=gen.incremental_strategy, max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
 
 
 # Define the champion trees strategy to be used

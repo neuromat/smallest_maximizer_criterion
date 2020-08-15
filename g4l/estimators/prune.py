@@ -1,7 +1,6 @@
 import numpy as np
 import pandas as pd
 from g4l.estimators.base import Base
-from g4l.estimators.ctm import CTM
 from datetime import datetime
 import logging
 

@@ -3,6 +3,7 @@ import re
 import math
 import numpy as np
 import g4l.tree as tr
+import g4l.tree.generation as gen
 from g4l.estimators.base import Base
 
 class CTM(Base):
@@ -32,7 +33,10 @@ class CTM(Base):
     for l in list(reversed(range(1, self.context_tree.max_depth))):
       # para cada indice de folha:
       for node_idx in range(alphabet_len ** l):
-        row = self.__locate_row(df, l, node_idx)
+        try:
+          row = self.__locate_row(df, l, node_idx)
+        except IndexError:
+          continue
 
         # para todo nó ocorrente mais de uma vez na amostra:
         if row.node_freq > 1:
@@ -56,8 +60,12 @@ class CTM(Base):
     data_len = len(self.data)
     for tree_length in range(1, self.context_tree.max_depth + 1):
       # TODO: change enumerate to yield to consume nodes on demand (optimizes memory)
-      for node_idx, node in enumerate(self.context_tree.all_leaves(tree_length)):
-        row = df[df.node==node].iloc[0]
+
+      for node_idx, node in enumerate(gen.all_leaves(tree_length, self.A)):
+        try:
+          row = df[df.node==node].iloc[0]
+        except IndexError:
+          continue
         if tree_length==1:
           if row.flag==0:
             df.loc[(df.node==node), 'final'] = 1

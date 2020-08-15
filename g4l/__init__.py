@@ -20,10 +20,11 @@ class SmallestMaximizerCriterion():
   max_depth = None
   evaluation_results = None
 
-  def __init__(self, tree_generation_method, max_depth=4, read_cache_dir=None, write_cache_dir=None):
+  def __init__(self, tree_generation_method, tree_initialization_method=tree.generation.original_strategy, max_depth=4, read_cache_dir=None, write_cache_dir=None):
     logging.debug("Initializing SMC")
     self.max_depth = max_depth
     self.tree_generation_method = tree_generation_method
+    self.tree_initialization_method = tree_initialization_method
     self.read_cache_dir = read_cache_dir
     self.write_cache_dir = write_cache_dir
 
@@ -124,7 +125,7 @@ class SmallestMaximizerCriterion():
     return hashlib.md5(filename.encode('utf-8')).hexdigest()
 
   def __create_champion_trees(self, X):
-    self.initial_tree = tree.ContextTree(X, max_depth=self.max_depth)
+    self.initial_tree = tree.ContextTree(X, max_depth=self.max_depth, tree_initialization_method=self.tree_initialization_method)
     self.champion_trees = self.tree_generation_method.execute(self.initial_tree)
     if self.write_cache_dir is not None:
       self.save(self.write_cache_dir)
