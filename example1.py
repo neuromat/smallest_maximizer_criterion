@@ -5,6 +5,7 @@ Linguistic case study
 Usage: ./example1.py
 '''
 
+
 # Following the conventions used by scikit-learn
 # https://scikit-learn.org/stable/developers/develop.html
 
@@ -36,7 +37,7 @@ ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
 # Instantiates SMC by passing the strategies that will
 # be used to generate the candidate trees
 cache_dir = 'examples/example1/cache'
-smc = SmallestMaximizerCriterion(ctm_scan, tree_initialization_method=gen.original_strategy, max_depth=4, write_cache_dir=cache_dir)
+smc = SmallestMaximizerCriterion(ctm_scan, tree_initialization_method=gen.original, max_depth=4, write_cache_dir=cache_dir)
 #smc = SmallestMaximizerCriterion(Prune(), max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
 
 

@@ -20,7 +20,7 @@ class SmallestMaximizerCriterion():
   max_depth = None
   evaluation_results = None
 
-  def __init__(self, tree_generation_method, tree_initialization_method=tree.generation.original_strategy, max_depth=4, read_cache_dir=None, write_cache_dir=None):
+  def __init__(self, tree_generation_method, tree_initialization_method=tree.generation.original, max_depth=4, read_cache_dir=None, write_cache_dir=None):
     logging.debug("Initializing SMC")
     self.max_depth = max_depth
     self.tree_generation_method = tree_generation_method

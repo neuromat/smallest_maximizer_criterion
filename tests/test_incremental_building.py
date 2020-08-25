@@ -17,7 +17,9 @@ X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
 
 def test_properness():
 
-  initial_tree = ContextTree(X, max_depth=max_depth, tree_initialization_method=g4l.tree.generation.incremental_strategy)
+  initial_tree = ContextTree(X, max_depth=max_depth)
+  #initial_tree = ContextTree(X, max_depth=max_depth, tree_initialization_method=g4l.tree.generation.incremental)
+
   t = ctm.CTM(initial_tree).execute(1.536489)
 
   g4l.tree.integrity.check_properness(t)

@@ -5,22 +5,12 @@ from g4l.estimators.ctm import CTM
 from datetime import datetime
 import logging
 
-class CTMScanner():
-  def __init__(self, penalty_interval=(0.1, 400), epsilon=0.01):
-    self.penalty_interval=penalty_interval
-    self.epsilon = epsilon
 
-  def execute(self, context_tree):
-    estimator = CTMScannerEstimator(context_tree)
-    return estimator.execute(self.penalty_interval[0],
-                             self.penalty_interval[1],
-                             self.epsilon)
+class CTMScanner(Base):
 
-
-class CTMScannerEstimator(Base):
-
-  def execute(self, min_c, max_c, epsilon):
+  def execute(self, penalty_interval=(0.1, 400), epsilon=0.01):
     self.intervals = None
+    min_c, max_c = penalty_interval
     logging.debug('Starting CTM Scanner')
 
     tree_a = self.__calc_bic(min_c)
@@ -39,7 +29,7 @@ class CTMScannerEstimator(Base):
           old_b = b
           old_tree_b = tree_b
           b = (a + b)/2
-          tree_b = self.strategy1(b)
+          tree_b = self.strategy2(b)
           #print("c = %s\n" % b, tree_b.to_str())
         a = b
         b = old_b
