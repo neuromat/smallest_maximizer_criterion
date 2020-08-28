@@ -39,39 +39,46 @@ class Prune(Base):
 
   def perform_pruning(self, df):
     iteration_num = 0
+
+    parent_node_idx = df.loc[(df.active==1) & (df.final==1) & (df.type=='L')].parent_idx.unique()
+    df.loc[df.node_idx.isin(parent_node_idx), 'type'] = 'LP' # leaf parent
+
+    trs = self.context_tree.transitions_df
+    children_contribs = trs.groupby(['idx']).apply(lambda x: np.log(x[x.prob > 0].prob).sum())
+    df.set_index(['node_idx'], inplace=True)
+    df['children_contrib'] = children_contribs
+    df.reset_index(drop=False, inplace=True)
+
     while df.final.sum()>0:
       #print('iteration', iteration_num)
       # fetch all nodes connected to leaf nodes and mark them as parent of leaves (LP)
-      parent_node_idx = df.loc[(df.active==1) & (df.final==1) & (df.type=='L')].parent_idx.unique()
-      df.loc[df.node_idx.isin(parent_node_idx), 'type'] = 'LP' # leaf parent
 
-      trs = self.context_tree.transitions_df
-      children_contribs = trs.groupby(['idx']).apply(lambda x: np.log(x[x.prob > 0].prob).sum())
-      df.set_index(['node_idx'], inplace=True)
-      df['children_contrib'] = children_contribs
-      df.reset_index(drop=False, inplace=True)
       # for all LP nodes, mark as candidate those ones that connects only with leaf nodes
       lp_nodes = df.loc[(df.type=='LP') & (df.final==1)]
       for idx, lp_node in lp_nodes.iterrows():
         child_nodes = df[df.parent_idx==lp_node.node_idx]
         num_child_nodes = len(child_nodes)
-        active_child_nodes = (child_nodes.final==1).astype(int).sum()
+        active_child_nodes = ((child_nodes.active==1) & (child_nodes.final==1)).astype(int).sum()
         leaf_nodes = (child_nodes.type=='L').astype(int).sum()
         # when all child nodes are leaves and active
         if num_child_nodes == active_child_nodes == leaf_nodes:
           df.loc[df.node_idx==lp_node.node_idx, 'type'] = 'LPC' # mark these nodes as candidates (LPC)
 
       lpc = df[df.type=='LPC']
-      if len(lpc)==0:
+      if len(df[df.type=='LPC'])==0:
         break
 
+
       # teste
-      leaf_parents = df[df.type=='L'].groupby(['parent_idx']).apply(lambda x: x.lps.sum())
-      df.set_index(['node_idx'], inplace=True)
-      df['lps2'] = leaf_parents
-      lpcs = df.iloc[leaf_parents.index]
+      #import code; code.interact(local=dict(globals(), **locals()))
+
+      leaf_parents_lps_sum = df[df.type=='L'].groupby(['parent_idx']).apply(lambda x: x.lps.sum())
+
+      lpc['lps2'] = leaf_parents_lps_sum
+
+      lpcs = lpc[lpc.node_idx.isin(leaf_parents_lps_sum.index)]
+      #import code; code.interact(local=dict(globals(), **locals()))
       lpcs = lpcs[lpcs.active==0]
-      df.reset_index(drop=False, inplace=True)
       lpcs['lps_delta'] = lpcs.lps2 - lpcs.lps
       less_contributive_lp_idx = lpcs.sort_values(['lps_delta']).index[0]
 
@@ -89,10 +96,15 @@ class Prune(Base):
       # The less contributive LPC becomes a leaf
       df.loc[df.node_idx==less_contributive_lp_idx, 'type'] = 'L'
       df.loc[df.node_idx==less_contributive_lp_idx, 'active'] = 1
+
+      grandparent_idx = df.loc[df.node_idx==less_contributive_lp_idx].parent_idx.iloc[0]
+      df.loc[df.node_idx==grandparent_idx, 'type'] = 'LP'
+
+      #import code; code.interact(local=dict(globals(), **locals()))
       iteration_num += 1
 
       active_nodes = df[(df.final==1) & (df.active==1)]
 
       # ['iter_num', 'num_nodes', 'log_likelihood_sum', 'node_idx']
-      print([iteration_num, len(active_nodes), active_nodes.lps.sum()])
+      #print([iteration_num, len(active_nodes), active_nodes.lps.sum()])
       self.results.loc[len(self.results)] = [iteration_num, len(active_nodes), active_nodes[active_nodes.type=='L'].lps.sum()]
