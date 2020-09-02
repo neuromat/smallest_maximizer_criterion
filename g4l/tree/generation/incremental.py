@@ -69,7 +69,7 @@ def create_indexes(df):
   return df
 
 def calculate_transition_probs(df, context_tree):
-  nodes = df[['node', 'freq', 'depth']]
+  nodes = df[['node', 'freq', 'depth']].copy()
   nodes['prev'] = nodes.node.str.slice(stop=-1)
   nodes['next_symbol'] = nodes.node.str.slice(start=-1)
   nodes.reset_index(drop=False, inplace=True)

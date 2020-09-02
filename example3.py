@@ -48,27 +48,28 @@ c = None
 
 
 start = time.time()
-ctm = Prune(t).execute()
+prune = Prune(t)
+prune.execute()
 end = time.time()
 print("Original init -> CTM")
 print("Elapsed (s):", end - start)
-print("Nodes:", ctm.to_str())
-print("Log-Likelihood:", ctm.log_likelihood())
+#print("Nodes:", ctm.to_str())
+# print("Log-Likelihood:", ctm.log_likelihood())
 print("-------------")
 
-start = time.time()
-#ctm = CTM(t2).execute(c)
-end = time.time()
-print("Incremental init -> CTM")
-print("Elapsed (s):", end - start)
-print("Nodes:", ctm.to_str())
-print("Log-Likelihood:", ctm.log_likelihood())
-print("-------------")
+## start = time.time()
+## #ctm = CTM(t2).execute(c)
+## end = time.time()
+## print("Incremental init -> CTM")
+## print("Elapsed (s):", end - start)
+## print("Nodes:", ctm.to_str())
+## print("Log-Likelihood:", ctm.log_likelihood())
+## print("-------------")
 
 
 #ctm = CTM2(t).execute(0.5)
 
-#import code; code.interact(local=dict(globals(), **locals()))
+import code; code.interact(local=dict(globals(), **locals()))
 
 
 
