@@ -1,24 +1,26 @@
 import numpy as np
 import math
 import pandas as pd
-from g4l.estimators.base import Base
 from g4l.tree import ContextTree
-from g4l.estimators.ctm import CTM
 from datetime import datetime
+from . import CollectionBase
+from . import CTM
+
 import logging
 
-class Prune(Base):
+class Prune(CollectionBase):
 
   def execute(self):
+    self.trees_constructed = 0
     self.results = pd.DataFrame(columns=['iter_num', 'num_nodes', 'log_likelihood_sum'])
     t = self.apply_ctm()
-    self.context_trees = []
     df = self.initialize_pruning(t)
     self.perform_pruning(df)
     self.context_trees = list(reversed(self.context_trees))
 
 
   def apply_ctm(self):
+    self.trees_constructed += 1
     return CTM(self.context_tree).execute(None)
 
   def initialize_pruning(self, t):
@@ -53,12 +55,6 @@ class Prune(Base):
 
   def perform_pruning(self, df):
     iteration_num = 0
-
-    #trs = self.context_tree.transitions_df
-    #children_contrib = trs.groupby(['idx']).apply(lambda x: np.log(x[x.prob > 0].prob).sum())
-    #df.set_index(['node_idx'], inplace=True)
-    #df['children_contrib'] = children_contrib
-    #df.reset_index(drop=False, inplace=True)
     self.add_tree(df)
     while True:
       self.update_counts(df)
@@ -79,10 +75,6 @@ class Prune(Base):
       logdata = (iteration_num, len(df[df.active==1]), less_contributive_node_idx)
       logging.debug("Iteration: %s ; leaves: %s; pruned node_idx: %s" % logdata)
     return self
-
-  def add_tree(self, df):
-    new_tree = ContextTree(self.context_tree.sample, max_depth=self.context_tree.max_depth, source_data_frame=df)
-    self.context_trees.append(new_tree)
 
   def remove_leaves(self, df, node_idx):
     df.loc[df.parent_idx==node_idx, 'active'] = 0

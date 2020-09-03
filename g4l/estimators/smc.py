@@ -1,73 +1,62 @@
 import numpy as np
 import pandas as pd
-from g4l.estimators.base import Base
-from g4l.estimators.ctm import CTM
+from . import CollectionBase
+from . import CTM
 from datetime import datetime
 import logging
 
 
-class CTMScanner(Base):
+class SMC(CollectionBase):
 
   def execute(self, penalty_interval=(0.1, 400), epsilon=0.01):
     self.intervals = None
     min_c, max_c = penalty_interval
-    logging.debug('Starting CTM Scanner')
+    self.trees_constructed = 0
 
+    logging.info('Starting CTM Scanner')
     tree_a = self.__calc_bic(min_c)
     tree_b = tree_f = self.__calc_bic(max_c)
-    champion_trees = []
-    champion_trees.append(tree_a)
-
-    a = min_c
-    b = max_c
-    #print("c = %s\n" % a, tree_a.to_str())
-    #print("c = %s\n" % b, tree_b.to_str())
-
+    self.add_tree(tree_a.df)
+    a, b = (min_c, max_c)
     while not tree_a.equals_to(tree_b):
       while b - a > epsilon:
         while not tree_a.equals_to(tree_b):
           old_b = b
           old_tree_b = tree_b
           b = (a + b)/2
-          tree_b = self.strategy2(b)
-          #print("c = %s\n" % b, tree_b.to_str())
+          tree_b = self.strategy_dynamic(b)
+          #tree_b = self.strategy_default(b)
         a = b
         b = old_b
         tree_b = old_tree_b
       a = b
       tree_a = tree_b
-      champion_trees.append(tree_a)
-      #print("-> c = %s\n" % b, tree_a.to_str())
-
+      self.add_tree(tree_a.df)
       b = max_c
       tree_b = tree_f
-
-    logging.debug('Finished CTM Scanner')
-    return champion_trees
+    logging.info('Finished CTM Scanner')
 
   def __calc_bic(self, c):
+    self.trees_constructed += 1
     return CTM(self.context_tree).execute(c)
 
-
-
-  def strategy1(self, c):
+  def strategy_default(self, c):
     bic =  self.__calc_bic(c)
     logging.debug('c=%s; \t\tt=%s' % (round(c, 4), bic.to_str()))
     return bic
 
-  #### Verificar se cabe utilizar estratégia com caching
-
-  def strategy2(self, c):
+  def strategy_dynamic(self, c):
+    # This strategy avoids computing trees where the current c is between
+    # 2 already computed values of c that have produced the same tree
     if self.intervals is None:
       self.intervals = dict()
     t = self.__cached_trees(c)
     if not t:
       t = self.__calc_bic(c)
       self.__add_tree(c, t)
-      #print(self.intervals.keys(), c)
-      print("** c=", c, '\t\t==>', t.to_str())
+      logging.debug("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
     else:
-      print("++ c=", c, '\t\t==>', t.to_str())
+      logging.debug("[skip] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
     return t
 
   def __cached_trees(self, k):

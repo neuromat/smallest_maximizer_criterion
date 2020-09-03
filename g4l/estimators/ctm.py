@@ -4,7 +4,7 @@ import math
 import numpy as np
 import g4l.tree as tr
 import g4l.tree.generation as gen
-from g4l.estimators.base import Base
+from .base import Base
 
 class CTM(Base):
 
@@ -49,8 +49,6 @@ class CTM(Base):
       parents = df[(df.depth==l) & (df.freq > 1)]
       nodes_to_remove = parents[(parents.num_child_nodes > 1) & (parents.lps2 > parents.lps)].index
       df.loc[nodes_to_remove, 'remove_node'] = 1
-      #df.loc[nodes_to_remove, 'lps'] = df.loc[nodes_to_remove].lps2
-    #import code; code.interact(local=dict(globals(), **locals()))
     df.drop('lps2', axis='columns', inplace=True)
     return df
 
