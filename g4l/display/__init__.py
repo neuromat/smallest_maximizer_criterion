@@ -32,7 +32,7 @@ def draw_tree(tree, size='10,10', previous_tree=None, diff_color='red'):
     else:
         t2 = previous_tree.to_str()
 
-    dot = Digraph(engine='dot', name=t)
+    dot = Digraph(engine='dot', name=t, format='png')
     dot.attr(size=size)
     dot.attr('node', shape='circle')
     contexts = t.split(' ')
