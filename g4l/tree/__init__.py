@@ -6,7 +6,6 @@ import g4l
 import re
 from collections import defaultdict
 import h5py
-import tables
 
 class ContextTree():
   sample = None

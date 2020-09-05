@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 from collections import Counter
 import h5py
-import tables
 
 
 def run(context_tree):

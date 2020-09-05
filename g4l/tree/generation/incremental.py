@@ -4,7 +4,6 @@ import re
 from collections import defaultdict
 from collections import Counter
 import h5py
-import tables
 
 
 def run(context_tree):
@@ -80,7 +79,7 @@ def calculate_transition_probs(df, context_tree):
   freqs = nodes[['idx', 'next_symbol', 'freq']].reset_index(drop=True)
   all_transition_freqs = freqs.groupby(['idx']).apply(lambda  x: x.freq.sum())
   freqs.set_index(['idx'], inplace=True)
-  freqs['prob'] = freqs.freq / all_transition_freqs.iloc[freqs.index]
+  freqs['prob'] = freqs.freq / all_transition_freqs.loc[freqs.index]
   context_tree.transitions_df = freqs
 
 def bind_parent_nodes(df):

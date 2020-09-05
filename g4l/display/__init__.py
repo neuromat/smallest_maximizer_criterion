@@ -1,4 +1,4 @@
-from graphviz import Digraph
+
 import matplotlib.pyplot as plt
 
 def bloxplot(smc_instance):
@@ -32,6 +32,7 @@ def draw_tree(tree, size='10,10', previous_tree=None, diff_color='red'):
     else:
         t2 = previous_tree.to_str()
 
+    from graphviz import Digraph
     dot = Digraph(engine='dot', name=t, format='png')
     dot.attr(size=size)
     dot.attr('node', shape='circle')
