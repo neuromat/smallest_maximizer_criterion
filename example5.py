@@ -28,13 +28,12 @@ logging.basicConfig(
 )
 
 # Create a sample object instance
-X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
-initial_tree = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.incremental)
-tree_a = CTM(initial_tree).execute(1.536489)
 
-# Tree A:   c = 1.536489   (11 contexts)
-# tree_a = "000 1 10 100 2 20 200 3 30 300 4"
+filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_5000.csv"
 
+f_5k = [x.replace(',', '') for x in open(filename).read().split('\n')]
+X = Sample(None, [0, 1], data=f_5k[0])
+initial_tree = tree.ContextTree(X, max_depth=6, tree_initialization_method=gen.incremental)
 #pruned_trees = Prune(initial_tree).execute()
 
-#import code; code.interact(local=dict(globals(), **locals()))
+import code; code.interact(local=dict(globals(), **locals()))

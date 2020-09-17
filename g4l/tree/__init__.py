@@ -12,11 +12,9 @@ class ContextTree():
   max_depth = None
   df = None
   transitions_df = None
-  chosen_penalty = None
 
-  def __init__(self, sample, max_depth=4, source_data_frame=None, chosen_penalty=None, tree_initialization_method=generation.original):
+  def __init__(self, sample, max_depth=4, source_data_frame=None, tree_initialization_method=generation.incremental):
     self.sample = sample
-    self.chosen_penalty = chosen_penalty
     self.max_depth = max_depth
     self.transitions_df = pd.DataFrame(columns=['node_idx', 'symbol', 'freq', 'prob'])
     self.df = None
@@ -29,14 +27,12 @@ class ContextTree():
   def load(cls, file_path, file_name):
     metadata_file = '%s/%s.metadata.h5' % (file_path, file_name)
     df_file = '%s/%s.df.pkl' % (file_path, file_name)
-
     hf = h5py.File(metadata_file, 'r')
     sample = g4l.data.Sample(hf.attrs['sample.filename'], hf.attrs['sample.A'])
     max_depth = hf.attrs['max_depth']
-    chosen_penalty = hf.attrs['chosen_penalty']
     df = pd.read_pickle(df_file)
     hf.close()
-    return ContextTree(sample, max_depth, df, chosen_penalty)
+    return ContextTree(sample, max_depth, df)
 
   def save(self, file_path, file_name):
     metadata_file = '%s/%s.metadata.h5' % (file_path, file_name)
@@ -47,13 +43,12 @@ class ContextTree():
     hf.attrs['sample.filename'] = self.sample.filename
     hf.attrs['sample.A'] = self.sample.A
     hf.attrs['max_depth'] = self.max_depth
-    hf.attrs['chosen_penalty'] = (self.chosen_penalty or -1)
     hf.close()
 
   def evaluate_sample(self, data):
     sample = g4l.data.Sample('', self.sample.A, data=data)
     new_tree = ContextTree(sample, max_depth=self.max_depth, source_data_frame=self.df)
-    new_tree.df.node_freq = new_tree.df.lps = new_tree.df.ps = 0
+    new_tree.df.node_freq = new_tree.df.likelihood = new_tree.df.ps = 0
     new_tree.df.transition_probs = None
     new_tree.df['transition_probs'] = self.df['transition_probs'].astype('object')
     new_tree.df.reset_index(drop=True, inplace=True)
@@ -65,27 +60,23 @@ class ContextTree():
   def to_str(self):
     return ' '.join(self.leaves())
 
-  def tag_nodes(self):
-    # Tag nodes as N (simple node) as default
-    self.df['type'] = None
-    self.df.loc[self.df.active==1, 'type'] = 'N'
-
-    parent_idxs = self.df.parent_idx.unique()
-
-    self.df.loc[(self.df.active==1) & (~self.df.node_idx.isin(parent_idxs)), 'type'] = 'L'
-    #import code; code.interact(local=dict(globals(), **locals()))
-    # All nodes without child nodes are tagged as leaves (L)
-
   def num_contexts(self):
     return len(self.leaves())
 
   def log_likelihood(self):
-    return self.tree().lps.sum()
+    return self.tree().likelihood.sum()
 
   def tree(self):
-    return self.df[self.df.active==1].sort_values(
+    return self.contexts().sort_values(
           by=['node'],
           ascending=(True))
+
+  def contexts(self, active_only=True):
+    df = self.df
+    r = df[~df.node_idx.isin(df[df.active==1].parent_idx)]
+    if active_only==True:
+      r = r[r.active==1]
+    return r
 
   def leaves(self):
     return np.sort(list(self.tree()['node']))
@@ -106,4 +97,4 @@ class ContextTree():
     for i, row in self.df.iterrows():
       fr, pb = gen.children_freq_prob(row.node, row.node_freq, self.A, self.sample.data)
       self.df.at[i, 'transition_probs'] = list(pb)
-      self.df.at[i, 'lps'] = gen.calc_lpmls(fr, pb)
+      self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)

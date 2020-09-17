@@ -9,24 +9,38 @@ import h5py
 def run(context_tree):
   #df = empty_frame()
   df = pd.DataFrame()
-
-  # count frequencies of each unique subsequence
+  # count frequencies of each unique subsequence of size 1..max_depth
   df = count_subsequence_frequencies(df, context_tree)
-
   # create depth-related info columns
   df = create_indexes(df)
-
   calculate_transition_probs(df, context_tree)
-
   df = remove_last_level(df, context_tree)
 
   # create parent relationship between nodes
   df = bind_parent_nodes(df)
+  while True:
+    df = calculate_num_child_nodes(df)
+    leaves = df.loc[~df.index.isin(df.parent_idx)]
+    single_leaves_parents = df.loc[leaves.parent_idx]
+    single_leaves_parents = single_leaves_parents[single_leaves_parents.num_child_nodes==1]
+    nodes_to_remove = df[df.parent_idx.isin(single_leaves_parents.index)]
+    if len(nodes_to_remove)==0:
+      break
+    df.drop(index=nodes_to_remove.index, inplace=True)
+
+  #import code; code.interact(local=dict(globals(), **locals()))
+
+
+  # uma vez tendo obtido a maior arvore possível (completa),
+  # localizar a maior admissível
+  # remover ramos com uma única folha
+
+  # guardar a verossimilhança, não a verossimilhança penalizada
+  # conjunto das
 
   # calculate nodes likelihoods
   df = calculate_likelihood(df, context_tree)
 
-  df = tag_nodes(df)
 
   df = cleanup(df, context_tree)
 
@@ -90,28 +104,23 @@ def bind_parent_nodes(df):
   parent_nodes_idx = df.loc[parent_nodes].node_idx
   df.reset_index(inplace=True)
   parent_nodes_idx = parent_nodes_idx.reset_index().node_idx.values
-  l1_values = np.repeat(None, len(df.loc[df.depth == 1]))
-  # this concatenation creates a full column with parent_idxs; None values are
-  # set for nodes with depth == 1
-  df['parent_idx'] = np.concatenate((l1_values, parent_nodes_idx))
-  num_child_nodes = df[df.depth>1].groupby(['parent_idx']).apply(lambda x: x.count().node_idx)
-  df.set_index(['node_idx'], inplace=True)
-  df['num_child_nodes'] = num_child_nodes
+  depth_1_values = np.repeat(None, len(df.loc[df.depth == 1]))
+  df['parent_idx'] = np.concatenate((depth_1_values, parent_nodes_idx))
   df.drop('parent_node', axis='columns', inplace=True)
-  df.reset_index(inplace=True)
-  #import code; code.interact(local=dict(globals(), **locals()))
+  df.set_index('node_idx', inplace=True)
   return df
+
+def calculate_num_child_nodes(df):
+  num_child_nodes = df[df.depth>1].reset_index(drop=False).groupby(['parent_idx']).apply(lambda x: x.count().node_idx)
+  df['num_child_nodes'] = num_child_nodes
+  return df
+
 
 def calculate_likelihood(df, context_tree):
-  df.set_index(['node_idx'], inplace=True)
+  #df.set_index(['node_idx'], inplace=True)
   x = context_tree.transitions_df
-  context_tree.transitions_df['lps'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
-  df['lps'] = context_tree.transitions_df.groupby(['idx']).apply(lambda s: s.lps.sum())
-
-  #df['transition_sum_log_likelihoods'] = sum_transition_log_probs
-  return df
-
-def tag_nodes(df):
+  context_tree.transitions_df['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
+  df['likelihood'] = context_tree.transitions_df.groupby(['idx']).apply(lambda s: s.likelihood.sum())
   return df
 
 def cleanup(df, context_tree):

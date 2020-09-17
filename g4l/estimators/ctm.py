@@ -12,18 +12,17 @@ class CTM(Base):
     # TODO: criar a context_tree
     data_frame = self.context_tree.df.copy()
     self.apply_penalization(c, data_frame)
-    data_frame = self.remove_non_contributive_nodes(data_frame) # até aqui ok
+    data_frame = self.remove_non_contributive_nodes(data_frame)
     self.select_active_contexts(data_frame)
     #champion_tree_df = self.final_tree(data_frame)
     self.cleanup(data_frame)
     new_tree = tr.ContextTree(self.sample,
                           self.context_tree.max_depth,
-                          source_data_frame=data_frame,
-                          chosen_penalty=c)
-    new_tree.tag_nodes()
+                          source_data_frame=data_frame)
     return new_tree
 
   def apply_penalization(self, c, data_frame):
+    data_frame['lps'] = data_frame.likelihood
     if c is not None:
       degrees_of_freedom = len(self.A)-1
       n = len(self.data)
@@ -31,6 +30,7 @@ class CTM(Base):
 
   def cleanup(self, df):
     df.drop('remove_node', axis='columns', inplace=True)
+    df.drop('lps', axis='columns', inplace=True)
 
   # find the largest admissible context tree
   def remove_non_contributive_nodes(self, df):

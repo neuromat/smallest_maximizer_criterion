@@ -14,7 +14,9 @@ class Prune(CollectionBase):
     self.trees_constructed = 0
     self.results = pd.DataFrame(columns=['iter_num', 'num_nodes', 'log_likelihood_sum'])
     t = self.apply_ctm()
+    self.context_tree = t
     df = self.initialize_pruning(t)
+    #import code; code.interact(local=dict(globals(), **locals()))
     self.perform_pruning(df)
     self.context_trees = list(reversed(self.context_trees))
 
@@ -26,7 +28,7 @@ class Prune(CollectionBase):
   def initialize_pruning(self, t):
     df = t.df.copy()
     #df['children_contrib'] = df.transition_sum_log_probs
-    df.loc[df.lps==0, 'children_contrib'] = -math.inf
+    df.loc[df.likelihood==0, 'children_contrib'] = -math.inf
     df.loc[df.active==0, 'num_total_leaves'] = 0
     df.loc[df.active==0, 'num_direct_leaves'] = 0
     return df
@@ -47,7 +49,7 @@ class Prune(CollectionBase):
   def update_counts(self, df):
     leaves = df[df.active==1]
     leaf_counts = leaves.groupby(['parent_idx']).count().node_idx
-    contrib = leaves.groupby(['parent_idx']).sum().lps
+    contrib = leaves.groupby(['parent_idx']).sum().likelihood
     df.loc[leaf_counts.index, 'num_total_leaves'] = leaf_counts
     df.loc[leaf_counts.index, 'num_direct_leaves'] = leaf_counts
     df.loc[leaf_counts.index, 'children_contrib'] = contrib
@@ -63,8 +65,8 @@ class Prune(CollectionBase):
       if len(candidate_nodes)==0:
         break
       candidate_children = df[(df.parent_idx.isin(candidate_nodes.node_idx)) & (df.active==1)]
-      lps2 = candidate_children.groupby(['parent_idx']).lps.sum()
-      diff = (lps2 - candidate_nodes.lps)
+      lps2 = candidate_children.groupby(['parent_idx']).likelihood.sum()
+      diff = (lps2 - candidate_nodes.likelihood)
       less_contributive_node_idx = diff.sort_values().index[0]
       #if less_contributive_node_idx==5:
       #  import code; code.interact(local=dict(globals(), **locals()))
