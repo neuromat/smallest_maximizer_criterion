@@ -7,7 +7,6 @@ import h5py
 
 
 def run(context_tree):
-  #df = empty_frame()
   df = pd.DataFrame()
   # count frequencies of each unique subsequence of size 1..max_depth
   df = count_subsequence_frequencies(df, context_tree)
@@ -15,7 +14,6 @@ def run(context_tree):
   df = create_indexes(df)
   calculate_transition_probs(df, context_tree)
   df = remove_last_level(df, context_tree)
-
   # create parent relationship between nodes
   df = bind_parent_nodes(df)
   while True:
@@ -27,25 +25,10 @@ def run(context_tree):
     if len(nodes_to_remove)==0:
       break
     df.drop(index=nodes_to_remove.index, inplace=True)
-
-  #import code; code.interact(local=dict(globals(), **locals()))
-
-
-  # uma vez tendo obtido a maior arvore possível (completa),
-  # localizar a maior admissível
-  # remover ramos com uma única folha
-
-  # guardar a verossimilhança, não a verossimilhança penalizada
-  # conjunto das
-
   # calculate nodes likelihoods
   df = calculate_likelihood(df, context_tree)
-
-
   df = cleanup(df, context_tree)
-
   return df
-
 
 
 def remove_last_level(df, context_tree):

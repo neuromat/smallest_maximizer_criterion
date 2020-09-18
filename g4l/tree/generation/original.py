@@ -24,10 +24,7 @@ def run(context_tree):
       # check how many occurrences of node exist in data
       freq = calc_node_frequency(node, sample_data)
       # calculate child nodes' probs
-      # TODO: remover abaixo
-      #ps = freq / (len(context_tree.sample.data) - tree_length + 1)
 
-      # frequencia da passagem pai -> filho
       child_freqs, transition_probs = calc_transition_probs(node, freq, A, sample_data)
 
       log_max_likelihood = calc_lpmls(child_freqs, transition_probs)

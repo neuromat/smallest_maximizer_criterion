@@ -18,3 +18,6 @@ def satisfies_completeness(context_tree):
   if ret != 1:
     return False
   return True
+
+def has_single_leaf_branch(context_tree):
+  pass

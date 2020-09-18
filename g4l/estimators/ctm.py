@@ -64,13 +64,3 @@ class CTM(Base):
             subnodes = df[df['node'].isin(subnodes_str)]
             if subnodes['remove_node'].product() == 1 and row.freq > 0:
               df.loc[(df.node==row.node), 'active'] = 1
-
-  # def final_tree(self, df):
-  #   selected_nodes = df.loc[df.active==1].sort_values(
-  #     by=['node'],
-  #     ascending=(True))
-  #   return selected_nodes
-
-  # def __update_summary(self, summary, node, field_name, value):
-  #   summary.loc[(summary['node']==node), field_name] = value
-
