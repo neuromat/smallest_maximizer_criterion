@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-from . import CollectionBase
-from . import CTM
+from .base import CollectionBase
+from .ctm import CTM
 from datetime import datetime
 import logging
 

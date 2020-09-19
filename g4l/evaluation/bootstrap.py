@@ -29,7 +29,7 @@ class Resample():
     if partition_string==None:
       self.partition_string = self.__most_frequent_substring(source_sample)
     if size==None:
-      size = len(source_sample.data)
+      self.size = len(source_sample.data)
     else:
       self.size = int(size)
 

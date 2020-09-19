@@ -1,3 +1,5 @@
+from . import compression
+
 def persist_trees(dump_fld, bic_tree, champion_trees):
   bic_tree.save(dump_fld, 'bic_tree')
   #to load: bic_tree = g4l.tree.ContextTree.load(dump_fld, 'bic_tree')

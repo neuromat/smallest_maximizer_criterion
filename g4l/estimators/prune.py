@@ -3,21 +3,20 @@ import math
 import pandas as pd
 from g4l.tree import ContextTree
 from datetime import datetime
-from . import CollectionBase
-from . import CTM
-
+from .base import CollectionBase
+from .ctm import CTM
 import logging
 
 class Prune(CollectionBase):
 
-  def execute(self):
+  def execute(self, max_trees=None):
     self.trees_constructed = 0
     self.results = pd.DataFrame(columns=['iter_num', 'num_nodes', 'log_likelihood_sum'])
     t = self.apply_ctm()
     self.context_tree = t
     df = self.initialize_pruning(t)
     #import code; code.interact(local=dict(globals(), **locals()))
-    self.perform_pruning(df)
+    self.perform_pruning(df, max_trees)
     self.context_trees = list(reversed(self.context_trees))
 
 
@@ -55,7 +54,7 @@ class Prune(CollectionBase):
     df.loc[leaf_counts.index, 'children_contrib'] = contrib
     self.update_parent_counts(df, leaf_counts.index.values)
 
-  def perform_pruning(self, df):
+  def perform_pruning(self, df, max_trees):
     iteration_num = 0
     self.add_tree(df)
     while True:
@@ -76,6 +75,8 @@ class Prune(CollectionBase):
       iteration_num += 1
       logdata = (iteration_num, len(df[df.active==1]), less_contributive_node_idx)
       logging.debug("Iteration: %s ; leaves: %s; pruned node_idx: %s" % logdata)
+      if (max_trees is not None) and (len(self.context_trees) > max_trees):
+        break
     return self
 
   def remove_leaves(self, df, node_idx):
