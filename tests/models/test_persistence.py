@@ -12,7 +12,7 @@ X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
 c = 1.536489
 
 def test_save_and_load_model():
-  t1 = CTM(c, max_depth).fit(X)
+  t1 = CTM(c, max_depth).fit(X).context_tree
 
   with tempfile.TemporaryDirectory() as tmpdirname:
     filename = tmpdirname + '/saved_model.h5'
