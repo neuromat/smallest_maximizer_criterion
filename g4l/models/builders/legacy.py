@@ -2,9 +2,6 @@ import numpy as np
 import pandas as pd
 import re
 from collections import defaultdict
-from collections import Counter
-import h5py
-
 
 def run(context_tree):
   df = empty_frame()

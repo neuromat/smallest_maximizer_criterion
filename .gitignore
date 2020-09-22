@@ -31,7 +31,6 @@ tests/result_images/
 .mr.developer.cfg
 
 # Data files
-*/data/*
 **/cache/*
 **/cache/
 tmp/

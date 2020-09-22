@@ -1,7 +1,7 @@
 import numpy as np
 import math
 import pandas as pd
-from g4l.tree import ContextTree
+from g4l.models import ContextTree
 from datetime import datetime
 from .base import CollectionBase
 from .ctm import CTM
@@ -11,7 +11,6 @@ class Prune(CollectionBase):
 
   def execute(self, max_trees=None):
     self.trees_constructed = 0
-    self.results = pd.DataFrame(columns=['iter_num', 'num_nodes', 'log_likelihood_sum'])
     t = self.apply_ctm()
     self.context_tree = t
     df = self.initialize_pruning(t)

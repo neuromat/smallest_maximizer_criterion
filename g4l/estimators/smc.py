@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from .base import CollectionBase
+from g4l.models import ContextTree
 from .ctm import CTM
 from datetime import datetime
 import logging
@@ -8,40 +9,48 @@ import logging
 
 class SMC(CollectionBase):
 
-  def execute(self, penalty_interval=(0.1, 400), epsilon=0.01):
-    self.intervals = None
-    min_c, max_c = penalty_interval
-    self.trees_constructed = 0
+  def __init__(self, max_depth, penalty_interval=(0.1, 400), epsilon=0.01, selection_criteria=None):
+    super().__init__(selection_criteria=None)
+    self.max_depth = max_depth
+    self.penalty_interval = penalty_interval
+    self.epsilon = epsilon
+    assert(max_depth > 0)
+    assert(epsilon > 0)
 
-    logging.info('Starting CTM Scanner')
-    tree_a = self.__calc_bic(min_c)
-    tree_b = tree_f = self.__calc_bic(max_c)
-    self.add_tree(tree_a.df)
+  def fit(self, X):
+    self.intervals = None
+    self.initial_tree = ContextTree.init_from_sample(X, self.max_depth)
+    min_c, max_c = self.penalty_interval
+    self.trees_constructed = 0
+    logging.debug('Starting CTM Scanner')
+    tree_a = self.__ctm(min_c)
+    tree_b = tree_f = self.__ctm(max_c)
+    self.add_tree(tree_a)
     a, b = (min_c, max_c)
     while not tree_a.equals_to(tree_b):
-      while b - a > epsilon:
+      while b - a > self.epsilon:
         while not tree_a.equals_to(tree_b):
           old_b = b
           old_tree_b = tree_b
           b = (a + b)/2
           tree_b = self.strategy_dynamic(b)
-          #tree_b = self.strategy_default(b)
         a = b
         b = old_b
         tree_b = old_tree_b
       a = b
       tree_a = tree_b
-      self.add_tree(tree_a.df)
+      self.add_tree(tree_a)
       b = max_c
       tree_b = tree_f
     logging.info('Finished CTM Scanner')
+    return self
 
-  def __calc_bic(self, c):
+  def __ctm(self, c):
     self.trees_constructed += 1
-    return CTM(self.context_tree).execute(c)
+    return CTM(c, self.max_depth).fit_tree(self.initial_tree).context_tree
 
   def strategy_default(self, c):
-    bic =  self.__calc_bic(c)
+    bic =  self.__ctm(c)
     logging.debug('c=%s; \t\tt=%s' % (round(c, 4), bic.to_str()))
     return bic
 
@@ -52,7 +61,7 @@ class SMC(CollectionBase):
       self.intervals = dict()
     t = self.__cached_trees(c)
     if not t:
-      t = self.__calc_bic(c)
+      t = self.__ctm(c)
       self.__add_tree(c, t)
       logging.debug("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
     else:

@@ -1,53 +1,50 @@
-from . import generation
-from . import integrity
+from .builders import incremental
+from . import persistence
 import numpy as np
 import pandas as pd
-import g4l
-import re
-from collections import defaultdict
-import h5py
 
 class ContextTree():
   sample = None
   max_depth = None
   df = None
-  transitions_df = None
+  transition_probs = None
 
-  def __init__(self, sample, max_depth=4, source_data_frame=None, tree_initialization_method=generation.incremental):
-    self.sample = sample
+  def __init__(self, max_depth, contexts_dataframe, transition_probs, source_sample=None):
     self.max_depth = max_depth
-    self.transitions_df = pd.DataFrame(columns=['node_idx', 'symbol', 'freq', 'prob'])
-    self.df = None
-    if source_data_frame is not None:
-      self.df = source_data_frame.copy()
-    else:
-      self.df = tree_initialization_method.run(self)
+    self.df = contexts_dataframe
+    self.transition_probs = transition_probs
+    self.sample = source_sample
+
 
   @classmethod
-  def load(cls, file_path, file_name):
-    metadata_file = '%s/%s.metadata.h5' % (file_path, file_name)
-    df_file = '%s/%s.df.pkl' % (file_path, file_name)
-    hf = h5py.File(metadata_file, 'r')
-    sample = g4l.data.Sample(hf.attrs['sample.filename'], hf.attrs['sample.A'])
-    max_depth = hf.attrs['max_depth']
-    df = pd.read_pickle(df_file)
-    hf.close()
-    return ContextTree(sample, max_depth, df)
+  def init_from_sample(cls, X, max_depth, initialization_method=incremental):
+    """ Builds a complete, admissible initial tree from a given sample """
 
-  def save(self, file_path, file_name):
-    metadata_file = '%s/%s.metadata.h5' % (file_path, file_name)
-    df_file = '%s/%s.df.pkl' % (file_path, file_name)
+    contexts, transition_probs = initialization_method.run(X, max_depth)
+    return ContextTree(max_depth, contexts, transition_probs, X)
 
-    self.df.to_pickle(df_file)
-    hf = h5py.File(metadata_file, 'w')
-    hf.attrs['sample.filename'] = self.sample.filename
-    hf.attrs['sample.A'] = self.sample.A
-    hf.attrs['max_depth'] = self.max_depth
-    hf.close()
+  @classmethod
+  def load_from_file(cls, file_path):
+    """ Loads model data from file """
 
-  def evaluate_sample(self, data):
-    sample = g4l.data.Sample('', self.sample.A, data=data)
-    new_tree = ContextTree(sample, max_depth=self.max_depth, source_data_frame=self.df)
+    X, max_depth, contexts, transition_probs = persistence.load_model(file_path)
+    return ContextTree(max_depth, contexts, transition_probs, X)
+
+
+  def copy(self):
+    """ Creates a complete copy of the model """
+    return ContextTree(self.max_depth,
+                      self.df.copy(),
+                      self.transition_probs.copy(),
+                      source_sample=self.sample)
+
+  def save(self, file_path):
+    """ Saves model in a file """
+
+    persistence.save_model(self, file_path)
+
+  def evaluate_sample(self, new_sample):
+    new_tree = self.copy()
     new_tree.df.node_freq = new_tree.df.likelihood = new_tree.df.ps = 0
     new_tree.df.transition_probs = None
     new_tree.df['transition_probs'] = self.df['transition_probs'].astype('object')
@@ -56,22 +53,37 @@ class ContextTree():
     new_tree.calculate_node_prob()
     return new_tree
 
-  # TODO: add `reverse=False` parameter to display contexts as root->leaf
+  def __str__(self):
+    return self.to_str()
+
   def to_str(self):
+    """ Represents context tree as a string
+
+    TODO: add `reverse=False` parameter to display contexts as root->leaf
+    """
+
     return ' '.join(self.leaves())
 
   def num_contexts(self):
+    """ Returns the number of contexts """
+
     return len(self.leaves())
 
   def log_likelihood(self):
+    """ Returns the total log likelihood for all active contexts """
+
     return self.tree().likelihood.sum()
 
   def tree(self):
+    """ Returns the tree with all active contexts ascending by nodes"""
+
     return self.contexts().sort_values(
           by=['node'],
           ascending=(True))
 
   def contexts(self, active_only=True):
+    """ Returns the tree with all active contexts"""
+
     df = self.df
     r = df[~df.node_idx.isin(df[df.active==1].parent_idx)]
     if active_only==True:
@@ -82,6 +94,8 @@ class ContextTree():
     return np.sort(list(self.tree()['node']))
 
   def equals_to(self, context_tree):
+
+    """ Matches the current context tree to another one """
     return self.to_str()==context_tree.to_str()
 
   def calculate_node_frequency(self):

@@ -2,42 +2,57 @@ import pandas as pd
 import re
 import math
 import numpy as np
-import g4l.tree as tr
-import g4l.tree.generation as gen
+from g4l.models import ContextTree
 from .base import Base
 
 class CTM(Base):
+  context_tree = None
 
-  def execute(self, c):
-    # TODO: criar a context_tree
-    data_frame = self.context_tree.df.copy()
-    self.apply_penalization(c, data_frame)
-    data_frame = self.remove_non_contributive_nodes(data_frame)
-    self.select_active_contexts(data_frame)
-    #champion_tree_df = self.final_tree(data_frame)
-    self.cleanup(data_frame)
-    new_tree = tr.ContextTree(self.sample,
-                          self.context_tree.max_depth,
-                          source_data_frame=data_frame)
-    return new_tree
+  def __init__(self, c, max_depth):
+    self.c = c
+    self.max_depth = max_depth
+    assert(c > 0)
+    assert(max_depth > 0)
 
-  def apply_penalization(self, c, data_frame):
+  def fit(self, X):
+    """ Estimates Context Tree model using BIC """
+    t = ContextTree.init_from_sample(X, self.max_depth)
+    self._bic(t, X)
+    self.context_tree = t
+    return self
+
+  def fit_tree(self, tree):
+    """ Estimates Context Tree model using BIC """
+    t = tree.copy()
+    self._bic(t, t.sample)
+    self.context_tree = t
+    return self
+
+  def _bic(self, t, X):
+    self._apply_penalization(self.c, t.df, X)
+    self._remove_non_contributive_nodes(t)
+    self._select_active_contexts(t.df)
+    self._cleanup(t.df)
+
+
+  def _apply_penalization(self, c, data_frame, sample):
     data_frame['lps'] = data_frame.likelihood
     if c is not None:
-      degrees_of_freedom = len(self.A)-1
-      n = len(self.data)
+      degrees_of_freedom = len(sample.A)-1
+      n = len(sample.data)
       data_frame.lps -= np.log(n) * (degrees_of_freedom * c)
 
-  def cleanup(self, df):
+  def _cleanup(self, df):
     df.drop('remove_node', axis='columns', inplace=True)
     df.drop('lps', axis='columns', inplace=True)
 
   # find the largest admissible context tree
-  def remove_non_contributive_nodes(self, df):
+  def _remove_non_contributive_nodes(self, t):
+    df = t.df
     df['remove_node'] = 0
     df['lps2'] = None
     df['lps2'] = df['lps2'].astype(np.float64)
-    for l in list(reversed(range(1, self.context_tree.max_depth))):
+    for l in list(reversed(range(1, self.max_depth))):
       parents = df[(df.depth==l) & (df.freq > 1)]
       child_nodes = df[(df.freq > 1) & (df.parent_idx.isin(parents.node_idx))]
       sum_lps_res = child_nodes.groupby([df.parent_idx]).apply(lambda x: x.lps.sum())
@@ -50,10 +65,10 @@ class CTM(Base):
       nodes_to_remove = parents[(parents.num_child_nodes > 1) & (parents.lps2 > parents.lps)].index
       df.loc[nodes_to_remove, 'remove_node'] = 1
     df.drop('lps2', axis='columns', inplace=True)
-    return df
+    t.df = df
 
-  def select_active_contexts(self, df):
-    for depth in range(1, self.context_tree.max_depth + 1):
+  def _select_active_contexts(self, df):
+    for depth in range(1, self.max_depth + 1):
       for idx, row in df[df.depth==depth].iterrows():
         if depth==1:
           if row.remove_node==0:

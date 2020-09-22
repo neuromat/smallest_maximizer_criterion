@@ -1,21 +1,32 @@
 import numpy as np
 import pandas as pd
-import re
-from collections import defaultdict
 from collections import Counter
-import h5py
 
 
-def run(context_tree):
+def run(sample, max_depth):
+  """
+  Creates contexts and transition probabilites given the sample and a maximum depth value:
+  """
+
   df = pd.DataFrame()
   # count frequencies of each unique subsequence of size 1..max_depth
-  df = count_subsequence_frequencies(df, context_tree)
+  df = count_subsequence_frequencies(df, sample, max_depth)
   # create depth-related info columns
   df = create_indexes(df)
-  calculate_transition_probs(df, context_tree)
-  df = remove_last_level(df, context_tree)
+  # calculate transition probabilities
+  transition_probs = calculate_transition_probs(df)
+  df = remove_last_level(df, max_depth)
   # create parent relationship between nodes
   df = bind_parent_nodes(df)
+  # remove invalid nodes
+  find_admissible_tree(df)
+  # calculate nodes likelihoods
+  df = calculate_likelihood(df, transition_probs)
+  # remove unuseful data
+  df = cleanup(df, max_depth)
+  return df, transition_probs
+
+def find_admissible_tree(df):
   while True:
     df = calculate_num_child_nodes(df)
     leaves = df.loc[~df.index.isin(df.parent_idx)]
@@ -25,14 +36,9 @@ def run(context_tree):
     if len(nodes_to_remove)==0:
       break
     df.drop(index=nodes_to_remove.index, inplace=True)
-  # calculate nodes likelihoods
-  df = calculate_likelihood(df, context_tree)
-  df = cleanup(df, context_tree)
-  return df
 
-
-def remove_last_level(df, context_tree):
-  return df[df.depth <= context_tree.max_depth]
+def remove_last_level(df, max_depth):
+  return df[df.depth <= max_depth]
 
 def sum_log_likelihoods(df_children):
   return (df_children.freq * np.log(df_children.node_prob)).sum()
@@ -40,12 +46,11 @@ def sum_log_likelihoods(df_children):
 def transition_sum_log_probs(df_children):
   return np.sum(np.log(df_children[df_children.node_prob > 0].node_prob))
 
-def count_subsequence_frequencies(df, context_tree):
-  sample_data = context_tree.sample.data
+def count_subsequence_frequencies(df, sample, max_depth):
+  sample_data = sample.data
   # for each position in a sliding window of size max_depth over sample_data,
   #for d in range(1, context_tree.max_depth + 1):
-  for d in range(1, context_tree.max_depth + 2):
-
+  for d in range(1, max_depth + 2):
     # create a dataframe with all subsequences and their frequencies
     substr_freqs = Counter([sample_data[i:i + d] for i in range(len(sample_data)-d+1)])
     df_tmp = pd.DataFrame.from_dict(substr_freqs, orient='index').reset_index()
@@ -64,7 +69,7 @@ def create_indexes(df):
   df.index.name = 'node_idx'
   return df
 
-def calculate_transition_probs(df, context_tree):
+def calculate_transition_probs(df):
   nodes = df[['node', 'freq', 'depth']].copy()
   nodes['prev'] = nodes.node.str.slice(stop=-1)
   nodes['next_symbol'] = nodes.node.str.slice(start=-1)
@@ -73,11 +78,11 @@ def calculate_transition_probs(df, context_tree):
   nodes['idx'] = nodes.set_index(['node']).node_idx.astype(int)
   nodes = nodes[nodes.depth > 1]
   nodes['idx'] = nodes['idx'].astype(int)
-  freqs = nodes[['idx', 'next_symbol', 'freq']].reset_index(drop=True)
-  all_transition_freqs = freqs.groupby(['idx']).apply(lambda  x: x.freq.sum())
-  freqs.set_index(['idx'], inplace=True)
-  freqs['prob'] = freqs.freq / all_transition_freqs.loc[freqs.index]
-  context_tree.transitions_df = freqs
+  transition_probs = nodes[['idx', 'next_symbol', 'freq']].reset_index(drop=True)
+  all_transition_freqs = transition_probs.groupby(['idx']).apply(lambda  x: x.freq.sum())
+  transition_probs.set_index(['idx'], inplace=True)
+  transition_probs['prob'] = transition_probs.freq / all_transition_freqs.loc[transition_probs.index]
+  return transition_probs
 
 def bind_parent_nodes(df):
   df['parent_node'] = df.node.str.slice(start=1)
@@ -99,16 +104,14 @@ def calculate_num_child_nodes(df):
   return df
 
 
-def calculate_likelihood(df, context_tree):
+def calculate_likelihood(df, transition_probs):
   #df.set_index(['node_idx'], inplace=True)
-  x = context_tree.transitions_df
-  context_tree.transitions_df['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
-  df['likelihood'] = context_tree.transitions_df.groupby(['idx']).apply(lambda s: s.likelihood.sum())
+  x = transition_probs
+  transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
+  df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
   return df
 
-def cleanup(df, context_tree):
+def cleanup(df, max_depth):
   df.reset_index(inplace=True)
-  df = df[df.depth <= context_tree.max_depth]
-  #df['final'] = 0
-  #df['flag'] = 0
+  df = df[df.depth <= max_depth]
   return df
