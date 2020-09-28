@@ -9,19 +9,29 @@ import logging
 
 class Prune(CollectionBase):
 
-  def execute(self, max_trees=None):
+  def __init__(self, max_depth, selection_criteria=None, max_trees=None):
+    super().__init__(selection_criteria=None)
+    self.max_depth = max_depth
+    self.max_trees = max_trees
+    assert(max_depth > 0)
+
+  def fit(self, X):
+    initial_tree = ContextTree.init_from_sample(X, self.max_depth)
     self.trees_constructed = 0
-    t = self.apply_ctm()
-    self.context_tree = t
-    df = self.initialize_pruning(t)
-    #import code; code.interact(local=dict(globals(), **locals()))
-    self.perform_pruning(df, max_trees)
+    t = self.apply_ctm(initial_tree)
+    self.initialize_pruning(t)
+    self.perform_pruning(t)
     self.context_trees = list(reversed(self.context_trees))
+    return self
 
+  def optimal_tree(self):
+    # TODO: implement as abstract method,
+    # use selection criteria instead returning first tree
+    return self.context_trees[0]
 
-  def apply_ctm(self):
+  def apply_ctm(self, tree):
     self.trees_constructed += 1
-    return CTM(self.context_tree).execute(None)
+    return CTM(None, self.max_depth).fit_tree(tree).context_tree
 
   def initialize_pruning(self, t):
     df = t.df.copy()
@@ -29,7 +39,7 @@ class Prune(CollectionBase):
     df.loc[df.likelihood==0, 'children_contrib'] = -math.inf
     df.loc[df.active==0, 'num_total_leaves'] = 0
     df.loc[df.active==0, 'num_direct_leaves'] = 0
-    return df
+    t.df = df
 
   def update_parent_counts(self, df, nodes_idx):
     updated_nodes = []
@@ -53,9 +63,11 @@ class Prune(CollectionBase):
     df.loc[leaf_counts.index, 'children_contrib'] = contrib
     self.update_parent_counts(df, leaf_counts.index.values)
 
-  def perform_pruning(self, df, max_trees):
+  def perform_pruning(self, t):
+    max_trees = self.max_trees
     iteration_num = 0
-    self.add_tree(df)
+    self.add_tree(t)
+    df = t.df
     while True:
       self.update_counts(df)
       candidate_nodes = df[(df.num_total_leaves==df.num_direct_leaves) & (df.num_total_leaves > 0) & (df.depth > 0)]
@@ -70,7 +82,9 @@ class Prune(CollectionBase):
       #  import code; code.interact(local=dict(globals(), **locals()))
       self.remove_leaves(df, less_contributive_node_idx)
       self.mark_as_leaf(df, less_contributive_node_idx)
-      self.add_tree(df)
+      t2 = t.copy()
+      t2.df = df
+      self.add_tree(t2)
       iteration_num += 1
       logdata = (iteration_num, len(df[df.active==1]), less_contributive_node_idx)
       logging.debug("Iteration: %s ; leaves: %s; pruned node_idx: %s" % logdata)

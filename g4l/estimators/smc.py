@@ -10,12 +10,12 @@ import logging
 class SMC(CollectionBase):
 
   def __init__(self, max_depth, penalty_interval=(0.1, 400), epsilon=0.01, selection_criteria=None):
+    assert(max_depth > 0)
+    assert(epsilon > 0)
     super().__init__(selection_criteria=None)
     self.max_depth = max_depth
     self.penalty_interval = penalty_interval
     self.epsilon = epsilon
-    assert(max_depth > 0)
-    assert(epsilon > 0)
 
   def fit(self, X):
     self.intervals = None

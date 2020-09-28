@@ -100,15 +100,22 @@ def bind_parent_nodes(df):
 
 def calculate_num_child_nodes(df):
   num_child_nodes = df[df.depth>1].reset_index(drop=False).groupby(['parent_idx']).apply(lambda x: x.count().node_idx)
-  df['num_child_nodes'] = num_child_nodes
+  try:
+    df['num_child_nodes'] = num_child_nodes
+  except ValueError:
+    df['num_child_nodes'] = 0
   return df
 
 
 def calculate_likelihood(df, transition_probs):
   #df.set_index(['node_idx'], inplace=True)
   x = transition_probs
-  transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
-  df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
+  try:
+    transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
+    df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
+  except:
+    import code; code.interact(local=dict(globals(), **locals()))
+
   return df
 
 def cleanup(df, max_depth):

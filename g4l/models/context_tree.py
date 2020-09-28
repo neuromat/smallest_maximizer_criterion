@@ -1,7 +1,11 @@
 from .builders import incremental
 from . import persistence
+from collections import Counter
+from .builders.tree_builder import ContextTreeBuilder
 import numpy as np
+import math
 import pandas as pd
+import regex as re
 
 class ContextTree():
   sample = None
@@ -43,6 +47,21 @@ class ContextTree():
 
     persistence.save_model(self, file_path)
 
+  def sample_likelihood(self, sample):
+    contexts_in_resample = self.tree()[['node_idx', 'node']]
+    fn = lambda x: [m.end(0)+1 for m in re.finditer(x, sample.data, overlapped=True)]
+    convert_to_symbols_fn = lambda x: [sample.data[i] for i in x if i < len(sample.data)]
+    next_symbols_positions = contexts_in_resample.node.apply(fn)
+    symbol_freqs = next_symbols_positions.apply(convert_to_symbols_fn)
+    contexts_in_resample['symbol_freqs'] = symbol_freqs.apply(lambda x: [Counter(x)[s] for s in sample.A])
+    contexts_in_resample['count'] = symbol_freqs.apply(lambda x: len(x))
+    builder = ContextTreeBuilder(sample.A)
+    for idx, row in contexts_in_resample.iterrows():
+      builder.add_context(row.node, row.symbol_freqs)
+    t = builder.build()
+    incremental.calculate_likelihood(t.df, t.transition_probs)
+    return t.log_likelihood(), t
+
   def evaluate_sample(self, new_sample):
     new_tree = self.copy()
     new_tree.df.node_freq = new_tree.df.likelihood = new_tree.df.ps = 0
@@ -63,6 +82,27 @@ class ContextTree():
     """
 
     return ' '.join(self.leaves())
+
+  def find_suffix(self, sample):
+    contexts = self.tree().set_index('node')['node_idx']
+    for i in range(1, self.max_depth+1):
+      substr = sample[-i:]
+      try:
+        return substr, contexts.loc[substr]
+      except KeyError:
+        pass
+
+  def generate_sample(self, sample_size, A):
+    """ Generates a sample from this model """
+
+    df = self.tree().set_index(['node_idx'])
+    sample = df[df.depth==self.max_depth].sample()
+    s = sample.node.values[0]
+    node_idx = sample.index
+    while len(s) < sample_size:
+      s += self._next_symbol(node_idx, A)
+      _, node_idx = self.find_suffix(s)
+    return s
 
   def num_contexts(self):
     """ Returns the number of contexts """
@@ -112,3 +152,9 @@ class ContextTree():
       fr, pb = gen.children_freq_prob(row.node, row.node_freq, self.A, self.sample.data)
       self.df.at[i, 'transition_probs'] = list(pb)
       self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)
+
+  def _next_symbol(self, node_idx, A):
+    transitions = self.transition_probs.loc[node_idx].set_index(['next_symbol'])
+    ps = transitions.prob.values
+    elements = transitions.loc[A].index
+    return np.random.choice(elements, 1, p=ps)[0]

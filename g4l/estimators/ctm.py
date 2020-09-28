@@ -11,7 +11,6 @@ class CTM(Base):
   def __init__(self, c, max_depth):
     self.c = c
     self.max_depth = max_depth
-    assert(c > 0)
     assert(max_depth > 0)
 
   def fit(self, X):

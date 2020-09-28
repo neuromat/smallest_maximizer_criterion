@@ -44,6 +44,8 @@ docs/auto_examples/
 # Testing and checkpoints
 .ipynb_checkpoints
 .coverage.*
+.pytest_cache/
+.pytest_cache/*
 
 #IDE
 .sublime/
