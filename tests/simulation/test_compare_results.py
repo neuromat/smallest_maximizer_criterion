@@ -31,14 +31,16 @@ def test_compare_results():
         #print(''.join(context))
 
 def test_compare_results2():
-  import code; code.interact(local=dict(globals(), **locals()))
   df = pd.read_csv(results_folder + '/mat_compare.csv')
   df['num_contexts'] = df.context.apply(lambda x: len(x.split(' ')))
   df = df.sort_values(['sample_idx', 'num_contexts'])
   df = df[['sample_idx', 'num_contexts', 'context']].set_index(['sample_idx', 'num_contexts'])
 
   df2 = pd.read_csv(results_folder + '/model1.csv')
-  df2 = df2[['sample_idx', 'num_contexts', 'tree']].set_index(['sample_idx', 'num_contexts'])
+  df2 = df2[df2.sample_size==10000]
+  df2 = df2[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
+  Counter(df2[df2.opt==1].reset_index().num_contexts.values)
+  import code; code.interact(local=dict(globals(), **locals()))
 
 
 
