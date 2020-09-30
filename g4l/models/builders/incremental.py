@@ -82,6 +82,7 @@ def calculate_transition_probs(df):
   all_transition_freqs = transition_probs.groupby(['idx']).apply(lambda  x: x.freq.sum())
   transition_probs.set_index(['idx'], inplace=True)
   transition_probs['prob'] = transition_probs.freq / all_transition_freqs.loc[transition_probs.index]
+  transition_probs = transition_probs[transition_probs.freq > 0]
   return transition_probs
 
 def bind_parent_nodes(df):
@@ -108,13 +109,9 @@ def calculate_num_child_nodes(df):
 
 
 def calculate_likelihood(df, transition_probs):
-  #df.set_index(['node_idx'], inplace=True)
   x = transition_probs
-  try:
-    transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
-    df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
-  except:
-    import code; code.interact(local=dict(globals(), **locals()))
+  transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
+  df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
 
   return df
 

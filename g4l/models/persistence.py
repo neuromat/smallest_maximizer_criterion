@@ -23,17 +23,22 @@ def save_model(context_tree, filename):
 
 def _write_sample(h5obj, sample):
   if sample is not None:
-    h5obj.attrs['sample.filename'] = sample.filename
-    h5obj.attrs['sample.A'] = sample.A
+    if sample.filename:
+      h5obj.attrs['sample.filename'] = sample.filename
+    if sample.A:
+      h5obj.attrs['sample.A'] = sample.A
     if sample.separator is not None:
       h5obj.attrs['sample.separator'] = sample.separator
 
-def _read_sample(h5obj):
-  try:
-    sep = h5obj.attrs['sample.separator']
-  except KeyError:
-    sep = None
-  return Sample(h5obj.attrs['sample.filename'],
-                  h5obj.attrs['sample.A'],
-                  sep)
 
+def _read_sample(h5obj):
+  return Sample(  try_key(h5obj, 'sample.filename'),
+                  try_key(h5obj, 'sample.A'),
+                  try_key(h5obj, 'sample.separator'))
+
+
+def try_key(h5obj, attr_key):
+  try:
+    return h5obj.attrs[attr_key]
+  except KeyError:
+    return ''

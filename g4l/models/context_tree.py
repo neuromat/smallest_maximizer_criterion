@@ -53,11 +53,13 @@ class ContextTree():
     convert_to_symbols_fn = lambda x: [sample.data[i] for i in x if i < len(sample.data)]
     next_symbols_positions = contexts_in_resample.node.apply(fn)
     symbol_freqs = next_symbols_positions.apply(convert_to_symbols_fn)
+    symbol_freqs = symbol_freqs[symbol_freqs.str.len()>0]
     contexts_in_resample['symbol_freqs'] = symbol_freqs.apply(lambda x: [Counter(x)[s] for s in sample.A])
     contexts_in_resample['count'] = symbol_freqs.apply(lambda x: len(x))
     builder = ContextTreeBuilder(sample.A)
     for idx, row in contexts_in_resample.iterrows():
-      builder.add_context(row.node, row.symbol_freqs)
+      if hasattr(row.symbol_freqs, "__len__"):
+        builder.add_context(row.node, row.symbol_freqs)
     t = builder.build()
     incremental.calculate_likelihood(t.df, t.transition_probs)
     return t.log_likelihood(), t

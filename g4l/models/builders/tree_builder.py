@@ -29,6 +29,7 @@ class ContextTreeBuilder:
         freqs = context[1]
         df.loc[len(df)] = [i, a, int(freqs[a_i]), freqs[a_i]/sum(freqs)]
     df.set_index(['idx'], inplace=True)
+    df = df[df.freq > 0]
     return df
 
 
@@ -42,8 +43,12 @@ class ContextTreeBuilder:
     df['depth'] = df.node.str.len()
     df = self._build_parents(df)
     df.sort_values(['depth'], inplace=True)
-    incremental.bind_parent_nodes(df)
-    incremental.calculate_num_child_nodes(df)
+    df.reset_index(drop=False, inplace=True)
+    try:
+      incremental.bind_parent_nodes(df)
+      incremental.calculate_num_child_nodes(df)
+    except:
+      import code; code.interact(local=dict(globals(), **locals()))
     df.reset_index(inplace=True)
     return df
 
@@ -51,14 +56,14 @@ class ContextTreeBuilder:
 
   def _build_parents(self, df):
     max_depth = df.node.str.len().max()
-    internal_nodes = [df.node.str.slice(stop=-v).values for v in range(max_depth)]
+    internal_nodes = [df.node.str.slice(start=-v).values for v in range(max_depth)]
     internal_nodes = np.unique(np.hstack(internal_nodes))
     internal_nodes = [i for i in internal_nodes if len(i) > 0]
+    internal_nodes = [i for i in internal_nodes if i not in df.node.values]
     df.set_index(['node_idx'], inplace=True)
     for n in internal_nodes:
-      if not n in df.node.values:
-        freqs_sum = df[df.node.str.slice(start=-len(n))==n].freq.sum()
-        df.loc[len(df)] = [n, int(freqs_sum), 0, len(n)]
+      freqs_sum = df[df.node.str.slice(start=-len(n))==n].freq.sum()
+      df.loc[len(df)] = [n, int(freqs_sum), 0, len(n)]
     return df
 
 

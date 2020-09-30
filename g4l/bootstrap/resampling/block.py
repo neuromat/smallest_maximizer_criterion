@@ -9,6 +9,11 @@ class BlockResampling(ResamplingBase):
     self.renewal_point = renewal_point
     self.sample = sample
 
+  def iterate(self, file):
+    resamples = open(file).read().split('\n')[:-1]
+    for i, resample in enumerate(resamples):
+      yield (i, resample)
+
   def generate(self, resample_size, file):
     data = self.sample.data
     slices = np.array(np.char.split([data], str(self.renewal_point)[0]))[0]

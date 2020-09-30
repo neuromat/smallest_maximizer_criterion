@@ -11,14 +11,8 @@ class Base():
 
 
 class CollectionBase(Base):
-  def __init__(self, selection_criteria=None):
+  def __init__(self):
     self.context_trees = []
-    self.selection_criteria = selection_criteria
-
-  def optimal_tree(self, args):
-    if self.selection_criteria is None:
-      return None
-    return self.selection_criteria(self.context_trees, *args)
 
   def add_tree(self, new_tree):
     print("appended", new_tree)

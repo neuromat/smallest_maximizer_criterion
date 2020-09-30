@@ -9,8 +9,7 @@ import logging
 
 class Prune(CollectionBase):
 
-  def __init__(self, max_depth, selection_criteria=None, max_trees=None):
-    super().__init__(selection_criteria=None)
+  def __init__(self, max_depth, max_trees=None):
     self.max_depth = max_depth
     self.max_trees = max_trees
     assert(max_depth > 0)
@@ -64,10 +63,11 @@ class Prune(CollectionBase):
     self.update_parent_counts(df, leaf_counts.index.values)
 
   def perform_pruning(self, t):
+    self.context_trees = []
     max_trees = self.max_trees
     iteration_num = 0
     self.add_tree(t)
-    df = t.df
+    df = t.df.copy()
     while True:
       self.update_counts(df)
       candidate_nodes = df[(df.num_total_leaves==df.num_direct_leaves) & (df.num_total_leaves > 0) & (df.depth > 0)]
@@ -78,12 +78,10 @@ class Prune(CollectionBase):
       lps2 = candidate_children.groupby(['parent_idx']).likelihood.sum()
       diff = (lps2 - candidate_nodes.likelihood)
       less_contributive_node_idx = diff.sort_values().index[0]
-      #if less_contributive_node_idx==5:
-      #  import code; code.interact(local=dict(globals(), **locals()))
       self.remove_leaves(df, less_contributive_node_idx)
       self.mark_as_leaf(df, less_contributive_node_idx)
       t2 = t.copy()
-      t2.df = df
+      t2.df = df.copy()
       self.add_tree(t2)
       iteration_num += 1
       logdata = (iteration_num, len(df[df.active==1]), less_contributive_node_idx)
