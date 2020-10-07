@@ -44,11 +44,8 @@ class ContextTreeBuilder:
     df = self._build_parents(df)
     df.sort_values(['depth'], inplace=True)
     df.reset_index(drop=False, inplace=True)
-    try:
-      incremental.bind_parent_nodes(df)
-      incremental.calculate_num_child_nodes(df)
-    except:
-      import code; code.interact(local=dict(globals(), **locals()))
+    incremental.bind_parent_nodes(df)
+    incremental.calculate_num_child_nodes(df)
     df.reset_index(inplace=True)
     return df
 

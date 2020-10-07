@@ -112,7 +112,6 @@ def calculate_likelihood(df, transition_probs):
   x = transition_probs
   transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
   df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
-
   return df
 
 def cleanup(df, max_depth):

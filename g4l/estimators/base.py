@@ -15,5 +15,4 @@ class CollectionBase(Base):
     self.context_trees = []
 
   def add_tree(self, new_tree):
-    print("appended", new_tree)
     self.context_trees.append(new_tree)

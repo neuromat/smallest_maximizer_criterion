@@ -11,6 +11,7 @@ from g4l.data import persistence
 from g4l.data import Sample
 from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
+from g4l.bootstrap.resampling import TreeSourceResampling
 import logging
 
 #from g4l.data import Sample
@@ -23,7 +24,7 @@ PATH = os.path.abspath('./examples/example2/samples')
 RESAMPLES_FOLDER = os.path.abspath('./examples/example2/tmp/resamples')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
 SAMPLE_SIZES = [5000, 10000, 20000]
-NUM_RESAMPLES = 100
+NUM_RESAMPLES = 5
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -41,7 +42,7 @@ def run_simulation(model_name):
   for sample_size in SAMPLE_SIZES:
     for sample_idx, sample in fetch_samples(model_name, sample_size, MAX_SAMPLES):
       print('sample:', sample_size, sample_idx)
-      resample_factory = BlockResampling(sample, renewal_point=RENEWAL_POINT)
+      resample_factory = TreeSourceResampling(model, sample)
       folder_vars = (RESAMPLES_FOLDER, model_name, sample_size, sample_idx)
       bootstrap = Bootstrap(resample_factory,
                             '%s/%s_%s_%s' % folder_vars,
@@ -49,7 +50,7 @@ def run_simulation(model_name):
                             resample_sizes=resample_sizes(sample_size),
                             alpha=0.01)
       print("estimating champion trees")
-      champion_trees = smc(sample)
+      champion_trees = prune(sample)
 
       print("finding optimal trees")
       opt_idx = bootstrap.find_optimal_tree(champion_trees)
@@ -57,7 +58,7 @@ def run_simulation(model_name):
         opt = int(tree_idx==opt_idx)
         obj = { 'model_name': model_name,
                 'sample_size': sample_size,
-                'method': 'smc',
+                'method': 'prune',
                 'tree_idx': tree_idx,
                 'tree': champion_tree.to_str(),
                 'num_contexts': champion_tree.num_contexts(),
@@ -75,7 +76,8 @@ def bic(sample):
   #return sort_trees([CTM(c, max_depth).fit(sample).context_tree])
 
 def smc(sample):
-  return sort_trees(SMC(max_depth, penalty_interval=(0, 500)).fit(sample).context_trees)
+  #import code; code.interact(local=dict(globals(), **locals()))
+  return sort_trees(SMC(max_depth, penalty_interval=(0, 500), epsilon=0.00001).fit(sample).context_trees)
 
 def prune(sample):
   return sort_trees(Prune(max_depth).fit(sample).context_trees)

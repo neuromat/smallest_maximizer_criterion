@@ -11,11 +11,12 @@ import shutil
 import math
 
 class Bootstrap():
-  def __init__(self, resample_factory, temp_folder, num_resamples, resample_sizes=(100, 500), alpha=0.01):
+  def __init__(self, resample_factory, temp_folder, num_resamples, resample_sizes=(100, 500), alpha=0.01, num_cores=3):
     self.resample_factory = resample_factory
     self.temp_folder = temp_folder
     self.num_resamples = num_resamples
     self.resample_sizes = resample_sizes
+    self.num_cores = num_cores
     self.alpha = alpha
 
   def find_optimal_tree(self, champion_trees):
@@ -29,7 +30,7 @@ class Bootstrap():
       L = parallel.calculate_likelihoods( self.temp_folder,
                                           champion_trees,
                                           self._resample_file(j),
-                                          num_cores=3)
+                                          num_cores=self.num_cores)
       l_current[:, j] = L[0]
     for t, tree in enumerate(champion_trees[1:]):
       l_next = np.zeros((self.num_resamples, 2))

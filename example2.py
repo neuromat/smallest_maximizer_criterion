@@ -5,15 +5,23 @@ Linguistic case study
 Usage: ./example1.py
 '''
 
-# Following the conventions used by scikit-learn
-# https://scikit-learn.org/stable/developers/develop.html
-
-from g4l import SmallestMaximizerCriterion
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.pyplot import boxplot
+import itertools
+import glob
+from scipy import stats
+import sys
+sys.path.insert(0,'../..')
+import g4l.display
+from g4l.estimators import SMC
+from g4l.models import ContextTree
 from g4l.estimators.prune import Prune
-from g4l.evaluation.bootstrap import Bootstrap
-from g4l.evaluation.t_test import TTest
+from g4l.bootstrap.resampling import BlockResampling
+from g4l.bootstrap import Bootstrap
 from g4l.data import Sample
-import g4l.tree.generation as gen
+
 
 import logging
 logging.basicConfig(
@@ -25,30 +33,30 @@ logging.basicConfig(
     ]
 )
 
-# Create a sample object instance
-X = Sample('examples/example1/publico.txt', [0, 1, 2, 3, 4])
 cache_dir = 'examples/example1/cache'
-
-smc = SmallestMaximizerCriterion(Prune(), tree_initialization_method=gen.incremental_strategy, max_depth=4, read_cache_dir=None, write_cache_dir=cache_dir)
-
-
-# Define the champion trees strategy to be used
+max_depth = 4
 num_resamples = 200
-bootstrap = Bootstrap(X, partition_string='4')
-small_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.3)
-large_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.9)
-t_test = TTest(small_resamples, large_resamples, alpha=0.01)
-
-# Run estimator
-smc.fit(X, t_test, processors=3)
-
-# Returns the best tree
-logging.info('best tree: %s' % smc.best_tree().to_str())
-
-# Evaluates a new sample with the model with previously fitted params
-#smc.score(Xb)
+X_bp = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
+X_ep = Sample('examples/example1/publico.txt', [0, 1, 2, 3, 4])
 
 
-# optional one-liner call
-#smc.fit(X, max_depth=4).score(Xb)
-#     import code; code.interact(local=dict(globals(), **locals()))
+# Instantiates SMC object
+smc = SMC(max_depth, penalty_interval=(0, 400), epsilon=0.01, cache_dir=cache_dir)
+
+# Estimates champion trees given a sample
+smc.fit(X_bp)
+
+
+# Select resampling generation strategy
+resampling_factory = BlockResampling(X_bp, renewal_point='4')
+
+
+# Estimates optimal tree using bootstrap procedure
+datalen = len(X_bp.data)
+bootstrap = Bootstrap(resampling_factory,
+                    '%s/resamples/%s' % (cache_dir, 'bp'),
+                    num_resamples,
+                    resample_sizes=(datalen  * 0.3, datalen * 0.9),
+                    alpha=0.01)
+opt_idx = bootstrap.find_optimal_tree(smc.context_trees)
+print("Optimal Context tree:", smc.context_trees[opt_idx])

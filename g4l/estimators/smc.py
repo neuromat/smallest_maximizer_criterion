@@ -4,20 +4,31 @@ from .base import CollectionBase
 from g4l.models import ContextTree
 from .ctm import CTM
 from datetime import datetime
+from hashlib import md5
+import pickle
 import logging
 
 
 class SMC(CollectionBase):
 
-  def __init__(self, max_depth, penalty_interval=(0.1, 400), epsilon=0.01, selection_criteria=None):
+  def __init__(self, max_depth, penalty_interval=(0.1, 400), epsilon=0.01, cache_dir=None, callback_fn=None):
     assert(max_depth > 0)
     assert(epsilon > 0)
     super().__init__()
     self.max_depth = max_depth
     self.penalty_interval = penalty_interval
     self.epsilon = epsilon
+    self.cache_dir = cache_dir
+    self.callback_fn = callback_fn
+    self.tresholds = []
 
   def fit(self, X):
+    ##try:
+    ##  self._load_cache(X)
+    ##  return self
+    ##except FileNotFoundError:
+    ##  logging.debug('cache file not found')
+    ##  pass
     self.intervals = None
     self.initial_tree = ContextTree.init_from_sample(X, self.max_depth)
     min_c, max_c = self.penalty_interval
@@ -25,7 +36,7 @@ class SMC(CollectionBase):
     logging.debug('Starting CTM Scanner')
     tree_a = self.__ctm(min_c)
     tree_b = tree_f = self.__ctm(max_c)
-    self.add_tree(tree_a)
+    self._add_tree(tree_a, min_c)
     a, b = (min_c, max_c)
     while not tree_a.equals_to(tree_b):
       while b - a > self.epsilon:
@@ -39,15 +50,44 @@ class SMC(CollectionBase):
         tree_b = old_tree_b
       a = b
       tree_a = tree_b
-      self.add_tree(tree_a)
+      self._add_tree(tree_a, b)
       b = max_c
       tree_b = tree_f
     logging.info('Finished CTM Scanner')
+    ##try:
+    ##  self._save_cache(X)
+    ##except:
+    ##  pass
     return self
 
   def __ctm(self, c):
     self.trees_constructed += 1
     return CTM(c, self.max_depth).fit_tree(self.initial_tree).context_tree
+
+  def _add_tree(self, t, c):
+    self.add_tree(t)
+    self.tresholds.append(c)
+    try:
+      self.callback_fn((c, t))
+    except TypeError:
+      pass
+
+  def _load_cache(self, X):
+    strg = X.data + str(self.penalty_interval) + str(self.epsilon)
+    cachefile = md5((strg).encode('utf-8')).hexdigest()
+    cachefile = '%s/%s.pkl' % (self.cache_dir, cachefile)
+    with open(cachefile) as f:
+      r = pickle.load(f)
+
+  def _save_cache(self, X):
+    if self.cache_dir is None:
+      raise FileNotFoundError
+    strg = X.data + str(self.penalty_interval) + str(self.epsilon)
+    cachefile = md5((strg).encode('utf-8')).hexdigest()
+    cachefile = '%s/%s.pkl' % (self.cache_dir, cachefile)
+    with open(cachefile, 'wb') as f:
+      import code; code.interact(local=dict(globals(), **locals()))
+      pickle.dump(self, f)
 
   def strategy_default(self, c):
     bic =  self.__ctm(c)

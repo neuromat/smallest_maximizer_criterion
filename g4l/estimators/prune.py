@@ -15,12 +15,12 @@ class Prune(CollectionBase):
     assert(max_depth > 0)
 
   def fit(self, X):
-    initial_tree = ContextTree.init_from_sample(X, self.max_depth)
+    t = ContextTree.init_from_sample(X, self.max_depth)
     self.trees_constructed = 0
-    t = self.apply_ctm(initial_tree)
+    #t = self.apply_ctm(initial_tree)
     self.initialize_pruning(t)
     self.perform_pruning(t)
-    self.context_trees = list(reversed(self.context_trees))
+    #self.context_trees = list(reversed(self.context_trees))
     return self
 
   def optimal_tree(self):

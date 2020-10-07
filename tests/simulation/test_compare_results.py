@@ -1,6 +1,7 @@
 import os
 from scipy import io
 import pandas as pd
+from collections import Counter
 import sys
 import pytest
 sys.path.insert(0, os.path.abspath('.'))
@@ -36,10 +37,32 @@ def test_compare_results2():
   df = df.sort_values(['sample_idx', 'num_contexts'])
   df = df[['sample_idx', 'num_contexts', 'context']].set_index(['sample_idx', 'num_contexts'])
 
-  df2 = pd.read_csv(results_folder + '/model1.csv')
-  df2 = df2[df2.sample_size==10000]
+  df2 = pd.read_csv(results_folder + '/model1.smc.tmp.csv')
+  df2 = df2[df2.sample_size==5000]
   df2 = df2[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
-  Counter(df2[df2.opt==1].reset_index().num_contexts.values)
+  ct = Counter(df2[df2.opt==1].reset_index().num_contexts.values)
+  ct[4]/len(df2[df2.opt==1])
+
+
+  import scipy.io as sio
+  from g4l.models import ContextTree
+  from g4l.data import Sample
+  from g4l.estimators import CTM
+
+  filename = './examples/example2/samples/model1_5000.mat'
+  arr = sio.loadmat(filename)['model1_5000']
+  dt = ''.join([str(x) for x in arr[0]])
+  sample = Sample(None, [0, 1], data=dt)
+  ctm = CTM(0, 6)
+  ctm.fit(sample)
+  print(ctm.context_tree.to_str())
+
+  import code; code.interact(local=dict(globals(), **locals()))
+
+  df3 = pd.read_csv(results_folder + '/model1.csv')
+  df3 = df3[df3.sample_size==5000]
+  df3 = df3[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
+
   import code; code.interact(local=dict(globals(), **locals()))
 
 

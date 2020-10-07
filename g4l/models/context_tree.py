@@ -18,6 +18,7 @@ class ContextTree():
     self.df = contexts_dataframe
     self.transition_probs = transition_probs
     self.sample = source_sample
+    self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
 
 
   @classmethod
@@ -25,7 +26,8 @@ class ContextTree():
     """ Builds a complete, admissible initial tree from a given sample """
 
     contexts, transition_probs = initialization_method.run(X, max_depth)
-    return ContextTree(max_depth, contexts, transition_probs, X)
+    ct = ContextTree(max_depth, contexts, transition_probs, X)
+    return ct
 
   @classmethod
   def load_from_file(cls, file_path):
@@ -100,7 +102,7 @@ class ContextTree():
     df = self.tree().set_index(['node_idx'])
     sample = df[df.depth==self.max_depth].sample()
     s = sample.node.values[0]
-    node_idx = sample.index
+    node_idx = sample.index[0]
     while len(s) < sample_size:
       s += self._next_symbol(node_idx, A)
       _, node_idx = self.find_suffix(s)
@@ -156,7 +158,8 @@ class ContextTree():
       self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)
 
   def _next_symbol(self, node_idx, A):
-    transitions = self.transition_probs.loc[node_idx].set_index(['next_symbol'])
+    transitions = self.transition_probs.reset_index()
+    transitions = transitions[transitions.idx==node_idx] #.set_index(['next_symbol'])
     ps = transitions.prob.values
-    elements = transitions.loc[A].index
+    elements = transitions.next_symbol.values #loc[A].index
     return np.random.choice(elements, 1, p=ps)[0]
