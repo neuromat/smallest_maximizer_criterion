@@ -42,7 +42,7 @@ def run_simulation(model_name):
   for sample_size in SAMPLE_SIZES:
     for sample_idx, sample in fetch_samples(model_name, sample_size, MAX_SAMPLES):
       print('sample:', sample_size, sample_idx)
-      resample_factory = TreeSourceResampling(model, sample)
+      resample_factory = BlockResampling(sample, RENEWAL_POINT)
       folder_vars = (RESAMPLES_FOLDER, model_name, sample_size, sample_idx)
       bootstrap = Bootstrap(resample_factory,
                             '%s/%s_%s_%s' % folder_vars,
@@ -58,11 +58,11 @@ def run_simulation(model_name):
         opt = int(tree_idx==opt_idx)
         obj = { 'model_name': model_name,
                 'sample_size': sample_size,
+                'sample_idx': sample_idx,
                 'method': 'prune',
                 'tree_idx': tree_idx,
                 'tree': champion_tree.to_str(),
                 'num_contexts': champion_tree.num_contexts(),
-                'sample_idx': sample_idx,
                 'opt': opt }
         use_header = (not os.path.exists(results_file))
         df = pd.DataFrame.from_dict([obj])

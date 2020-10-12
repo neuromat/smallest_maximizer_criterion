@@ -44,18 +44,18 @@ def test_compare_results2():
   ct[4]/len(df2[df2.opt==1])
 
 
-  import scipy.io as sio
-  from g4l.models import ContextTree
-  from g4l.data import Sample
-  from g4l.estimators import CTM
-
-  filename = './examples/example2/samples/model1_5000.mat'
-  arr = sio.loadmat(filename)['model1_5000']
-  dt = ''.join([str(x) for x in arr[0]])
-  sample = Sample(None, [0, 1], data=dt)
-  ctm = CTM(0, 6)
-  ctm.fit(sample)
-  print(ctm.context_tree.to_str())
+  #  import scipy.io as sio
+  #  from g4l.models import ContextTree
+  #  from g4l.data import Sample
+  #  from g4l.estimators import CTM
+  #
+  #  filename = './examples/example2/samples/model1_5000.mat'
+  #  arr = sio.loadmat(filename)['model1_5000']
+  #  dt = ''.join([str(x) for x in arr[0]])
+  #  sample = Sample(None, [0, 1], data=dt)
+  #  ctm = CTM(0, 6)
+  #  ctm.fit(sample)
+  #  print(ctm.context_tree.to_str())
 
   import code; code.interact(local=dict(globals(), **locals()))
 
