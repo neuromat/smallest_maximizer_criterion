@@ -23,8 +23,8 @@ A = ['0', '1']
 PATH = os.path.abspath('./examples/example2/samples')
 RESAMPLES_FOLDER = os.path.abspath('./examples/example2/tmp/resamples')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
-SAMPLE_SIZES = [5000, 10000, 20000]
-NUM_RESAMPLES = 5
+SAMPLE_SIZES = [20000, 5000, 10000]
+NUM_RESAMPLES = 7
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -83,7 +83,7 @@ def prune(sample):
   return sort_trees(Prune(max_depth).fit(sample).context_trees)
 
 def sort_trees(context_trees):
-  return sorted(context_trees, key=lambda x: x.num_contexts())
+  return sorted(context_trees, key=lambda x: -x.num_contexts())
 
 def fetch_samples(model_name, sample_size, max_samples=math.inf):
   i = -1

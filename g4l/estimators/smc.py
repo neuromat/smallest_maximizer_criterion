@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from .base import CollectionBase
 from g4l.models import ContextTree
-from .ctm import CTM
+from . import BIC
 from datetime import datetime
 from hashlib import md5
 import pickle
@@ -33,9 +33,8 @@ class SMC(CollectionBase):
     self.initial_tree = ContextTree.init_from_sample(X, self.max_depth)
     min_c, max_c = self.penalty_interval
     self.trees_constructed = 0
-    logging.debug('Starting CTM Scanner')
-    tree_a = self.__ctm(min_c)
-    tree_b = tree_f = self.__ctm(max_c)
+    tree_a = self._bic(min_c)
+    tree_b = tree_f = self._bic(max_c)
     self._add_tree(tree_a, min_c)
     a, b = (min_c, max_c)
     while not tree_a.equals_to(tree_b):
@@ -60,9 +59,12 @@ class SMC(CollectionBase):
     ##  pass
     return self
 
-  def __ctm(self, c):
+  def _bic(self, c):
     self.trees_constructed += 1
-    return CTM(c, self.max_depth).fit_tree(self.initial_tree).context_tree
+    #if c==200:
+      #import code; code.interact(local=dict(globals(), **locals()))
+    #return CTM(c, self.max_depth).fit_tree(self.initial_tree).context_tree
+    return BIC(c, self.max_depth).fit(self.initial_tree.sample).context_tree
 
   def _add_tree(self, t, c):
     self.add_tree(t)

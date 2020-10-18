@@ -2,7 +2,8 @@ import random
 import os
 import pandas as pd
 import numpy as np
-from scipy import stats
+#from scipy import stats
+from statsmodels.stats.weightstats import ttest_ind
 from g4l.models.builders import incremental
 from g4l.data import Sample
 from g4l.util import parallel
@@ -20,6 +21,7 @@ class Bootstrap():
     self.alpha = alpha
 
   def find_optimal_tree(self, champion_trees):
+    assert(champion_trees[0].num_contexts() < champion_trees[-1].num_contexts())
     diffs = self._initialize_diffs(len(champion_trees))
     for j, sz in enumerate(self.resample_sizes):
       self._generate_resamples(j, sz)
@@ -44,7 +46,9 @@ class Bootstrap():
     while (pvalue > self.alpha) and (t > 0):
       t-=1
       d1, d2 = diffs
-      _, pvalue = stats.ttest_ind(d1[t], d2[t])
+      # import code; code.interact(local=dict(globals(), **locals()))
+      _, pvalue, _  = ttest_ind(d1[t], d2[t], alternative='larger')
+      print(champion_trees[t].num_contexts(), t, pvalue)
     return t+1
 
 

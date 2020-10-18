@@ -4,7 +4,7 @@ import pandas as pd
 from g4l.models import ContextTree
 from datetime import datetime
 from .base import CollectionBase
-from .ctm import CTM
+from . import BIC
 import logging
 
 class Prune(CollectionBase):
@@ -17,7 +17,6 @@ class Prune(CollectionBase):
   def fit(self, X):
     t = ContextTree.init_from_sample(X, self.max_depth)
     self.trees_constructed = 0
-    #t = self.apply_ctm(initial_tree)
     self.initialize_pruning(t)
     self.perform_pruning(t)
     #self.context_trees = list(reversed(self.context_trees))
@@ -28,9 +27,6 @@ class Prune(CollectionBase):
     # use selection criteria instead returning first tree
     return self.context_trees[0]
 
-  def apply_ctm(self, tree):
-    self.trees_constructed += 1
-    return CTM(None, self.max_depth).fit_tree(tree).context_tree
 
   def initialize_pruning(self, t):
     df = t.df.copy()
@@ -79,7 +75,9 @@ class Prune(CollectionBase):
       diff = (lps2 - candidate_nodes.likelihood)
       less_contributive_node_idx = diff.sort_values().index[0]
       self.remove_leaves(df, less_contributive_node_idx)
-      self.mark_as_leaf(df, less_contributive_node_idx)
+      self.set_leaf(df, less_contributive_node_idx)
+      #candidate_children = df[(df.parent_idx.isin(candidate_nodes.node_idx)) & (df.active==1)]
+      #self.remove_empty_branches()
       t2 = t.copy()
       t2.df = df.copy()
       self.add_tree(t2)
@@ -95,6 +93,19 @@ class Prune(CollectionBase):
     df.loc[df.node_idx==node_idx, 'num_total_leaves'] = 0
     df.loc[df.node_idx==node_idx, 'num_direct_leaves'] = 0
 
-  def mark_as_leaf(self, df, node_idx):
-    df.loc[df.node_idx==node_idx, 'active'] = 1
+
+  def set_leaf(self, df, node_idx):
+    try:
+      parent = df.loc[df[df.node_idx==node_idx].parent_idx].iloc[0]
+    except ValueError:
+      df.loc[df.node_idx==node_idx, 'active'] = 1
+      return
+    if parent.num_child_nodes==1:
+      df.loc[df.node_idx==parent.node_idx, 'num_total_leaves'] = 0
+      df.loc[df.node_idx==parent.node_idx, 'num_direct_leaves'] = 0
+      df.loc[df.node_idx==node_idx, 'active'] = 0
+      self.set_leaf(df, parent.node_idx)
+    else:
+      df.loc[df.node_idx==node_idx, 'active'] = 1
+
 

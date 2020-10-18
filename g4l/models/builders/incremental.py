@@ -27,6 +27,8 @@ def run(sample, max_depth):
   return df, transition_probs
 
 def find_admissible_tree(df):
+  #df = calculate_num_child_nodes(df)
+  #return
   while True:
     df = calculate_num_child_nodes(df)
     leaves = df.loc[~df.index.isin(df.parent_idx)]
