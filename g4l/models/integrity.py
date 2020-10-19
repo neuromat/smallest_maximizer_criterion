@@ -1,6 +1,13 @@
 import logging
 import math
 
+def check_completeness(t):
+  """
+  A tree is complete if each node except the leaves has exactly |A| children  
+  """
+  
+  pass
+
 def satisfies_properness(df):
   """
   No string in the S is a suffix of any other string in the S
@@ -34,6 +41,7 @@ def check_admissibility(t, X):
 
   ## irreductibility:
   ## when suffix property is satisfied
+  
 
   assert(satisfies_properness(t.tree()))
   assert(satisfies_irreductibility(t))

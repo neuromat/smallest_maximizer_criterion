@@ -9,8 +9,7 @@ Usage: ./example1.py
 # Following the conventions used by scikit-learn
 # https://scikit-learn.org/stable/developers/develop.html
 
-from g4l.estimators.ctm2 import CTM2
-from g4l.estimators.ctm import CTM
+from g4l.estimators.bic2 import BIC2
 from g4l.estimators.smc import SMC
 from g4l.estimators.prune import Prune
 from g4l.models import ContextTree
@@ -29,7 +28,7 @@ logging.basicConfig(
 # Create a sample object instance
 X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
 #r = CTM2(0.01, 4).fit(X).context_tree.to_str()
-r = CTM2(0.01, 4).fit(X).context_tree.to_str()
+r = BIC2(0.01, 4).fit(X).context_tree.to_str()
 import code; code.interact(local=dict(globals(), **locals()))
 
 smc = SMC(4, penalty_interval=(0, 800), epsilon=0.00001)
