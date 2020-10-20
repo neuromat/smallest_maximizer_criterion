@@ -2,6 +2,7 @@ from .builders import incremental
 from . import persistence as per
 from collections import Counter
 from .builders.tree_builder import ContextTreeBuilder
+from .builders.resources import calculate_num_child_nodes
 import numpy as np
 import math
 import regex as re
@@ -19,7 +20,7 @@ class ContextTree():
         self.df = contexts_dataframe
         self.transition_probs = transition_probs
         self.sample = source_sample
-        self.df = self.calculate_num_child_nodes(self.df)
+        self.df = calculate_num_child_nodes(self.df)
         self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
 
     @classmethod
@@ -58,12 +59,15 @@ class ContextTree():
 
     def sample_likelihood(self, sample):
         contexts_in_resample = self.tree()[['node_idx', 'node']]
-        fn = lambda x: [m.end(0)+1 for m in re.finditer(x, sample.data, overlapped=True)]
+        fn = lambda x: [m.end(0)+1 for m in re.finditer(x,
+                                                        sample.data,
+                                                        overlapped=True)]
         convert_to_symbols_fn = lambda x: [sample.data[i] for i in x if i < len(sample.data)]
         next_symbols_positions = contexts_in_resample.node.apply(fn)
         symbol_freqs = next_symbols_positions.apply(convert_to_symbols_fn)
-        symbol_freqs = symbol_freqs[symbol_freqs.str.len()>0]
-        contexts_in_resample['symbol_freqs'] = symbol_freqs.apply(lambda x: [Counter(x)[s] for s in sample.A])
+        symbol_freqs = symbol_freqs[symbol_freqs.str.len() > 0]
+        func = lambda x: [Counter(x)[s] for s in sample.A]
+        contexts_in_resample['symbol_freqs'] = symbol_freqs.apply(func)
         contexts_in_resample['count'] = symbol_freqs.apply(lambda x: len(x))
         builder = ContextTreeBuilder(sample.A)
         for idx, row in contexts_in_resample.iterrows():
@@ -75,26 +79,20 @@ class ContextTree():
 
     def prune_unique_context_paths(self):
         while True:
-            df = self.calculate_num_child_nodes(self.df)
-            leaves = df.loc[(~df.index.isin(df.parent_idx)) & (df.active==1)]
-            single_leaves_parents = df.loc[leaves.parent_idx]
-            single_leaves_parents = single_leaves_parents[single_leaves_parents.num_child_nodes == 1]
-            nodes_to_remove = df[df.parent_idx.isin(single_leaves_parents.index)]
+            df = calculate_num_child_nodes(self.df)
+            leaves = df.loc[(~df.index.isin(df.parent_idx)) & (df.active == 1)]
+            lv_par = df.loc[leaves.parent_idx]  # single leaves' parents
+            lv_par = lv_par[lv_par.num_child_nodes == 1]
+            nodes_to_remove = df[df.parent_idx.isin(lv_par.index)]
 
             if len(nodes_to_remove) == 0:
                 break
-            self.df.loc[self.df.node_idx.isin(nodes_to_remove.node_idx),   'active'] = 0
-            self.df.loc[self.df.node_idx.isin(nodes_to_remove.parent_idx), 'active'] = 1
+            l_nodes = self.df.node_idx.isin(nodes_to_remove.node_idx)
+            l_parents = self.df.node_idx.isin(nodes_to_remove.parent_idx)
+            self.df.loc[l_nodes, 'active'] = 0
+            self.df.loc[l_parents, 'active'] = 1
             self.df = df
         #df.drop(index=nodes_to_remove.index, inplace=True)
-
-    def calculate_num_child_nodes(self, df):
-        num_child_nodes = df[df.depth > 1].reset_index(drop=False).groupby(['parent_idx']).apply(lambda x: x.count().node_idx)
-        try:
-            df['num_child_nodes'] = num_child_nodes
-        except ValueError:
-            df['num_child_nodes'] = 0
-        return df
 
     def evaluate_sample(self, new_sample):
         new_tree = self.copy()
@@ -127,10 +125,10 @@ class ContextTree():
                 pass
 
     def generate_sample(self, sample_size, A):
-        """ Generates a sample from this model """
+        """ Generates a sample using this model """
 
         df = self.tree().set_index(['node_idx'])
-        sample = df[df.depth==self.max_depth].sample()
+        sample = df[df.depth == self.max_depth].sample()
         s = sample.node.values[0]
         node_idx = sample.index[0]
         while len(s) < sample_size:
@@ -159,9 +157,9 @@ class ContextTree():
         """ Returns the tree with all active contexts"""
 
         df = self.df
-        r = df[~df.node_idx.isin(df[df.active==1].parent_idx)]
-        if active_only==True:
-            r = r[r.active==1]
+        r = df[~df.node_idx.isin(df[df.active == 1].parent_idx)]
+        if active_only:
+            r = r[r.active == 1]
         return r
 
     def leaves(self):
@@ -170,7 +168,7 @@ class ContextTree():
     def equals_to(self, context_tree):
 
         """ Matches the current context tree to another one """
-        return self.to_str()==context_tree.to_str()
+        return self.to_str() == context_tree.to_str()
 
     def calculate_node_frequency(self):
         for i, row in self.df.iterrows():

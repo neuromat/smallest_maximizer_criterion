@@ -1,0 +1,37 @@
+import numpy as np
+
+
+def calculate_num_child_nodes(df):
+    """
+    Given a context tree dataframe, this method creates a column with
+    the number of (immediate) children
+    """
+
+    num_child_nodes = (df[df.depth > 1]
+                       .reset_index(drop=False)
+                       .groupby(['parent_idx'])
+                       .apply(lambda x: x.count().node_idx))
+    try:
+            df['num_child_nodes'] = num_child_nodes
+    except ValueError:
+            df['num_child_nodes'] = 0
+    return df
+
+
+def bind_parent_nodes(df):
+    """
+    Connects nodes to their parents through the 'parent_idx' column
+    """
+
+    df['parent_node'] = df.node.str.slice(start=1)
+    df.reset_index(inplace=True)
+    df.set_index('node', inplace=True)
+    parent_nodes = df[df.depth > 1].parent_node
+    parent_nodes_idx = df.loc[parent_nodes].node_idx
+    df.reset_index(inplace=True)
+    parent_nodes_idx = parent_nodes_idx.reset_index().node_idx.values
+    depth_1_values = np.repeat(None, len(df.loc[df.depth == 1]))
+    df['parent_idx'] = np.concatenate((depth_1_values, parent_nodes_idx))
+    df.drop('parent_node', axis='columns', inplace=True)
+    df.set_index('node_idx', inplace=True)
+    return df

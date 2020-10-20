@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from collections import Counter
+from . import resources as rsc
 
 
 def run(sample, max_depth):
@@ -18,7 +19,7 @@ def run(sample, max_depth):
     transition_probs = calculate_transition_probs(df)
     df = remove_last_level(df, max_depth)
     # create parent relationship between nodes
-    df = bind_parent_nodes(df)
+    df = rsc.bind_parent_nodes(df)
     # remove invalid nodes
     #prune_unique_context_paths(df) (moved to context_tree)
     # calculate nodes likelihoods
@@ -82,19 +83,7 @@ def calculate_transition_probs(df):
     return transition_probs
 
 
-def bind_parent_nodes(df):
-    df['parent_node'] = df.node.str.slice(start=1)
-    df.reset_index(inplace=True)
-    df.set_index('node', inplace=True)
-    parent_nodes = df[df.depth > 1].parent_node
-    parent_nodes_idx = df.loc[parent_nodes].node_idx
-    df.reset_index(inplace=True)
-    parent_nodes_idx = parent_nodes_idx.reset_index().node_idx.values
-    depth_1_values = np.repeat(None, len(df.loc[df.depth == 1]))
-    df['parent_idx'] = np.concatenate((depth_1_values, parent_nodes_idx))
-    df.drop('parent_node', axis='columns', inplace=True)
-    df.set_index('node_idx', inplace=True)
-    return df
+
 
 
 def calculate_likelihood(df, transition_probs):

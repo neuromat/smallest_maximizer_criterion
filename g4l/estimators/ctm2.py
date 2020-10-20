@@ -77,7 +77,6 @@ class CTM2(Base):
       # remove todo nó cuja soma da verossimilhança dos filhos é maior do que a própria verossimilhança
       nodes_to_remove = parents[(parents.num_child_nodes > 1) & (parents.lps2 > parents.lps)].node_idx
       df.loc[df.node_idx.isin(nodes_to_remove), 'remove_node'] = 1
-    import code; code.interact(local=dict(globals(), **locals()))
     df.drop('lps2', axis='columns', inplace=True)
     t.df = df
 

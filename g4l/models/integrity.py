@@ -45,30 +45,26 @@ def check_admissibility(t, X):
     ## irreductibility:
     ## when suffix property is satisfied
 
+    assert satisfies_properness(t.tree()), "Properness not satisfied"
 
-    assert(satisfies_properness(t.tree()))
-    assert(satisfies_irreductibility(t))
+    assert satisfies_irreductibility(t), "Not irreductible"
 
     ## when the maximum node length is no more than the specified max_depth $
     max_context_len = t.tree().node.str.len().max()
-    assert(max_context_len <= t.max_depth)
+    assert max_context_len <= t.max_depth, "Tree length exceeds max depth"
 
     ## when \\sum_{b \\in A}N_{n}(wb) > 0 $
     ## i.e., all contexts in t have transition to at least one symbol
     transitions = t.transition_probs.reset_index().groupby('idx').freq.sum()
     nodes_with_transition_freq = t.tree().set_index('node_idx')[transitions>0]
-    assert(len(nodes_with_transition_freq) == len(t.tree()))
+    assert len(nodes_with_transition_freq) == len(t.tree()), "Nodes without transition"
 
     for j in range(t.max_depth, len(X.data)):
         if (j % math.floor(len(X.data)/100)) == 0: # for visualization purposes only
             tx = 'Checking admissibility: %s ' % round(j/len(X.data)*100, 0)
             logging.debug(tx + "%")
         possible_suffixes = [X.data[j-i-1:j] for i in range(min(j, t.max_depth))]
-        try:
-            assert t.tree().node.isin(possible_suffixes).astype(int).sum() == 1 #, msg3 # only one context
-        except:
-            import code; code.interact(local=dict(globals(), **locals()))
-            pass
+        assert t.tree().node.isin(possible_suffixes).astype(int).sum() == 1, "Not admissible"
         #msg3 = "suffixes for ...%s = %s" % (X.data[t.max_depth:j])
     return True
 
