@@ -4,7 +4,6 @@ from collections import Counter
 from .builders.tree_builder import ContextTreeBuilder
 import numpy as np
 import math
-import pandas as pd
 import regex as re
 
 
@@ -14,12 +13,13 @@ class ContextTree():
     df = None
     transition_probs = None
 
-    def __init__(self, max_depth, contexts_dataframe, 
+    def __init__(self, max_depth, contexts_dataframe,
                  transition_probs, source_sample=None):
         self.max_depth = max_depth
         self.df = contexts_dataframe
         self.transition_probs = transition_probs
         self.sample = source_sample
+        self.df = self.calculate_num_child_nodes(self.df)
         self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
 
     @classmethod
@@ -74,16 +74,18 @@ class ContextTree():
         return t.log_likelihood(), t
 
     def prune_unique_context_paths(self):
-        df = self.df
         while True:
-            df = self.calculate_num_child_nodes(df)
-            leaves = df.loc[~df.index.isin(df.parent_idx)]
+            df = self.calculate_num_child_nodes(self.df)
+            leaves = df.loc[(~df.index.isin(df.parent_idx)) & (df.active==1)]
             single_leaves_parents = df.loc[leaves.parent_idx]
             single_leaves_parents = single_leaves_parents[single_leaves_parents.num_child_nodes == 1]
             nodes_to_remove = df[df.parent_idx.isin(single_leaves_parents.index)]
+
             if len(nodes_to_remove) == 0:
                 break
-        df.loc[df.node_idx.isin(nodes_to_remove), 'active'] = 0
+            self.df.loc[self.df.node_idx.isin(nodes_to_remove.node_idx),   'active'] = 0
+            self.df.loc[self.df.node_idx.isin(nodes_to_remove.parent_idx), 'active'] = 1
+            self.df = df
         #df.drop(index=nodes_to_remove.index, inplace=True)
 
     def calculate_num_child_nodes(self, df):

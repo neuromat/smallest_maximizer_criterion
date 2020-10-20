@@ -10,8 +10,7 @@ Usage: ./example1.py
 # Following the conventions used by scikit-learn
 # https://scikit-learn.org/stable/developers/develop.html
 
-#from g4l import SmallestMaximizerCriterion
-from g4l.estimators.ctm import CTM
+from g4l.estimators.bic import BIC
 from g4l.estimators.prune import Prune
 #from g4l.estimators.ctm_scanner import CTMScanner
 #import g4l.tree.generation as gen
@@ -29,10 +28,12 @@ logging.basicConfig(
 
 # Create a sample object instance
 
-filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_5000.csv"
+filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_20000.csv"
 
-f_5k = [x.replace(',', '') for x in open(filename).read().split('\n')]
-X = Sample(None, [0, 1], data=f_5k[0])
+f_20k = [x.replace(',', '') for x in open(filename).read().split('\n')]
+for i in range(30):
+    X = Sample(None, [0, 1], data=f_20k[i])
+    print(BIC(0, 6).fit(X).context_tree.to_str())
 #initial_tree = ContextTree.init_from_sample(X, max_depth=6)
 p = Prune(6).fit(X)
 
