@@ -2,68 +2,86 @@ import os
 from scipy import io
 import pandas as pd
 from collections import Counter
+import logging
 import sys
 import pytest
 sys.path.insert(0, os.path.abspath('.'))
-from examples.example2 import simulation
+#from examples.example2 import simulation
 
 results_folder = os.path.abspath('./examples/example2/results')
-
-def test_compare_results():
-  return
-  s = '/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/redadosparacomparao/champion_M1_5000.mat'
-  f = io.loadmat(s)
-  df = pd.DataFrame(columns=['sample_idx', 'tree_idx', 'context'])
-  for sample_idx, sample in enumerate(f['champion_M1_5000']):
-    print('sample')
-    for tree_idx, context_tree in enumerate(sample[0][0,:]):
-      print('tree:', tree_idx)
-      for cell_id, context_cell in enumerate(context_tree):
-        print('cell:', cell_id)
-        for context_arr_id, context_arr in enumerate(context_cell):
-          #print('context_arr_id:', context_arr_id)
-          for context_arr_id2, context_arr2 in enumerate(context_arr):
-            #print('context_arr_id2:', context_arr_id2)
-            ss = ''.join([str(s) for s in list(context_arr2)])
-            df.loc[len(df)] = [sample_idx, tree_idx, ss]
-  df = df.sort_values(['sample_idx', 'tree_idx', 'context'], ascending=True)
-  r = df.groupby(['sample_idx', 'tree_idx']).context.apply(' '.join).reset_index()
-  r.to_csv(results_folder + '/mat_compare.csv', index=False)
-        #print(''.join(context))
-
-def test_compare_results2():
-  df = pd.read_csv(results_folder + '/mat_compare.csv')
-  df['num_contexts'] = df.context.apply(lambda x: len(x.split(' ')))
-  df = df.sort_values(['sample_idx', 'num_contexts'])
-  df = df[['sample_idx', 'num_contexts', 'context']].set_index(['sample_idx', 'num_contexts'])
-
-  df2 = pd.read_csv(results_folder + '/model1.smc.tmp.csv')
-  df2 = df2[df2.sample_size==5000]
-  df2 = df2[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
-  ct = Counter(df2[df2.opt==1].reset_index().num_contexts.values)
-  ct[4]/len(df2[df2.opt==1])
+trees_folder = os.path.abspath('./fixtures/champion_trees')
 
 
-  #  import scipy.io as sio
-  #  from g4l.models import ContextTree
-  #  from g4l.data import Sample
-  #  from g4l.estimators import CTM
-  #
-  #  filename = './examples/example2/samples/model1_5000.mat'
-  #  arr = sio.loadmat(filename)['model1_5000']
-  #  dt = ''.join([str(x) for x in arr[0]])
-  #  sample = Sample(None, [0, 1], data=dt)
-  #  ctm = CTM(0, 6)
-  #  ctm.fit(sample)
-  #  print(ctm.context_tree.to_str())
+def test_compare_trees():
+    sample_sizes = [5000, 10000, 20000]
+    models = ['model1', 'model2']
+    for sample_size in sample_sizes:
+        for model_name in models:
+            print("Executing %s - %s" % (sample_size, model_name))
+            result_file = '/SecROCTM/%s_%s.csv' % (model_name, sample_size)
+            #if not os.path.exists(results_folder + result_file):
+            create_champion_trees_file(sample_size, model_name)
+    for sample_size in sample_sizes:
+        for model_name in models:
+            import code; code.interact(local=dict(globals(), **locals()))
 
-  import code; code.interact(local=dict(globals(), **locals()))
+    print('ok')
 
-  df3 = pd.read_csv(results_folder + '/model1.csv')
-  df3 = df3[df3.sample_size==5000]
-  df3 = df3[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
 
-  import code; code.interact(local=dict(globals(), **locals()))
+def create_champion_trees_file(sample_size, model_name):
+    mat_file = '%s/%s_%s.mat' % (trees_folder, model_name, sample_size)
+    model_abbrev = {'model1': 'M1', 'model2': 'M2'}
+    f = io.loadmat(mat_file)
+    df = pd.DataFrame(columns=['sample_idx', 'tree_idx', 'tree'])
+    for sample_idx, sample in enumerate(f['champion_%s_%s' % (model_abbrev[model_name], sample_size)]):
+        for tree_idx, context_tree in enumerate(sample[0][0, :]):
+            for cell_id, context_cell in enumerate(context_tree):
+                for context_arr_id, context_arr in enumerate(context_cell):
+                    #print('context_arr_id:', context_arr_id)
+                    for context_arr_id2, context_arr2 in enumerate(context_arr):
+                        #print('context_arr_id2:', context_arr_id2)
+                        ss = ''.join([str(s) for s in list(context_arr2)])
+                        df.loc[len(df)] = [sample_idx, tree_idx, ss]
+    df = df.sort_values(['sample_idx', 'tree_idx', 'tree'], ascending=True)
+    rr = df.groupby(['sample_idx', 'tree_idx']).tree.apply(' '.join).reset_index()
+    #result_file = '/mat_compare_%s_%s.csv' % (model_name, sample_size)
+    result_file = '/SecROCTM/%s_%s.csv' % (model_name, sample_size)
+    rr.to_csv(results_folder + result_file, index=False)
+
+
+def xtest_compare_results2():
+    df = pd.read_csv(results_folder + '/mat_compare.csv')
+    df['num_contexts'] = df.context.apply(lambda x: len(x.split(' ')))
+    df = df.sort_values(['sample_idx', 'num_contexts'])
+    df = df[['sample_idx', 'num_contexts', 'tree']].set_index(['sample_idx', 'num_contexts'])
+
+    df2 = pd.read_csv(results_folder + '/model1.smc.tmp.csv')
+    df2 = df2[df2.sample_size==5000]
+    df2 = df2[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
+    ct = Counter(df2[df2.opt==1].reset_index().num_contexts.values)
+    ct[4]/len(df2[df2.opt==1])
+
+
+    #  import scipy.io as sio
+    #  from g4l.models import ContextTree
+    #  from g4l.data import Sample
+    #  from g4l.estimators import CTM
+    #
+    #  filename = './examples/example2/samples/model1_5000.mat'
+    #  arr = sio.loadmat(filename)['model1_5000']
+    #  dt = ''.join([str(x) for x in arr[0]])
+    #  sample = Sample(None, [0, 1], data=dt)
+    #  ctm = CTM(0, 6)
+    #  ctm.fit(sample)
+    #  print(ctm.context_tree.to_str())
+
+
+
+    df3 = pd.read_csv(results_folder + '/model1.csv')
+    df3 = df3[df3.sample_size==5000]
+    df3 = df3[['sample_idx', 'num_contexts', 'tree', 'opt']].set_index(['sample_idx', 'num_contexts'])
+
+    import code; code.interact(local=dict(globals(), **locals()))
 
 
 

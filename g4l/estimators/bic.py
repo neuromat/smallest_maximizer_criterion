@@ -4,6 +4,11 @@ from .base import Base
 
 
 class BIC(Base):
+    """
+    Implements the tree estimator described by Csiszár and Talata (2006)
+    in the paper Context tree estimation for not necessarily finite memory
+    processes, Via BIC and MDL (see section IV)
+    """
 
     def __init__(self, c, max_depth):
         self.c = c

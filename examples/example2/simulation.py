@@ -20,7 +20,7 @@ A = ['0', '1']
 PATH = os.path.abspath('./examples/example2/samples')
 RESAMPLES_FOLDER = os.path.abspath('./examples/example2/tmp/resamples')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
-SAMPLE_SIZES = [20000, 5000, 10000]
+SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 7
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
@@ -31,51 +31,54 @@ max_depth = 6
 
 
 def run_simulation(model_name):
-    results_file = "%s/%s.csv" % (RESULTS_FOLDER, model_name)
-    if os.path.exists(results_file):
-        os.remove(results_file)
-
+    estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
-    model = models.get_model(model_name)
+    #model = models.get_model(model_name)
 
     for sample_size in SAMPLE_SIZES:
-        args = (model_name, sample_size, MAX_SAMPLES)
-        for sample_idx, sample in fetch_samples(*args):
-            print('sample:', sample_size, sample_idx)
-            resample_factory = BlockResampling(sample, RENEWAL_POINT)
-            folder_vars = (RESAMPLES_FOLDER, model_name, sample_size, sample_idx)
-            bootstrap = Bootstrap(resample_factory,
-                                  '%s/%s_%s_%s' % folder_vars,
-                                  NUM_RESAMPLES,
-                                  resample_sizes=resample_sizes(sample_size),
-                                  alpha=0.01)
-            print("estimating champion trees")
-            champion_trees = prune(sample)
+        for estimator in ['smc']:
+            results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
+                                                model_name, sample_size)
+            if os.path.exists(results_file):
+                os.remove(results_file)
 
-            print("finding optimal trees")
-            opt_idx = bootstrap.find_optimal_tree(champion_trees)
-            for tree_idx, champion_tree in enumerate(champion_trees):
-                opt = int(tree_idx == opt_idx)
-                obj = {'model_name': model_name,
-                       'sample_size': sample_size,
-                       'sample_idx': sample_idx,
-                       'method': 'prune',
-                       'tree_idx': tree_idx,
-                       'tree': champion_tree.to_str(),
-                       'num_contexts': champion_tree.num_contexts(),
-                       'opt': opt}
-                use_header = (not os.path.exists(results_file))
-                df = pd.DataFrame.from_dict([obj])
-                df.to_csv(results_file, mode='a',
-                          index=False,
-                          header=use_header)
+            args = (model_name, sample_size, MAX_SAMPLES)
+            for sample_idx, sample in fetch_samples(*args):
+                print('sample:', sample_size, sample_idx)
+                resample_factory = BlockResampling(sample, RENEWAL_POINT)
+                folder_vars = (RESAMPLES_FOLDER, model_name,
+                               sample_size, sample_idx)
+                bootstrap = Bootstrap(resample_factory,
+                                      '%s/%s_%s_%s' % folder_vars,
+                                      NUM_RESAMPLES,
+                                      resample_sizes=resample_sizes(sample_size),
+                                      alpha=0.01)
+                print("estimating champion trees")
+                champion_trees = estimators[estimator](sample)
+
+                print("finding optimal trees")
+                opt_idx = -1  # bootstrap.find_optimal_tree(champion_trees)
+                for tree_idx, champion_tree in enumerate(champion_trees):
+                    opt = int(tree_idx == opt_idx)
+                    obj = {'model_name': model_name,
+                           'sample_idx': sample_idx,
+                           'method': estimator,
+                           'tree_idx': tree_idx,
+                           'tree': champion_tree.to_str(),
+                           'num_contexts': champion_tree.num_contexts(),
+                           'opt': opt}
+                    use_header = (not os.path.exists(results_file))
+                    df = pd.DataFrame.from_dict([obj])
+                    df.to_csv(results_file, mode='a',
+                              index=False,
+                              header=use_header)
 
 
 def resample_sizes(sample_size):
     return tuple(math.floor(f * sample_size) for f in [N1_FACTOR, N2_FACTOR])
 
 
-def bic(sample):
+def bic(sample, c):
     return [BIC(c, max_depth).fit(sample).context_tree]
 
 
@@ -102,4 +105,3 @@ def fetch_samples(model_name, sample_size, max_samples=math.inf):
             break
         i += 1
         yield i, s
-

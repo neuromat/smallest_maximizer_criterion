@@ -4,7 +4,6 @@ import pytest
 import logging
 sys.path.insert(0, os.path.abspath('.'))
 from g4l.data import Sample
-from g4l.models import ContextTree
 import g4l.models.integrity as integrity
 from g4l.estimators.smc import SMC
 
@@ -23,9 +22,10 @@ logging.basicConfig(
 
 
 def test_suffix_property():
-  for t in smc_estimator.context_trees:
-    assert(integrity.satisfies_suffix_property(t))
+    for t in smc_estimator.context_trees:
+      assert(integrity.satisfies_suffix_property(t))
+
 
 def test_completeness():
-  for t in smc_estimator.context_trees:
-    assert(integrity.satisfies_completeness(t))
+    for t in smc_estimator.context_trees:
+      assert(integrity.satisfies_completeness(t))
