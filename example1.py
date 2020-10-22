@@ -29,16 +29,12 @@ logging.basicConfig(
 # Create a sample object instance
 X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
 #r = CTM2(0.01, 4).fit(X).context_tree.to_str()
-bic = BIC(0.00, 4).fit(X)
-tt = bic.context_tree
-print(tt.to_str())
-integrity.check_admissibility(tt, X)
-import code; code.interact(local=dict(globals(), **locals()))
-
 smc = SMC(4, penalty_interval=(0, 800), epsilon=0.00001)
 smc.fit(X)
 [print(x.to_str()) for x in smc.context_trees]
 
+
+import code; code.interact(local=dict(globals(), **locals()))
 
 
 # Define the champion trees strategy to be used

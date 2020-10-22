@@ -52,12 +52,13 @@ def run_simulation(model_name):
                                       '%s/%s_%s_%s' % folder_vars,
                                       NUM_RESAMPLES,
                                       resample_sizes=resample_sizes(sample_size),
+                                      num_cores=6,
                                       alpha=0.01)
                 print("estimating champion trees")
                 champion_trees = estimators[estimator](sample)
 
                 print("finding optimal trees")
-                opt_idx = -1  # bootstrap.find_optimal_tree(champion_trees)
+                opt_idx = bootstrap.find_optimal_tree(champion_trees)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
@@ -66,6 +67,7 @@ def run_simulation(model_name):
                            'tree_idx': tree_idx,
                            'tree': champion_tree.to_str(),
                            'num_contexts': champion_tree.num_contexts(),
+                           'likelihood': champion_tree.log_likelihood(),
                            'opt': opt}
                     use_header = (not os.path.exists(results_file))
                     df = pd.DataFrame.from_dict([obj])
