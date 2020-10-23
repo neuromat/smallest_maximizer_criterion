@@ -21,7 +21,7 @@ PATH = os.path.abspath('./examples/example2/samples')
 RESAMPLES_FOLDER = os.path.abspath('./examples/example2/tmp/resamples')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
 SAMPLE_SIZES = [5000, 10000, 20000]
-NUM_RESAMPLES = 7
+NUM_RESAMPLES = 200
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -36,7 +36,7 @@ def run_simulation(model_name):
     #model = models.get_model(model_name)
 
     for sample_size in SAMPLE_SIZES:
-        for estimator in ['smc']:
+        for estimator in ['smc', 'prune']:
             results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
                                                 model_name, sample_size)
             if os.path.exists(results_file):
