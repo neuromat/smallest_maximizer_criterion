@@ -28,13 +28,14 @@ logging.basicConfig(
 
 # Create a sample object instance
 
-filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_20000.csv"
+filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_5000.csv"
 
-f_20k = [x.replace(',', '') for x in open(filename).read().split('\n')]
-for i in range(30):
-    X = Sample(None, [0, 1], data=f_20k[i])
-    print(BIC(0, 6).fit(X).context_tree.to_str())
+ff = [x.replace(',', '') for x in open(filename).read().split('\n')]
+samp = ff[-2]
+X = Sample(None, [0, 1], data=ff[-2])
+print(BIC(0, 6).fit(X).context_tree.to_str())
+
 #initial_tree = ContextTree.init_from_sample(X, max_depth=6)
-p = Prune(6).fit(X)
+#p = Prune(6).fit(X)
 
 import code; code.interact(local=dict(globals(), **locals()))

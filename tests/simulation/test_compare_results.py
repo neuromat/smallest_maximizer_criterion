@@ -13,7 +13,7 @@ trees_folder = os.path.abspath('./fixtures/champion_trees')
 
 
 def test_compare_trees():
-    sample_sizes = [5000, 10000, 20000]
+    sample_sizes = [5000]
     models = ['model1', 'model2']
     for sample_size in sample_sizes:
         for model_name in models:
@@ -33,7 +33,7 @@ def create_champion_trees_file(sample_size, model_name):
     model_abbrev = {'model1': 'M1', 'model2': 'M2'}
     f = io.loadmat(mat_file)
     df = pd.DataFrame(columns=['sample_idx', 'tree_idx', 'tree'])
-    for sample_idx, sample in enumerate(f['champion_%s_%s' % (model_abbrev[model_name], sample_size)]):
+    for sample_idx, sample in enumerate(f['champion_%s_%snew' % (model_abbrev[model_name], sample_size)]):
         for tree_idx, context_tree in enumerate(sample[0][0, :]):
             for cell_id, context_cell in enumerate(context_tree):
                 for context_arr_id, context_arr in enumerate(context_cell):
@@ -45,7 +45,7 @@ def create_champion_trees_file(sample_size, model_name):
     df = df.sort_values(['sample_idx', 'tree_idx', 'tree'], ascending=True)
     rr = df.groupby(['sample_idx', 'tree_idx']).tree.apply(' '.join).reset_index()
     #result_file = '/mat_compare_%s_%s.csv' % (model_name, sample_size)
-    result_file = '/SecROCTM/%s_%s.csv' % (model_name, sample_size)
+    result_file = '/SeqROCTM/%s_%s.csv' % (model_name, sample_size)
     rr.to_csv(results_folder + result_file, index=False)
 
 
