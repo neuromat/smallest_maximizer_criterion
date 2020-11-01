@@ -6,4 +6,4 @@ from examples.example2 import simulation
 
 def test_simulation_study():
   simulation.run_simulation('model1')
-  simulation.run_simulation('model2')
+  #simulation.run_simulation('model2')

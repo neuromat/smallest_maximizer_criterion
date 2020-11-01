@@ -34,6 +34,8 @@ ff = [x.replace(',', '') for x in open(filename).read().split('\n')]
 samp = ff[-2]
 X = Sample(None, [0, 1], data=ff[-2])
 print(BIC(0, 6).fit(X).context_tree.to_str())
+b = BIC(0, 6).fit(X).context_tree
+df = b.df
 
 #initial_tree = ContextTree.init_from_sample(X, max_depth=6)
 #p = Prune(6).fit(X)

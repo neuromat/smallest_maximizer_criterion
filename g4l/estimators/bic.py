@@ -36,11 +36,12 @@ class BIC(Base):
         df['val'] = df.likelihood_pen
         df['active'] = 0
         df['indicator'] = 0
-
+        df.loc[df.depth == self.max_depth, 'val2'] = df[df.depth == self.max_depth].val
         for d in reversed(range(1, self.max_depth)):
             parents = df[(df.depth == d) & (df.freq >= 1)]
             ch = df[(df.parent_idx.isin(parents.node_idx)) & (df.freq >= 1)]
-            ch_vals = ch.groupby([df.parent_idx]).apply(lambda x: x.val.sum())
+            #import code; code.interact(local=dict(globals(), **locals()))
+            ch_vals = ch.groupby([df.parent_idx]).apply(lambda x: x.val2.sum())
             ch_vals.name = 'val2'
             ch_vals = ch_vals.to_frame().reset_index()
             ch_vals.rename(columns={'parent_idx': 'node_idx'}, inplace=True)
@@ -50,6 +51,9 @@ class BIC(Base):
         max_val = df.loc[df.depth <= self.max_depth-1][['val', 'val2']]
         max_val = max_val.max(axis=1)
         df.loc[df.depth <= self.max_depth-1, 'val'] = max_val
+        df['p_chapeu'] = df.val
+        df['produtoria_filhos'] = df.val2
+        #import code; code.interact(local=dict(globals(), **locals()))
         df.drop('val2', axis='columns', inplace=True)
         df.loc[(df.depth <= self.max_depth - 1) & (df.val > df.likelihood_pen), 'indicator'] = 1
 

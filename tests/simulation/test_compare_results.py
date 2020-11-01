@@ -9,12 +9,13 @@ sys.path.insert(0, os.path.abspath('.'))
 #from examples.example2 import simulation
 
 results_folder = os.path.abspath('./examples/example2/results')
-trees_folder = os.path.abspath('./fixtures/champion_trees')
+trees_folder = os.path.abspath('./fixtures/champion_trees/2')
 
 
 def test_compare_trees():
     sample_sizes = [5000]
-    models = ['model1', 'model2']
+    #models = ['model1', 'model2']
+    models = ['model1']
     for sample_size in sample_sizes:
         for model_name in models:
             print("Executing %s - %s" % (sample_size, model_name))
@@ -33,7 +34,7 @@ def create_champion_trees_file(sample_size, model_name):
     model_abbrev = {'model1': 'M1', 'model2': 'M2'}
     f = io.loadmat(mat_file)
     df = pd.DataFrame(columns=['sample_idx', 'tree_idx', 'tree'])
-    for sample_idx, sample in enumerate(f['champion_%s_%snew' % (model_abbrev[model_name], sample_size)]):
+    for sample_idx, sample in enumerate(f['champion_%s_%s_bic' % (model_abbrev[model_name], sample_size)]):
         for tree_idx, context_tree in enumerate(sample[0][0, :]):
             for cell_id, context_cell in enumerate(context_tree):
                 for context_arr_id, context_arr in enumerate(context_cell):
