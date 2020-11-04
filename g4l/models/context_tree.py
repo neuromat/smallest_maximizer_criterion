@@ -80,8 +80,11 @@ class ContextTree():
     def prune_unique_context_paths(self):
         while True:
             df = calculate_num_child_nodes(self.df)
-            leaves = df.loc[(~df.index.isin(df.parent_idx)) & (df.active == 1)]
-            lv_par = df.loc[leaves.parent_idx]  # single leaves' parents
+            leaves = df[(df.active_children==0) & (df.active == 1)]
+            parents_idx = [x for x in leaves.parent_idx.unique() if x is not None]
+            #df[df.parent_idx]
+            #leaves = df.loc[(~df.node_idx.isin(df.parent_idx)) & (df.active == 1)]
+            lv_par = df.loc[parents_idx]  # single leaves' parents
             lv_par = lv_par[lv_par.num_child_nodes == 1]
             nodes_to_remove = df[df.parent_idx.isin(lv_par.index)]
 

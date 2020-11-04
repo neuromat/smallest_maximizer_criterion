@@ -6,16 +6,28 @@ def calculate_num_child_nodes(df):
     Given a context tree dataframe, this method creates a column with
     the number of (immediate) children
     """
-
+    df['active_children'] = 0
     num_child_nodes = (df[df.depth > 1]
                        .reset_index(drop=False)
                        .groupby(['parent_idx'])
                        .apply(lambda x: x.count().node_idx))
+
+    active_children = (df[df.depth > 1]
+                       .reset_index(drop=False)
+                       .groupby(['parent_idx'])
+                       .apply(lambda x: x.sum().active))
+
+    df.set_index('node_idx', inplace=True)
     try:
-            df['num_child_nodes'] = num_child_nodes
+        df['num_child_nodes'] = num_child_nodes
+        df['active_children'] = active_children
+        df['active_children'] = df['active_children'].fillna(0)
     except ValueError:
-            df['num_child_nodes'] = 0
+        df['num_child_nodes'] = 0
+
+    df.reset_index(inplace=True, drop=False)
     return df
+
 
 
 def bind_parent_nodes(df):

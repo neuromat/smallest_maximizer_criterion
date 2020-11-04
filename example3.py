@@ -8,12 +8,10 @@ Usage: ./example3.py
 # Following the conventions used by scikit-learn
 # https://scikit-learn.org/stable/developers/develop.html
 
-from g4l import SmallestMaximizerCriterion
-from g4l.estimators import CTM
-from g4l.estimators import Prune
 from g4l.estimators import SMC
-import g4l.tree.generation as gen
-import g4l.tree as tree
+from g4l.estimators import BIC
+from g4l.data import persistence
+import math
 from g4l.data import Sample
 import pandas as pd
 import time
@@ -27,52 +25,43 @@ logging.basicConfig(
     ]
 )
 
-# Create a sample object instance
-X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
+PATH = '/home/arthur/Documents/Neuromat/projects/SMC/smallest_maximizer_criterion/examples/example2/samples'
+
+A = ['0', '1']
 
 
-start = time.time()
-t_orig = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.original)
-end = time.time()
-print("Tree creation (original init)", end - start)
-
-start = time.time()
-t_incr = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.incremental)
-end = time.time()
-print("Tree creation (incremental init)", end - start)
-print("-------------")
-
-
-print('Starting estimation by pruning')
-start = time.time()
-prune = Prune(t_incr)
-prune.execute()
-end = time.time()
-print("Original init -> CTM")
-print("Elapsed (s):", end - start)
-print("Generated trees:")
-df = pd.DataFrame([], columns=['log-likelihood', 'num_contexts'])
-for t in prune.context_trees:
-  df.loc[len(df)] = [t.log_likelihood(), t.num_contexts()]
-print(df)
-
-# print("Log-Likelihood:", ctm.log_likelihood())
-
-## start = time.time()
-## #ctm = CTM(t2).execute(c)
-## end = time.time()
-## print("Incremental init -> CTM")
-## print("Elapsed (s):", end - start)
-## print("Nodes:", ctm.to_str())
-## print("Log-Likelihood:", ctm.log_likelihood())
-## print("-------------")
+def fetch_samples(model_name, sample_size, max_samples=math.inf):
+    i = -1
+    key = '%s_%s' % (model_name, sample_size)
+    filename = '%s/%s.mat' % (PATH, key)
+    for s in persistence.iterate_from_mat(filename, key, A):
+        if i > max_samples:
+            break
+        i += 1
+        yield i, s
 
 
-#ctm = CTM2(t).execute(0.5)
+def sort_trees(context_trees):
+    return sorted(context_trees, key=lambda x: -x.num_contexts())
 
-import code; code.interact(local=dict(globals(), **locals()))
+args = ('model1', '5000', 1)
+for sample_idx, sample in fetch_samples(*args):
+    max_depth = 6
+    c = 0.0536
+    bic = BIC(c, max_depth).fit(sample).context_tree
+    import code; code.interact(local=dict(globals(), **locals()))
+
+    smc = SMC(max_depth, penalty_interval=(0, 500), epsilon=0.00001)
+    champion_trees = smc.fit(sample).context_trees
+
+    [print(x.to_str()) for x in champion_trees]
 
 
+
+#
+#
+
+BIC(c, max_depth).fit(sample).context_tree
 
 #t_orig = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.original)
 #t_incr = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.incremental)

@@ -20,7 +20,6 @@ class BIC(Base):
         full_tree = ContextTree.init_from_sample(X, self.max_depth,
                                                  force_admissible=False)
 
-
         full_tree.df['likelihood_pen'] = full_tree.df.likelihood
         penalization_term = np.log(len(X.data)) * ((len(X.A)-1) * self.c)
         full_tree.df.likelihood_pen -= penalization_term
