@@ -33,7 +33,7 @@ max_depth = 6
 def run_simulation(model_name):
     estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
-    #model = models.get_model(model_name)
+    model = models.get_model(model_name)
 
     for sample_size in SAMPLE_SIZES:
         for estimator in ['smc', 'prune']:
@@ -45,7 +45,8 @@ def run_simulation(model_name):
             args = (model_name, sample_size, MAX_SAMPLES)
             for sample_idx, sample in fetch_samples(*args):
                 print('sample:', sample_size, sample_idx)
-                resample_factory = BlockResampling(sample, RENEWAL_POINT)
+                #resample_factory = BlockResampling(sample, RENEWAL_POINT)
+                resample_factory = TreeSourceResampling(model, sample)
                 folder_vars = (RESAMPLES_FOLDER, model_name,
                                sample_size, sample_idx)
                 bootstrap = Bootstrap(resample_factory,
@@ -58,7 +59,7 @@ def run_simulation(model_name):
                 champion_trees = estimators[estimator](sample)
 
                 print("finding optimal trees")
-                #opt_idx = bootstrap.find_optimal_tree(champion_trees)
+                opt_idx = bootstrap.find_optimal_tree(champion_trees)
                 opt_idx = 0
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)

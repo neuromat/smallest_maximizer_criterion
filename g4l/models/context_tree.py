@@ -118,26 +118,27 @@ class ContextTree():
 
         return ' '.join(self.leaves())
 
-    def find_suffix(self, sample):
-        contexts = self.tree().set_index('node')['node_idx']
-        for i in range(1, self.max_depth+1):
-            substr = sample[-i:]
-            try:
-                return substr, contexts.loc[substr]
-            except KeyError:
-                pass
-
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
-
         df = self.tree().set_index(['node_idx'])
         sample = df[df.depth == self.max_depth].sample()
-        s = sample.node.values[0]
+
         node_idx = sample.index[0]
-        while len(s) < sample_size:
-            s += self._next_symbol(node_idx, A)
-            _, node_idx = self.find_suffix(s)
-        return s
+        M = np.zeros((len(df), len(A)))
+        trs = self.transition_probs.reset_index()
+        for i in range(len(df)):
+            for jj in range(len(A)):
+                try:
+                    M[i, jj] = trs[(trs.idx == i) & (trs.next_symbol == A[jj])].iloc[0].prob
+                except IndexError:
+                    M[i, jj] = 0
+        contexts = self.tree().set_index('node')['node_idx']
+        smpl = sample.node.values[0]
+        while len(smpl) < sample_size:
+            smpl += self._next_symbol(node_idx, A, M)
+            suffixes = [smpl[-i:] for i in range(1, self.max_depth+1)]
+            node_idx = contexts[contexts.index.isin(suffixes)].iloc[0]
+        return smpl
 
     def num_contexts(self):
         """ Returns the number of contexts """
@@ -188,9 +189,5 @@ class ContextTree():
             self.df.at[i, 'transition_probs'] = list(pb)
             self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)
 
-    def _next_symbol(self, node_idx, A):
-        transitions = self.transition_probs.reset_index()
-        transitions = transitions[transitions.idx==node_idx] #.set_index(['next_symbol'])
-        ps = transitions.prob.values
-        elements = transitions.next_symbol.values #loc[A].index
-        return np.random.choice(elements, 1, p=ps)[0]
+    def _next_symbol(self, node_idx, A, M):
+        return np.random.choice(A, 1, p=M[node_idx])[0]

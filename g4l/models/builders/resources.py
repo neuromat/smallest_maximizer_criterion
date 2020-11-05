@@ -17,7 +17,9 @@ def calculate_num_child_nodes(df):
                        .groupby(['parent_idx'])
                        .apply(lambda x: x.sum().active))
 
-    df.set_index('node_idx', inplace=True)
+
+    if df.index.name is not 'node_idx':
+        df.set_index('node_idx', inplace=True)
     try:
         df['num_child_nodes'] = num_child_nodes
         df['active_children'] = active_children

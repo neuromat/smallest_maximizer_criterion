@@ -33,11 +33,11 @@ logging.basicConfig(
     ]
 )
 
-cache_dir = 'examples/example1/cache'
+cache_dir = 'examples/linguistic_case_study/cache'
 max_depth = 4
 num_resamples = 200
-X_bp = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
-X_ep = Sample('examples/example1/publico.txt', [0, 1, 2, 3, 4])
+X_bp = Sample('examples/linguistic_case_study/folha.txt', [0, 1, 2, 3, 4])
+X_ep = Sample('examples/linguistic_case_study/publico.txt', [0, 1, 2, 3, 4])
 
 
 # Instantiates SMC object

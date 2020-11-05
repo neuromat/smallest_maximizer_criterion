@@ -45,7 +45,7 @@ class ContextTreeBuilder:
         df.reset_index(drop=False, inplace=True)
         rsc.bind_parent_nodes(df)
         rsc.calculate_num_child_nodes(df)
-        df.reset_index(inplace=True)
+        df.reset_index(inplace=True, drop=True)
         return df
 
     def _build_parents(self, df):

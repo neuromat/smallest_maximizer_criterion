@@ -46,8 +46,6 @@ class Bootstrap():
         pvalue = 1
         t = len(champion_trees)-1
 
-        #import code; code.interact(local=dict(globals(), **locals()))
-
         while (pvalue > self.alpha) and (t > 0):
             t -= 1
             d1, d2 = diffs
@@ -55,7 +53,7 @@ class Bootstrap():
             #_, pvalue, _ = ttest_ind(d1[t], d2[t], alternative='smaller')
 
             pvalue = self.t_test(d1[t], d2[t], alternative='greater')
-        #import code; code.interact(local=dict(globals(), **locals()))
+            import code; code.interact(local=dict(globals(), **locals()))
         return t+1
 
     def t_test(self, x, y, alternative='both-sided'):
