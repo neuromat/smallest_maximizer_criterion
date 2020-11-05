@@ -45,8 +45,8 @@ def run_simulation(model_name):
             args = (model_name, sample_size, MAX_SAMPLES)
             for sample_idx, sample in fetch_samples(*args):
                 print('sample:', sample_size, sample_idx)
-                #resample_factory = BlockResampling(sample, RENEWAL_POINT)
-                resample_factory = TreeSourceResampling(model, sample)
+                resample_factory = BlockResampling(sample, RENEWAL_POINT)
+                #resample_factory = TreeSourceResampling(model, sample)
                 folder_vars = (RESAMPLES_FOLDER, model_name,
                                sample_size, sample_idx)
                 bootstrap = Bootstrap(resample_factory,
@@ -60,7 +60,6 @@ def run_simulation(model_name):
 
                 print("finding optimal trees")
                 opt_idx = bootstrap.find_optimal_tree(champion_trees)
-                opt_idx = 0
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,

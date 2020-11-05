@@ -24,6 +24,7 @@ class Bootstrap():
                 >= champion_trees[-1].num_contexts())
 
         diffs = self._initialize_diffs(len(champion_trees))
+        print('Generating resamples')
         for j, sz in enumerate(self.resample_sizes):
             self._generate_resamples(j, sz)
         l_current = np.zeros((self.num_resamples, 2))
@@ -35,7 +36,8 @@ class Bootstrap():
                                                self._resample_file(j),
                                                num_cores=self.num_cores)
             l_current[:, j] = L[0]
-        for t, tree in enumerate(champion_trees[1:]):
+        #for t, tree in enumerate(champion_trees[1:]):
+        for t, tree in enumerate(champion_trees[0:-1]):
             l_next = np.zeros((self.num_resamples, 2))
             for j, sz in enumerate(self.resample_sizes):
                 l_next[:, j] = L[t+1]
@@ -45,16 +47,19 @@ class Bootstrap():
             l_current = l_next
         pvalue = 1
         t = len(champion_trees)-1
-
-        while (pvalue > self.alpha) and (t > 0):
-            t -= 1
-            d1, d2 = diffs
-            #import code; code.interact(local=dict(globals(), **locals()))
-            #_, pvalue, _ = ttest_ind(d1[t], d2[t], alternative='smaller')
-
-            pvalue = self.t_test(d1[t], d2[t], alternative='greater')
-            import code; code.interact(local=dict(globals(), **locals()))
-        return t+1
+        d1, d2 = diffs
+        res = np.array([self.t_test(d1[t], d2[t], alternative='greater') for t in range(len(champion_trees)-1)])
+        import code; code.interact(local=dict(globals(), **locals()))
+        return np.argsort(1 - (res < self.alpha).astype(int))[0]
+#        while (pvalue > self.alpha) and (t > 0):
+#            t -= 1
+#            d1, d2 = diffs
+#            #import code; code.interact(local=dict(globals(), **locals()))
+#            #_, pvalue, _ = ttest_ind(d1[t], d2[t], alternative='smaller')
+#
+#            pvalue = self.t_test(d1[t], d2[t], alternative='greater')
+#            import code; code.interact(local=dict(globals(), **locals()))
+#        return t+1
 
     def t_test(self, x, y, alternative='both-sided'):
         _, double_p = ttest_ind(x, y, equal_var=False)
