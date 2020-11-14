@@ -68,16 +68,21 @@ sample = Sample(None, [0, 1], data=data, separator=None)
 max_depth = 6
 c = 0.0536
 cc = 0.0587
-
-#c = 0
+c = 0.14766
 bic = BIC(c, max_depth).fit(sample).context_tree
 
+df = bic.df
+aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
+rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
+rr
 
-
-smc = SMC(max_depth, penalty_interval=(0, 100), epsilon=0.00001)
-champion_trees = smc.fit(sample).context_trees
 
 import code; code.interact(local=dict(globals(), **locals()))
+
+smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
+champion_trees = smc.fit(sample).context_trees
+
+
 #
 #
 #pp = Prune().fit(sample).context_trees
