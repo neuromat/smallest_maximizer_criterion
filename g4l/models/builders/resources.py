@@ -31,12 +31,11 @@ def calculate_num_child_nodes(df):
     return df
 
 
-
 def bind_parent_nodes(df):
     """
     Connects nodes to their parents through the 'parent_idx' column
     """
-
+    empty_node_idx = df[df.node == ''].index
     df['parent_node'] = df.node.str.slice(start=1)
     df.reset_index(inplace=True)
     df.set_index('node', inplace=True)
@@ -44,8 +43,10 @@ def bind_parent_nodes(df):
     parent_nodes_idx = df.loc[parent_nodes].node_idx
     df.reset_index(inplace=True)
     parent_nodes_idx = parent_nodes_idx.reset_index().node_idx.values
-    depth_1_values = np.repeat(None, len(df.loc[df.depth == 1]))
-    df['parent_idx'] = np.concatenate((depth_1_values, parent_nodes_idx))
+    #depth_1_values = np.repeat(None, len(df.loc[df.depth == 1]))
+    depth_0_values = [None]
+    depth_1_values = np.repeat(empty_node_idx, len(df.loc[df.depth == 1]))
+    df['parent_idx'] = np.concatenate((depth_0_values, depth_1_values, parent_nodes_idx))
     df.drop('parent_node', axis='columns', inplace=True)
     df.set_index('node_idx', inplace=True)
     return df

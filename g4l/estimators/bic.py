@@ -21,8 +21,10 @@ class BIC(Base):
                                                  force_admissible=False)
 
         full_tree.df['likelihood_pen'] = full_tree.df.likelihood
-        penalization_term = np.log(len(X.data)) * ((len(X.A)-1) * self.c)
-        full_tree.df.likelihood_pen -= penalization_term
+        penalization_term = np.log(len(X.data)) * (((1-len(X.A))/2) * self.c)
+        #penalization_term = np.log(len(X.data)) * ((len(X.A)-1) * self.c)
+        #full_tree.df[full_tree.df.node=='100']
+        full_tree.df.likelihood_pen += penalization_term
 
 
         df = self.assign_values(full_tree.df[full_tree.df.freq >= 1])
@@ -39,7 +41,6 @@ class BIC(Base):
         for d in reversed(range(1, self.max_depth)):
             parents = df[(df.depth == d) & (df.freq >= 1)]
             ch = df[(df.parent_idx.isin(parents.node_idx)) & (df.freq >= 1)]
-            #import code; code.interact(local=dict(globals(), **locals()))
             ch_vals = ch.groupby([df.parent_idx]).apply(lambda x: x.val2.sum())
             ch_vals.name = 'val2'
             ch_vals = ch_vals.to_frame().reset_index()

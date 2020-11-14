@@ -29,10 +29,11 @@ class SMC(CollectionBase):
         tree_a = self._bic(min_c)
         tree_b = tree_f = self._bic(max_c)
         self._add_tree(tree_a, min_c)
+
         a, b = (min_c, max_c)
         while not tree_a.equals_to(tree_b):
-            while b - a > self.epsilon:
-                while not tree_a.equals_to(tree_b):
+            while abs(b - a) > self.epsilon:
+                while not tree_a.equals_to(tree_b) and abs(max_c - min_c) > 10**-5:
                     old_b = b
                     old_tree_b = tree_b
                     b = (a + b)/2
@@ -45,7 +46,8 @@ class SMC(CollectionBase):
             self._add_tree(tree_a, b)
             b = max_c
             tree_b = tree_f
-        logging.info('Finished CTM Scanner')
+        #self.add_tree(self._bic(max_c))
+        logging.info('Finished SMC')
         return self
 
     def _bic(self, c):

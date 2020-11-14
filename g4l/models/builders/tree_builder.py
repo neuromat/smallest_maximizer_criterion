@@ -3,6 +3,7 @@ import numpy as np
 #sys.path.insert(0, os.path.abspath('.'))
 #from . import incremental
 from . import resources as rsc
+from collections import defaultdict
 
 
 class ContextTreeBuilder:
@@ -16,6 +17,10 @@ class ContextTreeBuilder:
 
     def build(self):
         from .. import ContextTree
+        empty_tr_freq_dic = dict([(ctx, sum(ps)) for ctx, ps in self.contexts if len(ctx)==1])
+        empty_tr_freq_dic = defaultdict(int, empty_tr_freq_dic)
+        empty_tr_freq = [empty_tr_freq_dic[x] for x in self.A]
+        self.contexts.append(('', empty_tr_freq))
         df = self._build_contexts_dataframe()
         probs = self._build_transition_probs()
         max_depth = df.node.str.len().max()
@@ -35,8 +40,9 @@ class ContextTreeBuilder:
     def _build_contexts_dataframe(self):
         df = pd.DataFrame(columns=['node_idx', 'node', 'freq'])
         #max_depth, contexts_dataframe, transition_probs, source_sample=None
-        for i, context in enumerate(self.contexts):
-            df.loc[len(df)] = [i, context[0], sum(context[1])]
+        self.contexts.sort(key=lambda x: x[0])
+        for i, (node, freq) in enumerate(self.contexts):
+            df.loc[len(df)] = [i, node, sum(freq)]
 
         df['active'] = 1
         df['depth'] = df.node.str.len()
