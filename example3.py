@@ -77,7 +77,7 @@ rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_fil
 rr
 
 
-import code; code.interact(local=dict(globals(), **locals()))
+#import code; code.interact(local=dict(globals(), **locals()))
 
 smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
 champion_trees = smc.fit(sample).context_trees
