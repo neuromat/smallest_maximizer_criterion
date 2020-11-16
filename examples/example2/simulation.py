@@ -59,8 +59,8 @@ def run_simulation(model_name):
                 champion_trees = estimators[estimator](sample)
 
                 print("finding optimal trees")
-                #opt_idx = bootstrap.find_optimal_tree(champion_trees)
-                opt_idx = 0
+                opt_idx = bootstrap.find_optimal_tree(champion_trees)
+                #opt_idx = 0
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
