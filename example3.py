@@ -72,14 +72,18 @@ c = 0.0536
 cc = 0.0587
 c = 0.14766
 c = 0.18050
+
+import pandas as pd
+df2 = pd.read_csv('/home/arthur/tmp/sample98_c0.18050.csv', sep=';', dtype={'node': object})
+
 bic = BIC(c, max_depth).fit(sample).context_tree
-
 df = bic.df
-import code; code.interact(local=dict(globals(), **locals()))
 
-aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
-rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
-rr
+#import code; code.interact(local=dict(globals(), **locals()))
+
+#aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
+#rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
+#rr
 
 
 
@@ -87,7 +91,7 @@ rr
 smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
 champion_trees = smc.fit(sample).context_trees
 
-
+import code; code.interact(local=dict(globals(), **locals()))
 #
 #
 #pp = Prune().fit(sample).context_trees
@@ -97,3 +101,4 @@ champion_trees = smc.fit(sample).context_trees
 #t_incr = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.incremental)
 #CTM(t_incr).execute(0.08).to_str()
 #CTM2(t_incr).execute(0.8).to_str()
+
