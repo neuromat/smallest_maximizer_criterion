@@ -19,12 +19,47 @@ def test_compare_trees():
     for sample_size in sample_sizes:
         for model_name in models:
             print("Executing %s - %s" % (sample_size, model_name))
-            result_file = '/SecROCTM/%s_%s.csv' % (model_name, sample_size)
+            result_file = '/SeqROCTM/%s_%s.csv' % (model_name, sample_size)
             #if not os.path.exists(results_folder + result_file):
-            create_champion_trees_file(sample_size, model_name)
+            #create_champion_trees_file(sample_size, model_name)
     for sample_size in sample_sizes:
         for model_name in models:
-            import code; code.interact(local=dict(globals(), **locals()))
+            algs = ['smc', 'SeqROCTM']
+            f1, f2 = ['%s/%s/%s_%s.csv' % (results_folder, alg, model_name, sample_size) for alg in algs]
+            #import code; code.interact(local=dict(globals(), **locals()))
+            df1 = pd.read_csv(f1).sort_values(['sample_idx', 'num_contexts'])
+            df2 = pd.read_csv(f2)
+            df2['num_contexts'] = df2.tree.apply(lambda x: len(x.split()))
+            df2 = df2.sort_values(['sample_idx', 'num_contexts'])
+            df2['tree'] = df2.tree.apply(lambda x: ' '.join(sorted(x.split())))
+            df1['tree'] = df1.tree.apply(lambda x: ' '.join(sorted(x.split())))
+            for sample_idx in range(100):
+                ok = True
+                for tree in df2[df2.sample_idx == sample_idx].tree.values:
+                    try:
+                        df1[(df1.sample_idx == sample_idx) & (df1.tree == tree)].values[0]
+                    except IndexError:
+                        ok = False
+                        print("===============================")
+                        print("sample idx ", sample_idx, "; missing tree: ", tree)
+                        print("===============================")
+                        print("smc:")
+                        print('\n'.join(df1[df1.sample_idx == sample_idx].tree.values))
+                        print("seq:")
+                        print('\n'.join(df2[df2.sample_idx == sample_idx].tree.values))
+                        print("===============================")
+
+                if ok:
+                    print('sample ', sample_idx, ' -> OK')
+
+
+
+    samples_path = os.path.abspath('./examples/example2/samples')
+    mat_file = '%s/model1_5000.mat' % (samples_path)
+    f = io.loadmat(mat_file)
+    sample = ''.join(f['model1_5000'][98].astype(str))
+
+    import code; code.interact(local=dict(globals(), **locals()))
 
     print('ok')
 

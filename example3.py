@@ -63,21 +63,26 @@ def sort_trees(context_trees):
 #    [print(x.to_str()) for x in champion_trees]
 #
 
-data = open('fixtures/sample20000.txt').read()
+#data = open('fixtures/sample20000.txt').read()
+data = open('/home/arthur/Documents/Neuromat/projects/SMC/98.txt').read()[:-1]
+
 sample = Sample(None, [0, 1], data=data, separator=None)
 max_depth = 6
 c = 0.0536
 cc = 0.0587
 c = 0.14766
+c = 0.18050
 bic = BIC(c, max_depth).fit(sample).context_tree
 
 df = bic.df
+import code; code.interact(local=dict(globals(), **locals()))
+
 aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
 rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
 rr
 
 
-#import code; code.interact(local=dict(globals(), **locals()))
+
 
 smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
 champion_trees = smc.fit(sample).context_trees
