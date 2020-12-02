@@ -3,6 +3,7 @@ from . import persistence as per
 from collections import Counter
 from .builders.tree_builder import ContextTreeBuilder
 from .builders.resources import calculate_num_child_nodes
+from numpy.matlib import repmat
 import numpy as np
 import math
 import regex as re
@@ -59,28 +60,27 @@ class ContextTree():
 
     def sample_likelihood(self, sample):
         contexts_in_resample = self.tree()[['node_idx', 'node']]
-        fn = lambda x: [m.end(0)+1 for m in re.finditer(x,
+        fn = lambda x: [m.end(0) for m in re.finditer(x,
                                                         sample.data,
                                                         overlapped=True)]
-        convert_to_symbols_fn = lambda x: [sample.data[i] for i in x if i < len(sample.data)]
+        sample_len = len(sample.data)
+        convert_fn = lambda x: [sample.data[i] for i in x if i < sample_len]
         next_symbols_positions = contexts_in_resample.node.apply(fn)
-        symbol_freqs = next_symbols_positions.apply(convert_to_symbols_fn)
-        symbol_freqs = symbol_freqs[symbol_freqs.str.len() > 0]
-        func = lambda x: [Counter(x)[s] for s in sample.A]
-        contexts_in_resample['symbol_freqs'] = symbol_freqs.apply(func)
-        contexts_in_resample['count'] = symbol_freqs.apply(lambda x: len(x))
-        builder = ContextTreeBuilder(sample.A)
-        for idx, row in contexts_in_resample.iterrows():
-            if hasattr(row.symbol_freqs, "__len__"):
-                builder.add_context(row.node, row.symbol_freqs)
-        t = builder.build()
-        incremental.calculate_likelihood(t.df, t.transition_probs)
-        return t.log_likelihood(), t
+        transitions = next_symbols_positions.apply(convert_fn)
+        N = np.zeros([len(contexts_in_resample), len(sample.A)])
+        for i, tr in enumerate(transitions.values):
+            counter = Counter(tr)
+            for j, a in enumerate(sample.A):
+                N[i, j] = counter[a]
+        ss = np.array([sum(x) for x in N])
+        ind = N > 0
+        B = repmat(ss, len(sample.A), 1).T
+        return np.sum(np.multiply(N[ind], np.log(N[ind]) - np.log(B[ind])))
 
     def prune_unique_context_paths(self):
         while True:
             df = calculate_num_child_nodes(self.df)
-            leaves = df[(df.active_children==0) & (df.active == 1)]
+            leaves = df[(df.active_children == 0) & (df.active == 1)]
             parents_idx = [x for x in leaves.parent_idx.unique() if x is not None]
             #df[df.parent_idx]
             #leaves = df.loc[(~df.node_idx.isin(df.parent_idx)) & (df.active == 1)]

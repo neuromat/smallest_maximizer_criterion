@@ -17,10 +17,12 @@ class ContextTreeBuilder:
 
     def build(self):
         from .. import ContextTree
-        empty_tr_freq_dic = dict([(ctx, sum(ps)) for ctx, ps in self.contexts if len(ctx)==1])
-        empty_tr_freq_dic = defaultdict(int, empty_tr_freq_dic)
-        empty_tr_freq = [empty_tr_freq_dic[x] for x in self.A]
-        self.contexts.append(('', empty_tr_freq))
+        # import code; code.interact(local=dict(globals(), **locals()))
+        if len([c for c, f in self.contexts if c == '']) == 0:
+            empty_tr_freq_dic = dict([(ctx, sum(ps)) for ctx, ps in self.contexts if len(ctx)==1])
+            empty_tr_freq_dic = defaultdict(int, empty_tr_freq_dic)
+            empty_tr_freq = [empty_tr_freq_dic[x] for x in self.A]
+            self.contexts.append(('', empty_tr_freq))
         df = self._build_contexts_dataframe()
         probs = self._build_transition_probs()
         max_depth = df.node.str.len().max()

@@ -3,6 +3,8 @@ from g4l.models import ContextTree
 from . import BIC
 from hashlib import md5
 import pickle
+from collections import Counter
+from g4l.models.builders.tree_builder import ContextTreeBuilder
 import logging
 
 
@@ -93,10 +95,12 @@ class SMC(CollectionBase):
         if not t:
             t = self._bic(c)
             self.__add_tree(c, t)
-            logging.debug("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
+            print("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
         else:
-            logging.debug("[skip] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
+            print("[skip] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
         return t
+
+
 
     def __cached_trees(self, k):
         for a, b in self.intervals.keys():

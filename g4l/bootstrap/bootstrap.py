@@ -25,22 +25,23 @@ class Bootstrap():
 
         diffs = self._initialize_diffs(len(champion_trees))
         print('Generating resamples')
-        for j, sz in enumerate(self.resample_sizes):
-            self._generate_resamples(j, sz)
-        l_current = np.zeros((self.num_resamples, 2))
+        #for j, sz in enumerate(self.resample_sizes):
+        self._generate_resamples(*self.resample_sizes)
 
+        l_current = np.zeros((self.num_resamples, 2))
+        L = [None, None]
         for j, sz in enumerate(self.resample_sizes):
             print("Calculating likelihood j=", j+1)
-            L = parallel.calculate_likelihoods(self.temp_folder,
+            L[j] = parallel.calculate_likelihoods(self.temp_folder,
                                                champion_trees,
-                                               self._resample_file(j),
+                                               self._resample_file(j+1),
                                                num_cores=self.num_cores)
-            l_current[:, j] = L[0]
+            l_current[:, j] = L[j][0]
         #for t, tree in enumerate(champion_trees[1:]):
-        for t, tree in enumerate(champion_trees[0:-1]):
+        for t, tree in enumerate(champion_trees[:-1]):
             l_next = np.zeros((self.num_resamples, 2))
             for j, sz in enumerate(self.resample_sizes):
-                l_next[:, j] = L[t+1]
+                l_next[:, j] = L[j][t+1]
                 for b in range(self.num_resamples):
                     diffs[j][t, b] = (l_current[b, j] - l_next[b, j])
                     diffs[j][t, b] /= (self.resample_sizes[j]**0.9)
@@ -48,9 +49,11 @@ class Bootstrap():
         pvalue = 1
         t = len(champion_trees)-1
         d1, d2 = diffs
-        res = np.array([self.t_test(d1[t], d2[t], alternative='greater') for t in range(len(champion_trees)-1)])
-        import code; code.interact(local=dict(globals(), **locals()))
-        return np.argsort(1 - (res < self.alpha).astype(int))[0]
+        rev_idxs = list(reversed(range(len(champion_trees)-1)))
+        res = np.array([self.t_test(d1[t], d2[t], alternative='greater') for t in rev_idxs])
+        first_occur_idx = np.argsort(1 - (res < self.alpha).astype(int))[0]
+        return rev_idxs[first_occur_idx]
+#        [print(t.to_str()) for t in champion_trees]
 #        while (pvalue > self.alpha) and (t > 0):
 #            t -= 1
 #            d1, d2 = diffs
@@ -77,12 +80,20 @@ class Bootstrap():
                 pval = 1.0 - double_p/2.
         return pval
 
-    def _generate_resamples(self, j, sz):
-        file = self._resample_file(j)
-        if os.path.exists(file):
-            os.remove(file)
-        for b in range(self.num_resamples): # TODO: run in parallel
-            self.resample_factory.generate(sz, file)
+    def _generate_resamples(self, sz1, sz2):
+        filename_n1 = self._resample_file(1)
+        filename_n2 = self._resample_file(2)
+        if os.path.exists(filename_n2):
+            os.remove(filename_n2)
+        if os.path.exists(filename_n1):
+            os.remove(filename_n1)
+        params = (sz2, self.num_resamples, filename_n2, self.num_cores)
+        self.resample_factory.generate(*params)
+        with open(filename_n2, 'r') as f:
+            larger_samples = f.read().split('\n')[:-1]
+        smaller_samples = [s[:sz1] for s in larger_samples]
+        with open(filename_n1, 'w') as f:
+            f.write('\n'.join(smaller_samples) + '\n')
 
     def _initialize_diffs(self, num_trees):
         m = np.zeros((num_trees-1, self.num_resamples))

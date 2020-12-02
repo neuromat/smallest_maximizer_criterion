@@ -47,8 +47,11 @@ def count_subsequence_frequencies(df, sample, max_depth):
     dct_node_freq = defaultdict(lambda: 0)
     for d in range(max_depth + 1):
         # create a dataframe with all subsequences and their frequencies
+        # aqui
         for i in range(max_depth, len(sample_data)):
             node = sample_data[i-d:i]
+            #if d==1:
+                #import code; code.interact(local=dict(globals(), **locals()))
             a = sample_data[i]
             dct_node_freq[node] += 1
             dct_transition[node][sample.A.index(a)] += 1

@@ -16,6 +16,7 @@ import math
 from g4l.data import Sample
 import pandas as pd
 import time
+from examples.example2 import models
 import logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -65,7 +66,6 @@ def sort_trees(context_trees):
 
 #data = open('fixtures/sample20000.txt').read()
 data = open('/home/arthur/Documents/Neuromat/projects/SMC/98.txt').read()[:-1]
-
 sample = Sample(None, [0, 1], data=data, separator=None)
 max_depth = 6
 c = 0.0536
@@ -73,13 +73,29 @@ cc = 0.0587
 c = 0.14766
 c = 0.18050
 
-import pandas as pd
-df2 = pd.read_csv('/home/arthur/tmp/sample98_c0.18050.csv', sep=';', dtype={'node': object})
 
-bic = BIC(c, max_depth).fit(sample).context_tree
-df = bic.df
+
+from g4l.util import renewal_point
+t = models.get_model('model1')
+#t.transition_probs.reset_index(drop=False, inplace=True)
+#renewal_point.find_renewal_points(t, sample)
 
 #import code; code.interact(local=dict(globals(), **locals()))
+
+
+import pandas as pd
+#df2 = pd.read_csv('/home/arthur/tmp/sample98_c0.18050.csv', sep=';', dtype={'node': object})
+#import code; code.interact(local=dict(globals(), **locals()))
+sample = [x for x in fetch_samples('model1', '5000', 10)][1][1]
+bic = BIC(0.166982, max_depth).fit(sample).context_tree
+df = bic.df
+df[['node', 'freq']]
+
+#import code; code.interact(local=dict(globals(), **locals()))
+
+
+
+
 
 #aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
 #rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
