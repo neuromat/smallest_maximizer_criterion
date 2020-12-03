@@ -36,7 +36,7 @@ def run_simulation(model_name):
     model = models.get_model(model_name)
 
     for sample_size in SAMPLE_SIZES:
-        for estimator in ['smc', 'prune']:
+        for estimator in ['prune']:
             results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
                                                 model_name, sample_size)
             if os.path.exists(results_file):
