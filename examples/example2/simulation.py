@@ -46,7 +46,6 @@ def run_simulation(model_name):
             for sample_idx, sample in fetch_samples(*args):
                 print('sample:', sample_size, sample_idx)
                 resample_factory = BlockResampling(sample, RENEWAL_POINT)
-                #resample_factory = TreeSourceResampling(model, sample)
                 folder_vars = (RESAMPLES_FOLDER, model_name,
                                sample_size, sample_idx)
                 bootstrap = Bootstrap(resample_factory,

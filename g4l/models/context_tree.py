@@ -21,8 +21,8 @@ class ContextTree():
         self.df = contexts_dataframe
         self.transition_probs = transition_probs
         self.sample = source_sample
-        self.df = calculate_num_child_nodes(self.df)
-        self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
+        #self.df = calculate_num_child_nodes(self.df)
+        #self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
 
     @classmethod
     def init_from_sample(cls, X, max_depth, initialization_method=incremental,
@@ -31,6 +31,8 @@ class ContextTree():
 
         contexts, transition_probs = initialization_method.run(X, max_depth)
         t = ContextTree(max_depth, contexts, transition_probs, X)
+        contexts = calculate_num_child_nodes(contexts)
+        contexts.loc[contexts.num_child_nodes.isna(), 'active'] = 1
         if force_admissible:
             t.prune_unique_context_paths()
         return t
@@ -61,8 +63,8 @@ class ContextTree():
     def sample_likelihood(self, sample):
         contexts_in_resample = self.tree()[['node_idx', 'node']]
         fn = lambda x: [m.end(0) for m in re.finditer(x,
-                                                        sample.data,
-                                                        overlapped=True)]
+                                                      sample.data,
+                                                      overlapped=True)]
         sample_len = len(sample.data)
         convert_fn = lambda x: [sample.data[i] for i in x if i < sample_len]
         next_symbols_positions = contexts_in_resample.node.apply(fn)

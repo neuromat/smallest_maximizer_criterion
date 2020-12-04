@@ -75,7 +75,7 @@ c = 0.18050
 
 
 
-from g4l.util import renewal_point
+#from g4l.util import renewal_point
 t = models.get_model('model1')
 #t.transition_probs.reset_index(drop=False, inplace=True)
 #renewal_point.find_renewal_points(t, sample)
