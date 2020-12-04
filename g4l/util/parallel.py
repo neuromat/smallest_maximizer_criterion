@@ -11,22 +11,23 @@ import tqdm
 
 
 def calc_likelihood_process(args):
-    trees_folder, resamples_file, tree_idx, resample_idx = args
+    trees_folder, resamples_file, resample_size, tree_idx, resample_idx = args
     tree = get_tree(trees_folder, tree_idx)
-    resample = Sample(None, tree.sample.A,
-                      data=resamples(resamples_file)[resample_idx])
+    data = resamples(resamples_file)[resample_idx][:int(resample_size)]
+    resample = Sample(None, tree.sample.A, data=data)
+
     ret = tree.sample_likelihood(resample)
     return ret
 
 
-def calculate_likelihoods(temp_folder, champion_trees, resamples_file, num_cores=None):
+def calculate_likelihoods(temp_folder, champion_trees, resamples_file,
+                          resample_size, num_cores=None):
     num_resamples = len(resamples(resamples_file))
-    #import code; code.interact(local=dict(globals(), **locals()))
     num_trees = len(champion_trees)
     trees_folder = champion_trees_folder(temp_folder, champion_trees)
     persist_trees(champion_trees, trees_folder)
     pr = product(range(num_trees), range(num_resamples))
-    params = [(trees_folder, resamples_file, *x) for x in pr]
+    params = [(trees_folder, resamples_file, resample_size, *x) for x in pr]
     if num_cores is None:
         result = map(calc_likelihood_process, params)
     else:

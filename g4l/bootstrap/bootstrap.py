@@ -4,26 +4,23 @@ from g4l.util.stats import t_test
 
 
 class Bootstrap():
-    def __init__(self, champion_trees, samples_n1, samples_n2):
+    def __init__(self, champion_trees, resample_file, resample_sizes):
         self.champion_trees = champion_trees
-        self.resample_files = (samples_n1, samples_n2)
-
-    def calculate_sample_sizes(self):
-        fn = lambda x: len(open(x).read().split('\n')[0])
-        return list(map(fn, self.resample_files))
+        self.resample_file = resample_file
+        self.resample_sizes = resample_sizes
 
     def calculate_likelihoods(self, temp_folder, num_cores=3):
         L = [None, None]
-        for j, resample_file in enumerate(self.resample_files):
+        for j, resample_size in enumerate(self.resample_sizes):
             print("Calculating likelihood j=", j+1)
             L[j] = prl.calculate_likelihoods(temp_folder,
                                              self.champion_trees,
-                                             resample_file,
+                                             self.resample_file,
+                                             resample_size,
                                              num_cores=num_cores)
-        return L
+        return np.array(L)
 
     def calculate_diffs(self, L):
-        resample_sizes = self.calculate_sample_sizes()
         num_resample_sizes, num_trees, num_resamples = L.shape
         m = np.zeros((num_trees-1, num_resamples))
         diffs = (m, m.copy())
@@ -36,7 +33,7 @@ class Bootstrap():
                 l_next[:, j] = L[j][t+1]
                 for b in range(num_resamples):
                     diffs[j][t, b] = (l_current[b, j] - l_next[b, j])
-                    diffs[j][t, b] /= (resample_sizes[j]**0.9)
+                    diffs[j][t, b] /= (self.resample_sizes[j]**0.9)
             l_current = l_next
         return diffs
 
@@ -45,8 +42,9 @@ class Bootstrap():
         d1, d2 = diffs
         rev_idxs = list(reversed(range(len(self.champion_trees)-1)))
         res = np.array([t_test(d1[t], d2[t], alternative='greater') for t in rev_idxs])
-        first_occur_idx = np.argsort(1 - (res < alpha).astype(int))[0]
-        return rev_idxs[first_occur_idx], res
+        first_occur_idx = len(res) - np.argmax(res < alpha)
+        #first_occur_idx = np.argsort(1 - (res < alpha).astype(int))[0]
+        return first_occur_idx, res
 
     def _initialize_diffs(self, num_trees, num_resamples):
         m = np.zeros((num_trees-1, num_resamples))

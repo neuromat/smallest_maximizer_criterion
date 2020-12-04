@@ -1,6 +1,7 @@
 from .base import CollectionBase
 from g4l.models import ContextTree
 from . import BIC
+import os
 from hashlib import md5
 import pickle
 from collections import Counter
@@ -24,6 +25,8 @@ class SMC(CollectionBase):
         self.tresholds = []
 
     def fit(self, X):
+        if self._load_cache(X):
+            return self
         self.intervals = None
         self.initial_tree = ContextTree.init_from_sample(X, self.max_depth)
         min_c, max_c = self.penalty_interval
@@ -48,7 +51,8 @@ class SMC(CollectionBase):
             self._add_tree(tree_a, b)
             b = max_c
             tree_b = tree_f
-        #self.add_tree(self._bic(max_c))
+        if self.cache_dir is not None:
+            self._save_cache(X)
         logging.info('Finished SMC')
         return self
 
@@ -66,20 +70,45 @@ class SMC(CollectionBase):
             pass
 
     def _load_cache(self, X):
-        strg = X.data + str(self.penalty_interval) + str(self.epsilon)
+        cache_folder, cachefile = self.cache_file(X)
+        try:
+            with open(cachefile, 'rb') as f:
+                dic = pickle.load(f)
+            print("Loaded from cache")
+        except FileNotFoundError:
+            return False
+        self.max_depth = dic['max_depth']
+        self.penalty_interval = dic['penalty_interval']
+        self.epsilon = dic['epsilon']
+        self.cache_dir = dic['cache_dir']
+        self.tresholds = dic['tresholds']
+        self.context_trees = []
+        for i in range(dic['context_trees']):
+            t = ContextTree.load_from_file('%s/%s.tree' % (cache_folder, i))
+            self.context_trees.append(t)
+        return True
+
+    def cache_file(self, X):
+        strg = 'SMC' + X.data + str(self.penalty_interval) + str(self.epsilon)
         cachefile = md5((strg).encode('utf-8')).hexdigest()
-        cachefile = '%s/%s.pkl' % (self.cache_dir, cachefile)
-        with open(cachefile) as f:
-            r = pickle.load(f)
+        cachefile = '%s/%s/params.pkl' % (self.cache_dir, cachefile)
+        folder = os.path.dirname(cachefile)
+        return folder, cachefile
 
     def _save_cache(self, X):
-        if self.cache_dir is None:
-            raise FileNotFoundError
-        strg = X.data + str(self.penalty_interval) + str(self.epsilon)
-        cachefile = md5((strg).encode('utf-8')).hexdigest()
-        cachefile = '%s/%s.pkl' % (self.cache_dir, cachefile)
+        folder, cachefile = self.cache_file(X)
+        print("Cached in folder %s" % folder)
+        os.makedirs(folder, exist_ok=True)
+        dic = {'max_depth': self.max_depth,
+               'penalty_interval': self.penalty_interval,
+               'epsilon': self.epsilon,
+               'cache_dir': self.cache_dir,
+               'tresholds': self.tresholds,
+               'context_trees': len(self.context_trees)}
         with open(cachefile, 'wb') as f:
-            pickle.dump(self, f)
+            pickle.dump(dic, f)
+        for i, t in enumerate(self.context_trees):
+            t.save('%s/%s.tree' % (folder, i))
 
     def strategy_default(self, c):
         bic = self._bic(c)
@@ -99,7 +128,6 @@ class SMC(CollectionBase):
         else:
             print("[skip] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
         return t
-
 
 
     def __cached_trees(self, k):

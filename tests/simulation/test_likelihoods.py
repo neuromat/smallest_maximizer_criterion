@@ -16,31 +16,33 @@ cache_folder = os.path.abspath('tests/cache')
 model_name = 'model1'
 model = models.get_model(model_name)
 sample_size = 5000
+resample_sizes = (1500, 4500)
 sample_idx = 14
 max_depth = 6
 A = [0, 1]
-num_cores = None
+num_cores = 6
 
 
 @pytest.fixture(scope='function')
 def tree_resources(request):
     sample = load_sample()
     samples_n1, samples_n2 = load_bootstrap_samples()
-    smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
+    cachefld = '%s/smc' % cache_folder
+    smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001, cache_dir=cachefld)
     champion_trees = smc.fit(sample).context_trees
     return sample, samples_n1, samples_n2, champion_trees
 
 
-def xtest_likelihoods(tree_resources):
+def test_likelihoods(tree_resources):
     sample, samples_n1, samples_n2, champion_trees = tree_resources
     assert(sample.data.index('0001001010101010100010') == 0)
     assert(champion_trees[0].to_str() == largest_tree)
     assert(len(champion_trees) == 13)
-    assert(len(open(samples_n1).read().split('\n')[0]) == 1500)
-    assert(len(open(samples_n2).read().split('\n')[0]) == 4500)
+    assert(len(open(samples_n1).read().split('\n')[0]) == resample_sizes[0])
+    assert(len(open(samples_n2).read().split('\n')[0]) == resample_sizes[1])
     assert(open(samples_n1).read().split('\n')[0].index('1001000101') == 0)
     assert(open(samples_n2).read().split('\n')[0].index('1001000101') == 0)
-    bootstrap = Bootstrap(champion_trees, samples_n1, samples_n2)
+    bootstrap = Bootstrap(champion_trees, samples_n2, resample_sizes)
     L = bootstrap.calculate_likelihoods(cache_folder, num_cores=num_cores)
     assert(round(sum(sum(L[0])), 2) == -1398697.55)  # values calculated with SeqROCTM
     assert(round(sum(sum(L[1])), 2) == -4217787.59)
@@ -50,7 +52,7 @@ def xtest_likelihoods(tree_resources):
 
 def test_calculate_diffs(tree_resources):
     sample, samples_n1, samples_n2, champion_trees = tree_resources
-    bootstrap = Bootstrap(champion_trees, samples_n1, samples_n2)
+    bootstrap = Bootstrap(champion_trees, samples_n2, resample_sizes)
     L = np.load('tests/simulation/fixtures/L.npy')
     diffs = bootstrap.calculate_diffs(L)
     assert(round(sum(diffs[0][0]), 5) == 0.16477)  # values calculated with SeqROCTM
@@ -64,14 +66,14 @@ def test_calculate_diffs(tree_resources):
 
 def test_find_optimal_tree(tree_resources):
     sample, samples_n1, samples_n2, champion_trees = tree_resources
-    bootstrap = Bootstrap(champion_trees, samples_n1, samples_n2)
+    bootstrap = Bootstrap(champion_trees, samples_n2, resample_sizes)
     L = np.load('tests/simulation/fixtures/L.npy')
     diffs = bootstrap.calculate_diffs(L)
     opt_idx, res = bootstrap.find_optimal_tree(diffs)
     round_res = [round(x, 4) for x in res]
     expected = [1.0, 0.2525, 0.202, 0.0057, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0015, 0.0]
     assert(round_res == expected)
-    assert(champion_trees[opt_idx].to_str() == '0000 1 10 100 1000')
+    assert(champion_trees[opt_idx].to_str() == '000 1 10 100')
 
 
 def load_sample():

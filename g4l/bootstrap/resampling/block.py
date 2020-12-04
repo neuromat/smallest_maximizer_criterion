@@ -1,9 +1,11 @@
 import random
 import pandas as pd
 import numpy as np
+import os
 from .base import ResamplingBase
 from multiprocessing import Pool
 import tqdm
+
 
 def generate_sample(params):
     np.random.seed()
@@ -18,30 +20,28 @@ def generate_sample(params):
 
 
 class BlockResampling(ResamplingBase):
-    def __init__(self, sample, renewal_point=None):
-        self.renewal_point = renewal_point
+
+    def __init__(self, sample, file, resample_sizes, renewal_point):
         self.sample = sample
+        self.file = file
+        self.resample_sizes = resample_sizes
+        self.renewal_point = renewal_point
 
     def iterate(self, file):
         resamples = open(file).read().split('\n')[:-1]
         for i, resample in enumerate(resamples):
             yield (i, resample)
 
-    def generate(self, resample_size, num_resamples, file, num_cores=3):
+    def generate(self, num_resamples, num_cores=3):
         data = self.sample.data
-        prms = (data, file, self.renewal_point, resample_size)
+        os.makedirs(os.path.dirname(self.file), exist_ok=True)
+        with open(self.file, 'w') as f:
+            f.write('')
+        prms = (data, self.file, self.renewal_point, max(self.resample_sizes))
         params = [prms for i in range(num_resamples)]
-        with Pool(num_cores) as p:
-            p.map(generate_sample, params)
-        #fn = generate_sample(data, file, self.renewal_point, resample_size)
-        #with Pool(num_cores) as p:
-        #    p.map(fn, range(num_resamples)
-        #    tqdm.tqdm(p.map(fn, range(num_resamples)), total=num_resamples)
-            #p.map(fn, range(num_resamples))
-        #for b in range(num_resamples):
-        #    generate_sample(data, file, self.renewal_point, resample_size)
-
-
-    def __most_frequent_substring(self, source_sample):
-        # TODO: implementation
-        return '0'
+        if num_cores is None:
+            for p in params:
+                generate_sample(p)
+        else:
+            with Pool(num_cores) as p:
+                p.map(generate_sample, params)

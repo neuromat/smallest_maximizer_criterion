@@ -18,10 +18,11 @@ import logging
 
 A = ['0', '1']
 PATH = os.path.abspath('./examples/example2/samples')
-RESAMPLES_FOLDER = os.path.abspath('./examples/example2/tmp/resamples')
+TEMP_FOLDER = os.path.abspath('./examples/example2/tmp')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
 SAMPLE_SIZES = [5000]
 NUM_RESAMPLES = 200
+NUM_CORES = 6
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -30,36 +31,38 @@ MAX_SAMPLES = math.inf
 max_depth = 6
 
 
+def get_results_file(estimator, model_name, sample_size):
+    results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
+                                        model_name, sample_size)
+    if os.path.exists(results_file):
+        os.remove(results_file)
+    return results_file
+
+
 def run_simulation(model_name):
     estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
-    model = models.get_model(model_name)
-
     for sample_size in SAMPLE_SIZES:
-        for estimator in ['prune']:
-            results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
-                                                model_name, sample_size)
-            if os.path.exists(results_file):
-                os.remove(results_file)
-
-            args = (model_name, sample_size, MAX_SAMPLES)
-            for sample_idx, sample in fetch_samples(*args):
+        folder = "%s/%s/%s" % (TEMP_FOLDER, model_name, sample_size)
+        n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
+        print("Generating resamples")
+        resamples_folder = generate_bootstrap_resamples(model_name,
+                                                        sample_size,
+                                                        folder,
+                                                        n_sizes)
+        for estimator in ['smc', 'prune']:
+            results_file = get_results_file(estimator, model_name, sample_size)
+            for sample_idx, sample in fetch_samples(model_name, sample_size):
                 print('sample:', sample_size, sample_idx)
-                resample_factory = BlockResampling(sample, RENEWAL_POINT)
-                folder_vars = (RESAMPLES_FOLDER, model_name,
-                               sample_size, sample_idx)
-                bootstrap = Bootstrap(resample_factory,
-                                      '%s/%s_%s_%s' % folder_vars,
-                                      NUM_RESAMPLES,
-                                      resample_sizes=resample_sizes(sample_size),
-                                      num_cores=6,
-                                      alpha=0.01)
                 print("estimating champion trees")
                 champion_trees = estimators[estimator](sample)
+                resamples_file = resample_file(folder, sample_idx)
+                bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
+                L = bootstrap.calculate_likelihoods(resamples_folder,
+                                                    num_cores=NUM_CORES)
 
-                print("finding optimal trees")
-                opt_idx = bootstrap.find_optimal_tree(champion_trees)
-                #opt_idx = 0
+                diffs = bootstrap.calculate_diffs(L)
+                opt_idx, res = bootstrap.find_optimal_tree(diffs, alpha=0.01)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
@@ -77,6 +80,19 @@ def run_simulation(model_name):
                               header=use_header)
 
 
+def resample_file(folder, sample_idx):
+    return "%s/resamples/%s.txt" % (folder, sample_idx)
+
+
+def generate_bootstrap_resamples(model_name, sample_size, folder, larger_size):
+    args = (model_name, sample_size, MAX_SAMPLES)
+    for sample_idx, sample in fetch_samples(*args):
+        file = resample_file(folder, sample_idx)
+        resample_fctry = BlockResampling(sample, file, larger_size,
+                                         RENEWAL_POINT)
+        resample_fctry.generate(NUM_RESAMPLES, num_cores=NUM_CORES)
+
+
 def resample_sizes(sample_size):
     return tuple(math.floor(f * sample_size) for f in [N1_FACTOR, N2_FACTOR])
 
@@ -86,7 +102,9 @@ def bic(sample, c):
 
 
 def smc(sample):
-    smc = SMC(max_depth, penalty_interval=(0, 500), epsilon=0.00001)
+    smc = SMC(max_depth, penalty_interval=(0, 500),
+              epsilon=0.00001,
+              cache_dir='%s/trees' % TEMP_FOLDER)
     trees = smc.fit(sample).context_trees
     return sort_trees(trees)
 
