@@ -20,9 +20,9 @@ A = ['0', '1']
 PATH = os.path.abspath('./examples/example2/samples')
 TEMP_FOLDER = os.path.abspath('./examples/example2/tmp')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
-SAMPLE_SIZES = [5000]
+SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
-NUM_CORES = 6
+NUM_CORES = 25
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -62,7 +62,7 @@ def run_simulation(model_name):
                                                     num_cores=NUM_CORES)
 
                 diffs = bootstrap.calculate_diffs(L)
-                opt_idx, res = bootstrap.find_optimal_tree(diffs, alpha=0.01)
+                opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
