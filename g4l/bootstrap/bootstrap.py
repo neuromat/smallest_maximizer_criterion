@@ -40,11 +40,16 @@ class Bootstrap():
     def find_optimal_tree(self, diffs, alpha=0.01):
         t = len(self.champion_trees)-1
         d1, d2 = diffs
-        rev_idxs = list(reversed(range(len(self.champion_trees)-1)))
-        res = np.array([t_test(d1[t], d2[t], alternative='greater') for t in rev_idxs])
-        first_occur_idx = len(res) - np.argmax(res < alpha)
-        #first_occur_idx = np.argsort(1 - (res < alpha).astype(int))[0]
-        return first_occur_idx, res
+        pvalue = 1
+        while pvalue > alpha and t > 0:
+            t -= 1
+            pvalue = t_test(d1[t], d2[t], alternative='greater')
+
+        #rev_idxs = list(reversed(range(len(self.champion_trees)-1)))
+        #res = np.array([t_test(d1[t], d2[t], alternative='greater') for t in rev_idxs])
+        #first_occur_idx = (len(res) - np.argmax(res < alpha))+1
+        ##first_occur_idx = np.argsort(1 - (res < alpha).astype(int))[0]
+        return t+1
 
     def _initialize_diffs(self, num_trees, num_resamples):
         m = np.zeros((num_trees-1, num_resamples))
