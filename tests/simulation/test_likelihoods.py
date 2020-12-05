@@ -75,6 +75,7 @@ def test_find_optimal_tree(tree_resources):
     #expected = [1.0, 0.2525, 0.202, 0.0057, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0015, 0.0]
     #assert(round_res == expected)
     assert(champion_trees[opt_idx].to_str() == '000 1 10 100')
+    #assert(champion_trees[opt_idx+1].to_str() == '000 1 10 100')
 
 
 def load_sample():

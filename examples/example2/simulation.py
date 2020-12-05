@@ -22,7 +22,7 @@ TEMP_FOLDER = os.path.abspath('./examples/example2/tmp')
 RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
 SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
-NUM_CORES = 25
+NUM_CORES = 6
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
@@ -72,7 +72,8 @@ def run_simulation(model_name):
                            'tree': champion_tree.to_str(),
                            'num_contexts': champion_tree.num_contexts(),
                            'likelihood': champion_tree.log_likelihood(),
-                           'opt': opt}
+                           'opt': opt,
+                           'opt_idx': opt_idx}
                     use_header = (not os.path.exists(results_file))
                     df = pd.DataFrame.from_dict([obj])
                     df.to_csv(results_file, mode='a',
