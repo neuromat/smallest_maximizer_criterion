@@ -31,7 +31,6 @@ tests/result_images/
 .mr.developer.cfg
 
 # Data files
-*/data/*
 **/cache/*
 **/cache/
 tmp/
@@ -45,6 +44,9 @@ docs/auto_examples/
 # Testing and checkpoints
 .ipynb_checkpoints
 .coverage.*
+.pytest_cache/
+.pytest_cache/*
 
 #IDE
 .sublime/
+None/

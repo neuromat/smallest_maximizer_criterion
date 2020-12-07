@@ -1,7 +1,18 @@
-class Base():
+from abc import ABCMeta, abstractmethod
+import g4l.models
 
-  def __init__(self, context_tree):
-    self.context_tree = context_tree
-    self.sample = self.context_tree.sample
-    self.data = self.sample.data
-    self.A = self.sample.A
+class Base():
+  __metaclass__ = ABCMeta
+
+  @abstractmethod
+  def fit(X):
+    ''' To override '''
+    pass
+
+
+class CollectionBase(Base):
+  def __init__(self):
+    self.context_trees = []
+
+  def add_tree(self, new_tree):
+    self.context_trees.append(new_tree)

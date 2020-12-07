@@ -1,4 +1,4 @@
-from graphviz import Digraph
+
 import matplotlib.pyplot as plt
 
 def bloxplot(smc_instance):
@@ -22,22 +22,32 @@ def log_likelihood_per_leaves(smc_instances, labels):
     plt.grid()
     plt.legend()
 
-def draw_tree(tree, size='10,10'):
+def draw_tree(tree, size='10,10', previous_tree=None, diff_color='red'):
     if isinstance(tree, str):
       t = tree
     else:
       t = tree.to_str()
-    dot = Digraph(engine='dot', name=t)
+    if previous_tree==None:
+        t2 = t
+    else:
+        t2 = previous_tree.to_str()
+
+    from graphviz import Digraph
+    dot = Digraph(engine='dot', name=t, format='png')
     dot.attr(size=size)
     dot.attr('node', shape='circle')
     contexts = t.split(' ')
+    contexts2 = t2.split(' ')
     d = []
     dot.node(name='$', label='root')
     for i in range(len(contexts)):
         ctx = contexts[i][::-1]
         ctxl = [(ctx[:i+1], c) for i, c in enumerate(ctx)]
         for node in ctxl:
-            dot.node(name=node[0], label=node[1])
+            color=None
+            if contexts2.count(node[0][::-1])==0:
+                color=diff_color
+            dot.node(name=node[0], label=node[1], color=color, fontcolor=color)
             if(len(node[0]))==1:
                 if ('$', node[0]) not in d:
                     d.append(('$', node[0]))
