@@ -45,6 +45,7 @@ def generate_sample(params):
     #import code; code.interact(local=dict(globals(), **locals()))
     #pass
 
+# TODO: escrever teste comparando os métodos usando o mesmo seed
 def generate_sample2(params):
     np.random.seed()
     (data, file, renewal_point, resample_size) = params
