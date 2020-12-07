@@ -10,6 +10,44 @@ import tqdm
 def generate_sample(params):
     np.random.seed()
     (data, file, renewal_point, resample_size) = params
+    renewal_point = str(renewal_point)
+    resample_size = int(resample_size)
+    X = data
+    lrp = len(str(renewal_point))
+    idx = np.zeros(resample_size)
+    nrenewals = 1
+    for i in range(resample_size - lrp):
+        if X[i:i+lrp] == renewal_point:
+            idx[nrenewals] = i
+            nrenewals += 1
+    idx = idx[:nrenewals].astype(int)
+    l_idx = len(idx)
+    #blocks = cell(l_idx - 1, 1)
+    blocks = np.empty(l_idx - 1, dtype='object')
+    for i in range(l_idx-1):
+        blocks[i] = X[idx[i]: idx[i+1]]
+
+    #  create the bootstrap samples
+    nblocks = len(blocks)
+    lblocks = list(map(lambda x: len(x), blocks))
+
+    B = np.empty(resample_size + max(lblocks), dtype='object')
+    nseq = -1
+    it = 0
+    while (nseq < resample_size):
+        blk = np.random.randint(nblocks)
+        B[it] = blocks[blk]
+        it += 1
+        nseq = nseq + lblocks[blk]
+    ret = ''.join(B[:it])[:int(resample_size)]
+    with open(file, 'a') as f:
+        f.write(ret + '\n')
+    #import code; code.interact(local=dict(globals(), **locals()))
+    #pass
+
+def generate_sample2(params):
+    np.random.seed()
+    (data, file, renewal_point, resample_size) = params
 
     # 1. Split the sample using renewal point
     # "000100100010" -> ['000', '00', '000', '0']
@@ -23,7 +61,7 @@ def generate_sample(params):
 
     # 4. generate a new sequence by collecting slices according to the indexes
     #  . add the renewal point when joining subsequences
-    resample = ''.join(['%s%s' % (slices[idx], renewal_point) for idx in idxs])
+    resample = ''.join(['%s%s' % (renewal_point, slices[idx]) for idx in idxs])
     with open(file, 'a') as f:
         # truncate the sequence to match the resample_size
         f.write(resample[:int(resample_size)] + '\n')

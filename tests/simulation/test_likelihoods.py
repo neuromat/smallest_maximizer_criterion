@@ -28,7 +28,7 @@ def tree_resources(request):
     sample = load_sample()
     samples_n1, samples_n2 = load_bootstrap_samples()
     cachefld = '%s/smc' % cache_folder
-    smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
+    smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001, cache_dir=cachefld)
     champion_trees = smc.fit(sample).context_trees
     return sample, samples_n1, samples_n2, champion_trees
 

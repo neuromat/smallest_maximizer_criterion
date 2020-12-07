@@ -1,7 +1,26 @@
 import numpy as np
 from g4l.util import parallel as prl
 from g4l.util.stats import t_test
+from numba import jit
 
+
+@jit(nopython=True)
+def jit_calculate_diffs(resample_sizes, L):
+    num_resample_sizes, num_trees, num_resamples = L.shape
+    m = np.zeros((num_trees-1, num_resamples))
+    diffs = (m, m.copy())
+    l_current = np.zeros((num_resamples, 2))
+    for j in [0, 1]:
+        l_current[:, j] = L[j][0]
+    for t in range(num_trees - 1):
+        l_next = np.zeros((num_resamples, 2))
+        for j in range(num_resample_sizes):
+            l_next[:, j] = L[j][t+1]
+            for b in range(num_resamples):
+                diffs[j][t, b] = (l_current[b, j] - l_next[b, j])
+                diffs[j][t, b] /= (resample_sizes[j]**0.9)
+        l_current = l_next
+    return diffs
 
 class Bootstrap():
     def __init__(self, champion_trees, resample_file, resample_sizes):
@@ -21,21 +40,7 @@ class Bootstrap():
         return np.array(L)
 
     def calculate_diffs(self, L):
-        num_resample_sizes, num_trees, num_resamples = L.shape
-        m = np.zeros((num_trees-1, num_resamples))
-        diffs = (m, m.copy())
-        l_current = np.zeros((num_resamples, 2))
-        for j in [0, 1]:
-            l_current[:, j] = L[j][0]
-        for t in range(num_trees - 1):
-            l_next = np.zeros((num_resamples, 2))
-            for j in range(num_resample_sizes):
-                l_next[:, j] = L[j][t+1]
-                for b in range(num_resamples):
-                    diffs[j][t, b] = (l_current[b, j] - l_next[b, j])
-                    diffs[j][t, b] /= (self.resample_sizes[j]**0.9)
-            l_current = l_next
-        return diffs
+        return jit_calculate_diffs(self.resample_sizes, L)
 
     def find_optimal_tree(self, diffs, alpha=0.01):
         t = len(self.champion_trees)-1
