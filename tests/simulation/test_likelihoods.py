@@ -28,12 +28,14 @@ def tree_resources(request):
     sample = load_sample()
     samples_n1, samples_n2 = load_bootstrap_samples()
     cachefld = '%s/smc' % cache_folder
-    smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001, cache_dir=cachefld)
+    smc = SMC(max_depth, penalty_interval=(0, 1000),
+              epsilon=0.00001,
+              cache_dir=cachefld)
     champion_trees = smc.fit(sample).context_trees
     return sample, samples_n1, samples_n2, champion_trees
 
 
-def xtest_likelihoods(tree_resources):
+def test_likelihoods(tree_resources):
     sample, samples_n1, samples_n2, champion_trees = tree_resources
     assert(sample.data.index('0001001010101010100010') == 0)
     assert(champion_trees[0].to_str() == largest_tree)
@@ -50,7 +52,7 @@ def xtest_likelihoods(tree_resources):
     pass
 
 
-def xtest_calculate_diffs(tree_resources):
+def test_calculate_diffs(tree_resources):
     sample, samples_n1, samples_n2, champion_trees = tree_resources
     bootstrap = Bootstrap(champion_trees, samples_n2, resample_sizes)
     L = np.load('tests/simulation/fixtures/L.npy')

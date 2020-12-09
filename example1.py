@@ -14,7 +14,10 @@ from g4l.estimators.smc import SMC
 from g4l.estimators.prune import Prune
 from g4l.models import ContextTree
 from g4l.data import Sample
+from g4l.bootstrap.resampling import BlockResampling
+from g4l.bootstrap import Bootstrap
 from g4l.models import integrity
+import numpy as np
 
 import logging
 logging.basicConfig(
@@ -27,36 +30,46 @@ logging.basicConfig(
 )
 
 # Create a sample object instance
-X = Sample('examples/example1/folha.txt', [0, 1, 2, 3, 4])
-#r = CTM2(0.01, 4).fit(X).context_tree.to_str()
-smc = SMC(4, penalty_interval=(0, 800), epsilon=0.00001)
-smc.fit(X)
-[print(x.to_str()) for x in smc.context_trees]
+cache_folder = "examples/linguistic_case_study/cache/smc"
+samples_folder = "examples/linguistic_case_study"
+max_depth = 4
+NUM_RESAMPLES = 200
+NUM_CORES = 6
+RENEWAL_POINT = '4'
+
+X_bp = Sample('%s/folha.txt' % samples_folder, [0, 1, 2, 3, 4])
+X_ep = Sample('%s/publico.txt' % samples_folder, [0, 1, 2, 3, 4])
+resamples_folder = '%s/resamples' % cache_folder
+resamples_file = "%s/resamples.txt" % resamples_folder
+
+
+def run_smc(X, instance_name='bp'):
+    L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
+    n_sizes = (int(len(X.data) * 0.3), int(len(X.data) * 0.9)) # 29337, 88011
+    smc = SMC(max_depth,
+              penalty_interval=(0.1, 400),
+              epsilon=0.01,
+              cache_dir=cache_folder)
+    smc.fit(X)
+    champion_trees = smc.context_trees
+
+    # try loading from cache
+    try:
+        L = np.load(L_path)
+    except:
+        resample_fctry = BlockResampling(X_bp, resamples_file,
+                                         n_sizes,
+                                         RENEWAL_POINT)
+        resample_fctry.generate(NUM_RESAMPLES, num_cores=NUM_CORES)
+        bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
+        L = bootstrap.calculate_likelihoods(resamples_folder, num_cores=NUM_CORES)
+        np.save(L_path, L)
+
+    diffs = bootstrap.calculate_diffs(L)
+    opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
+    return champion_trees, opt_idx
+
+run_smc(X_bp, instance_name='bp')
 
 
 import code; code.interact(local=dict(globals(), **locals()))
-
-
-# Define the champion trees strategy to be used
-#ctm_scan = CTMScanner(penalty_interval=(0.1, 400), epsilon=0.01)
-
-# Define the champion trees strategy to be used
-#num_resamples = 200
-#bootstrap = Bootstrap(X, partition_string='4')
-#small_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.3)
-#large_resamples = bootstrap.resample(num_resamples, size=len(X.data) * 0.9)
-#t_test = TTest(small_resamples, large_resamples, alpha=0.01)
-
-# Run estimator
-#smc.fit(X, t_test, processors=3)
-
-# Returns the best tree
-#logging.info('best tree: %s' % smc.best_tree().to_str())
-
-# Evaluates a new sample with the model with previously fitted params
-#smc.score(Xb)
-
-
-# optional one-liner call
-#smc.fit(X, max_depth=4).score(Xb)
-#     import code; code.interact(local=dict(globals(), **locals()))

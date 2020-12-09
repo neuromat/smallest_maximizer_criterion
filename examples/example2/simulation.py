@@ -11,10 +11,6 @@ from g4l.bootstrap.resampling import BlockResampling
 from g4l.bootstrap.resampling import TreeSourceResampling
 import logging
 
-#from g4l.data import Sample
-#import pandas as pd
-#import time
-
 
 A = ['0', '1']
 PATH = os.path.abspath('./examples/example2/samples')

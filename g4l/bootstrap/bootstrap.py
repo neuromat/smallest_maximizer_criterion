@@ -2,6 +2,8 @@ import numpy as np
 from g4l.util import parallel as prl
 from g4l.util.stats import t_test
 from numba import jit
+from pathlib import Path
+
 
 
 @jit(nopython=True)
@@ -22,6 +24,7 @@ def jit_calculate_diffs(resample_sizes, L):
         l_current = l_next
     return diffs
 
+
 class Bootstrap():
     def __init__(self, champion_trees, resample_file, resample_sizes):
         self.champion_trees = champion_trees
@@ -32,12 +35,16 @@ class Bootstrap():
         L = [None, None]
         for j, resample_size in enumerate(self.resample_sizes):
             print("Calculating likelihood j=", j+1)
+            self.create_temp_folder(temp_folder)
             L[j] = prl.calculate_likelihoods(temp_folder,
                                              self.champion_trees,
                                              self.resample_file,
                                              resample_size,
                                              num_cores=num_cores)
         return np.array(L)
+
+    def create_temp_folder(self, temp_folder):
+        Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
     def calculate_diffs(self, L):
         return jit_calculate_diffs(self.resample_sizes, L)
@@ -49,11 +56,6 @@ class Bootstrap():
         while pvalue > alpha and t > 0:
             t -= 1
             pvalue = t_test(d1[t], d2[t], alternative='greater')
-
-        #rev_idxs = list(reversed(range(len(self.champion_trees)-1)))
-        #res = np.array([t_test(d1[t], d2[t], alternative='greater') for t in rev_idxs])
-        #first_occur_idx = (len(res) - np.argmax(res < alpha))+1
-        ##first_occur_idx = np.argsort(1 - (res < alpha).astype(int))[0]
         return t+1
 
     def _initialize_diffs(self, num_trees, num_resamples):

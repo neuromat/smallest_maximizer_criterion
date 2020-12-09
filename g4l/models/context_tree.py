@@ -60,24 +60,29 @@ class ContextTree():
 
         per.save_model(self, file_path)
 
-    def sample_likelihood(self, sample):
-        contexts_in_resample = self.tree()[['node_idx', 'node']]
-        fn = lambda x: [m.end(0) for m in re.finditer(x,
-                                                      sample.data,
-                                                      overlapped=True)]
-        sample_len = len(sample.data)
-        convert_fn = lambda x: [sample.data[i] for i in x if i < sample_len]
-        next_symbols_positions = contexts_in_resample.node.apply(fn)
-        transitions = next_symbols_positions.apply(convert_fn)
-        N = np.zeros([len(contexts_in_resample), len(sample.A)])
-        for i, tr in enumerate(transitions.values):
-            counter = Counter(tr)
-            for j, a in enumerate(sample.A):
-                N[i, j] = counter[a]
-        ss = np.array([sum(x) for x in N])
-        ind = N > 0
+    def _count_context_freqs(self, ctx, sample_data, A):
+        idxs = [m.end(0) for m in re.finditer(ctx, sample_data, overlapped=True)]
+        ctr = Counter([sample_data[i] for i in idxs if i < len(sample_data)])
+        return [ctr[a] for a in A]
+
+    def calculate_node_transitions(self, sample_data, A):
+        all_contexts = list(self.df.node.values)
+        trs = [self._count_context_freqs(ctx, sample_data, A) for ctx in all_contexts]
+        transitions = np.hstack(trs).reshape(len(all_contexts), len(A))
+        return all_contexts, transitions
+
+    def sample_likelihood(self, sample, buf=(None, None)):
+        all_contexts, N = buf
+        contexts = list(self.tree().node.values)
+        if N is None:
+            all_contexts, N = self.calculate_node_transitions(sample.data, sample.A)
+        ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
+        N2 = N[ctx_idx]
+        ss = np.array([sum(x) for x in N2])
+        ind = N2 > 0
         B = repmat(ss, len(sample.A), 1).T
-        return np.sum(np.multiply(N[ind], np.log(N[ind]) - np.log(B[ind])))
+        L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
+        return L, (all_contexts, N)
 
     def prune_unique_context_paths(self):
         while True:

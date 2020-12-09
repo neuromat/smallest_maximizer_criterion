@@ -25,6 +25,7 @@ class SMC(CollectionBase):
         self.tresholds = []
 
     def fit(self, X):
+        self.tresholds = []
         if self._load_cache(X):
             return self
         self.intervals = None
