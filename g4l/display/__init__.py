@@ -22,12 +22,12 @@ def log_likelihood_per_leaves(smc_instances, labels):
     plt.grid()
     plt.legend()
 
-def draw_tree(tree, size='10,10', previous_tree=None, diff_color='red'):
+def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):
     if isinstance(tree, str):
       t = tree
     else:
       t = tree.to_str()
-    if previous_tree==None:
+    if previous_tree is None:
         t2 = t
     else:
         t2 = previous_tree.to_str()

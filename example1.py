@@ -5,18 +5,11 @@ Linguistic case study
 Usage: ./example1.py
 '''
 
-
-# Following the conventions used by scikit-learn
-# https://scikit-learn.org/stable/developers/develop.html
-
 from g4l.estimators.bic import BIC
 from g4l.estimators.smc import SMC
-from g4l.estimators.prune import Prune
-from g4l.models import ContextTree
 from g4l.data import Sample
 from g4l.bootstrap.resampling import BlockResampling
 from g4l.bootstrap import Bootstrap
-from g4l.models import integrity
 import numpy as np
 
 import logging
@@ -28,19 +21,6 @@ logging.basicConfig(
         logging.StreamHandler()
     ]
 )
-
-# Create a sample object instance
-cache_folder = "examples/linguistic_case_study/cache/smc"
-samples_folder = "examples/linguistic_case_study"
-max_depth = 4
-NUM_RESAMPLES = 200
-NUM_CORES = 6
-RENEWAL_POINT = '4'
-
-X_bp = Sample('%s/folha.txt' % samples_folder, [0, 1, 2, 3, 4])
-X_ep = Sample('%s/publico.txt' % samples_folder, [0, 1, 2, 3, 4])
-resamples_folder = '%s/resamples' % cache_folder
-resamples_file = "%s/resamples.txt" % resamples_folder
 
 
 def run_smc(X, instance_name='bp'):
@@ -69,7 +49,27 @@ def run_smc(X, instance_name='bp'):
     opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
     return champion_trees, opt_idx
 
-run_smc(X_bp, instance_name='bp')
+# Create a sample object instance
+cache_folder = "examples/linguistic_case_study/cache/smc"
+samples_folder = "examples/linguistic_case_study"
+max_depth = 4
+NUM_RESAMPLES = 200
+NUM_CORES = 6
+RENEWAL_POINT = '4'
+
+X_bp = Sample('%s/folha.txt' % samples_folder, [0, 1, 2, 3, 4])
+X_ep = Sample('%s/publico.txt' % samples_folder, [0, 1, 2, 3, 4])
+resamples_folder = '%s/resamples' % cache_folder
+resamples_file = "%s/resamples.txt" % resamples_folder
+
+
+
+bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
+bic_tree.to_str()
+import code; code.interact(local=dict(globals(), **locals()))
+# bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
+
+# run_smc(X_bp, instance_name='bp')
 
 
 import code; code.interact(local=dict(globals(), **locals()))

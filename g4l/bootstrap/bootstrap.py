@@ -5,7 +5,6 @@ from numba import jit
 from pathlib import Path
 
 
-
 @jit(nopython=True)
 def jit_calculate_diffs(resample_sizes, L):
     num_resample_sizes, num_trees, num_resamples = L.shape
@@ -39,7 +38,7 @@ class Bootstrap():
             L[j] = prl.calculate_likelihoods(temp_folder,
                                              self.champion_trees,
                                              self.resample_file,
-                                             resample_size,
+                                             int(resample_size),
                                              num_cores=num_cores)
         return np.array(L)
 

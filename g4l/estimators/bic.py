@@ -1,6 +1,7 @@
 import numpy as np
 from g4l.models import ContextTree
 from .base import Base
+from g4l.models.builders import incremental
 
 
 class BIC(Base):
@@ -17,18 +18,19 @@ class BIC(Base):
 
     def fit(self, X):
         """ Estimates Context Tree model using BIC """
-        full_tree = ContextTree.init_from_sample(X, self.max_depth,
-                                                 force_admissible=False)
 
+        full_tree = ContextTree.init_from_sample(X, self.max_depth,
+                                                 force_admissible=False,
+                                                 initialization_method=incremental)
+        #import code; code.interact(local=dict(globals(), **locals()))
         full_tree.df['likelihood_pen'] = full_tree.df.likelihood
         penalization_term = np.log(len(X.data)) * (((1-len(X.A))/2) * self.c)
-        #penalization_term = np.log(len(X.data)) * ((len(X.A)-1) * self.c)
         full_tree.df.likelihood_pen += penalization_term
-
 
         df = self.assign_values(full_tree.df[full_tree.df.freq >= 1])
         full_tree.df = df
         full_tree.prune_unique_context_paths()
+        full_tree.df = full_tree.df[['node', 'node_idx', 'parent_idx', 'freq', 'likelihood', 'depth', 'active', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos', 'chosen']]
         self.context_tree = full_tree
         return self
 
@@ -51,34 +53,23 @@ class BIC(Base):
             df.reset_index(inplace=True)
             depth_df = df.loc[df.depth == d]
             df.loc[df.depth == d, 'chosen'] = depth_df[['val', 'val2']].max(axis=1)
-            #df[['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos', 'chosen', 'indicator', 'active']]
-
-        #import code; code.interact(local=dict(globals(), **locals()))
-        #max_val = df.loc[df.depth <= self.max_depth-1][['val', 'val2']]
-        #max_val = max_val.max(axis=1)
-        #df.loc[df.depth <= self.max_depth-1, 'val'] = max_val
+        # TODO: for verification purposes only. remove below
         df['p_chapeu'] = df.val
         df['produtoria_filhos'] = df.val2
 
-        df.loc[(df.depth <= self.max_depth - 1) & (df.val2 > df.likelihood_pen), 'indicator'] = 1
+        cond = (df.depth <= self.max_depth - 1) & (df.val2 > df.likelihood_pen)
+        df.loc[cond, 'indicator'] = 1
         df.drop('val2', axis='columns', inplace=True)
 
-        #df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
         for d in range(self.max_depth + 1):
             candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
             for idx, row in candidate_nodes.iterrows():
-#                if row.node=='1000':
-#                    import code; code.interact(local=dict(globals(), **locals()))
+                # import code; code.interact(local=dict(globals(), **locals()))
                 node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
-                if row.depth==1:
+                if row.depth == 1:
                     node_suffixes += ['']
                 suffixes = df[df['node'].isin(node_suffixes)]
-                #if suffixes['indicator'].product() == 1 and row.freq > 0:
                 if suffixes['indicator'].product() == 1 and row.indicator == 0:
                     df.loc[(df.node == row.node), 'active'] = 1
-
-        #import code; code.interact(local=dict(globals(), **locals()))
-        #df[['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos', 'chosen', 'indicator', 'active']]
-        #df.to_csv('/home/arthur/tmp/99.csv', index=False)
         df.drop('val', axis='columns', inplace=True)
         return df

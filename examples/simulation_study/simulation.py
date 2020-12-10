@@ -1,21 +1,19 @@
 import math
 import os
 import pandas as pd
-from . import models
 from g4l.estimators import BIC
 from g4l.estimators import SMC
 from g4l.estimators import Prune
 from g4l.data import persistence
 from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
-from g4l.bootstrap.resampling import TreeSourceResampling
 import logging
 
 
 A = ['0', '1']
-PATH = os.path.abspath('./examples/example2/samples')
-TEMP_FOLDER = os.path.abspath('./examples/example2/tmp')
-RESULTS_FOLDER = os.path.abspath('./examples/example2/results')
+PATH = os.path.abspath('./examples/simulation_study/samples')
+temp_folder = os.path.abspath('./examples/simulation_study/tmp')
+results_folder = os.path.abspath('./examples/simulation_study/results')
 SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
 NUM_CORES = 6
@@ -28,7 +26,7 @@ max_depth = 6
 
 
 def get_results_file(estimator, model_name, sample_size):
-    results_file = "%s/%s/%s_%s.csv" % (RESULTS_FOLDER, estimator,
+    results_file = "%s/%s/%s_%s.csv" % (results_folder, estimator,
                                         model_name, sample_size)
     if os.path.exists(results_file):
         os.remove(results_file)
@@ -39,7 +37,7 @@ def run_simulation(model_name):
     estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
     for sample_size in SAMPLE_SIZES:
-        folder = "%s/%s/%s" % (TEMP_FOLDER, model_name, sample_size)
+        folder = "%s/%s/%s" % (temp_folder, model_name, sample_size)
         n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
         print("Generating resamples")
         resamples_folder = generate_bootstrap_resamples(model_name,
@@ -101,7 +99,7 @@ def bic(sample, c):
 def smc(sample):
     smc = SMC(max_depth, penalty_interval=(0, 500),
               epsilon=0.00001,
-              cache_dir='%s/trees' % TEMP_FOLDER)
+              cache_dir='%s/trees' % temp_folder)
     trees = smc.fit(sample).context_trees
     return sort_trees(trees)
 
