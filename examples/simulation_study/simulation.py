@@ -11,9 +11,6 @@ import logging
 
 
 A = ['0', '1']
-PATH = os.path.abspath('./examples/simulation_study/samples')
-temp_folder = os.path.abspath('./examples/simulation_study/tmp')
-results_folder = os.path.abspath('./examples/simulation_study/results')
 SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
 NUM_CORES = 6
@@ -25,7 +22,7 @@ MAX_SAMPLES = math.inf
 max_depth = 6
 
 
-def get_results_file(estimator, model_name, sample_size):
+def get_results_file(estimator, model_name, sample_size, results_folder):
     results_file = "%s/%s/%s_%s.csv" % (results_folder, estimator,
                                         model_name, sample_size)
     if os.path.exists(results_file):
@@ -33,25 +30,27 @@ def get_results_file(estimator, model_name, sample_size):
     return results_file
 
 
-def run_simulation(model_name):
+def run_simulation(model_name, temp_folder, results_folder, samples_path):
     estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
     for sample_size in SAMPLE_SIZES:
         folder = "%s/%s/%s" % (temp_folder, model_name, sample_size)
         n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
         print("Generating resamples")
-        resamples_folder = generate_bootstrap_resamples(model_name,
-                                                        sample_size,
-                                                        folder,
-                                                        n_sizes)
+        generate_bootstrap_resamples(model_name,
+                                     sample_size,
+                                     folder,
+                                     n_sizes,
+                                     samples_path)
         for estimator in ['smc', 'prune']:
-            results_file = get_results_file(estimator, model_name, sample_size)
-            for sample_idx, sample in fetch_samples(model_name, sample_size):
+            results_file = get_results_file(estimator, model_name, sample_size, results_folder)
+            for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path):
                 print('sample:', sample_size, sample_idx)
                 print("estimating champion trees")
-                champion_trees = estimators[estimator](sample)
+                champion_trees = estimators[estimator](sample, temp_folder)
                 resamples_file = resample_file(folder, sample_idx)
                 bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
+                resamples_folder = '%s/likelihoods' % folder
                 L = bootstrap.calculate_likelihoods(resamples_folder,
                                                     num_cores=NUM_CORES)
 
@@ -79,8 +78,8 @@ def resample_file(folder, sample_idx):
     return "%s/resamples/%s.txt" % (folder, sample_idx)
 
 
-def generate_bootstrap_resamples(model_name, sample_size, folder, larger_size):
-    args = (model_name, sample_size, MAX_SAMPLES)
+def generate_bootstrap_resamples(model_name, sample_size, folder, larger_size, samples_path):
+    args = (model_name, sample_size, samples_path, MAX_SAMPLES)
     for sample_idx, sample in fetch_samples(*args):
         file = resample_file(folder, sample_idx)
         resample_fctry = BlockResampling(sample, file, larger_size,
@@ -92,19 +91,24 @@ def resample_sizes(sample_size):
     return tuple(math.floor(f * sample_size) for f in [N1_FACTOR, N2_FACTOR])
 
 
-def bic(sample, c):
+def bic(sample, c, temp_folder):
     return [BIC(c, max_depth).fit(sample).context_tree]
 
 
-def smc(sample):
+def smc(sample, temp_folder):
+    if temp_folder is None:
+        cache_dir = None
+    else:
+        cache_dir = '%s/trees' % temp_folder
+
     smc = SMC(max_depth, penalty_interval=(0, 500),
               epsilon=0.00001,
-              cache_dir='%s/trees' % temp_folder)
+              cache_dir=cache_dir)
     trees = smc.fit(sample).context_trees
     return sort_trees(trees)
 
 
-def prune(sample):
+def prune(sample, temp_folder):
     return sort_trees(Prune(max_depth).fit(sample).context_trees)
 
 
@@ -112,10 +116,10 @@ def sort_trees(context_trees):
     return sorted(context_trees, key=lambda x: -x.num_contexts())
 
 
-def fetch_samples(model_name, sample_size, max_samples=math.inf):
+def fetch_samples(model_name, sample_size, path, max_samples=math.inf):
     i = -1
     key = '%s_%s' % (model_name, sample_size)
-    filename = '%s/%s.mat' % (PATH, key)
+    filename = '%s/%s.mat' % (path, key)
     for s in persistence.iterate_from_mat(filename, key, A):
         if i > max_samples:
             break

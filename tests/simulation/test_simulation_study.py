@@ -1,9 +1,20 @@
 import os
 import sys
-import pytest
 sys.path.insert(0, os.path.abspath('.'))
-from examples.example2 import simulation
+from examples.simulation_study import simulation
+
 
 def test_simulation_study():
-  simulation.run_simulation('model1')
-  simulation.run_simulation('model2')
+    samples_path = os.path.abspath('./examples/simulation_study/samples')
+    temp_folder = os.path.abspath('./examples/simulation_study/tmp')
+    results_folder = os.path.abspath('./examples/simulation_study/results')
+
+    simulation.run_simulation('model1',
+                              temp_folder,
+                              results_folder,
+                              samples_path)
+
+    simulation.run_simulation('model2',
+                              temp_folder,
+                              results_folder,
+                              samples_path)
