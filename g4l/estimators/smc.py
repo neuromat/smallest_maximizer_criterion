@@ -1,5 +1,5 @@
-from .base import CollectionBase
-from .logics import smc as smc
+from g4l.estimators.base import CollectionBase
+from g4l.estimators.logics import smc as smc
 
 
 class SMC(CollectionBase):
