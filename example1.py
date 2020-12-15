@@ -33,6 +33,7 @@ def run_smc(X, instance_name='bp'):
     smc.fit(X)
     champion_trees = smc.context_trees
 
+    bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
     # try loading from cache
     try:
         L = np.load(L_path)
@@ -41,7 +42,7 @@ def run_smc(X, instance_name='bp'):
                                          n_sizes,
                                          RENEWAL_POINT)
         resample_fctry.generate(NUM_RESAMPLES, num_cores=NUM_CORES)
-        bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
+
         L = bootstrap.calculate_likelihoods(resamples_folder, num_cores=NUM_CORES)
         np.save(L_path, L)
 
@@ -49,8 +50,12 @@ def run_smc(X, instance_name='bp'):
     opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
     return champion_trees, opt_idx
 
+
+
+
+
 # Create a sample object instance
-cache_folder = "examples/linguistic_case_study/cache/smc"
+cache_folder = "examples/linguistic_case_study/cache/smc2"
 samples_folder = "examples/linguistic_case_study"
 max_depth = 4
 NUM_RESAMPLES = 200
@@ -64,12 +69,12 @@ resamples_file = "%s/resamples.txt" % resamples_folder
 
 
 
-bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
-bic_tree.to_str()
-import code; code.interact(local=dict(globals(), **locals()))
+# bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
+# bic_tree.to_str()
+# import code; code.interact(local=dict(globals(), **locals()))
 # bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
 
-# run_smc(X_bp, instance_name='bp')
-
+champion_trees_bp, opt_idx_ep = run_smc(X_bp, instance_name='bp')
+champion_trees_ep, opt_idx_ep = run_smc(X_ep, instance_name='ep')
 
 import code; code.interact(local=dict(globals(), **locals()))

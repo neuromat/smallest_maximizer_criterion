@@ -4,8 +4,6 @@ from . import BIC
 import os
 from hashlib import md5
 import pickle
-from collections import Counter
-from g4l.models.builders.tree_builder import ContextTreeBuilder
 import logging
 
 

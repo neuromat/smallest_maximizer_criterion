@@ -22,9 +22,21 @@ class BIC(Base):
         full_tree = ContextTree.init_from_sample(X, self.max_depth,
                                                  force_admissible=False,
                                                  initialization_method=incremental)
-        #import code; code.interact(local=dict(globals(), **locals()))
         full_tree.df['likelihood_pen'] = full_tree.df.likelihood
+
+        ## # ---- remove it -------------
+        ## #import code; code.interact(local=dict(globals(), **locals()))
+        ## d = full_tree.transition_probs
+        ## num_nodes = d[d.freq > 0].groupby(['idx']).count().next_symbol
+        ## full_tree.df.num_child_nodes = num_nodes
+        ## #strat_pen_g4l = (len(X.A)-1)/2
+        ## strat_pen_csiz = full_tree.df.num_child_nodes
+        ## penalization_term = -(np.log(len(X.data)) * self.c * strat_pen_g4l)
+        ## # /---- remove it -------------
+
+
         penalization_term = np.log(len(X.data)) * (((1-len(X.A))/2) * self.c)
+
         full_tree.df.likelihood_pen += penalization_term
 
         df = self.assign_values(full_tree.df[full_tree.df.freq >= 1])
@@ -64,7 +76,6 @@ class BIC(Base):
         for d in range(self.max_depth + 1):
             candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
             for idx, row in candidate_nodes.iterrows():
-                # import code; code.interact(local=dict(globals(), **locals()))
                 node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
                 if row.depth == 1:
                     node_suffixes += ['']

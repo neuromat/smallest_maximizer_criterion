@@ -2,21 +2,16 @@
 '''
 Linguistic case study
 
-Usage: ./example3.py
+Usage: ./example1.py
 '''
 
-# Following the conventions used by scikit-learn
-# https://scikit-learn.org/stable/developers/develop.html
+from g4l.estimators.bic import BIC
+from g4l.estimators.smc import SMC
+from g4l.data import Sample
+from g4l.bootstrap.resampling import BlockResampling
+from g4l.bootstrap import Bootstrap
+import numpy as np
 
-from g4l.estimators import SMC
-from g4l.estimators import BIC
-from g4l.data import Sample
-from g4l.data import persistence
-import math
-from g4l.data import Sample
-import pandas as pd
-import time
-from examples.example2 import models
 import logging
 logging.basicConfig(
     level=logging.DEBUG,
@@ -27,94 +22,28 @@ logging.basicConfig(
     ]
 )
 
-PATH = '/home/arthur/Documents/Neuromat/projects/SMC/smallest_maximizer_criterion/examples/example2/samples'
 
-A = ['0', '1']
+# Create a sample object instance
+cache_folder = "examples/linguistic_case_study/cache/smc"
+samples_folder = "examples/linguistic_case_study"
+max_depth = 4
+NUM_RESAMPLES = 200
+NUM_CORES = 6
+RENEWAL_POINT = '4'
 
-
-def fetch_samples(model_name, sample_size, max_samples=math.inf):
-    i = -1
-    key = '%s_%s' % (model_name, sample_size)
-    filename = '%s/%s.mat' % (PATH, key)
-    for s in persistence.iterate_from_mat(filename, key, A):
-        if i > max_samples:
-            break
-        i += 1
-        yield i, s
-
-
-def sort_trees(context_trees):
-    return sorted(context_trees, key=lambda x: -x.num_contexts())
-
-#args = ('model1', '5000', 1)
-#for sample_idx, sample in fetch_samples(*args):
-#    max_depth = 6
-#    c = 0.0536
-#    cc = 0.0587
-#    bic = BIC(c, max_depth).fit(sample).context_tree
-#    bic2 = BIC(cc, max_depth).fit(sample).context_tree
-#    print(bic.to_str())
-#    print(bic2.to_str())
-#
-#
-#    smc = SMC(max_depth, penalty_interval=(0, 500), epsilon=0.00001)
-#    champion_trees = smc.fit(sample).context_trees
-#    import code; code.interact(local=dict(globals(), **locals()))
-#
-#    [print(x.to_str()) for x in champion_trees]
-#
-
-#data = open('fixtures/sample20000.txt').read()
-data = open('/home/arthur/Documents/Neuromat/projects/SMC/98.txt').read()[:-1]
-sample = Sample(None, [0, 1], data=data, separator=None)
-max_depth = 6
-c = 0.0536
-cc = 0.0587
-c = 0.14766
-c = 0.18050
+X_bp = Sample('%s/folha.txt' % samples_folder, [0, 1, 2, 3, 4])
+X_ep = Sample('%s/publico.txt' % samples_folder, [0, 1, 2, 3, 4])
+resamples_folder = '%s/resamples' % cache_folder
+resamples_file = "%s/resamples.txt" % resamples_folder
 
 
 
-#from g4l.util import renewal_point
-t = models.get_model('model1')
-#t.transition_probs.reset_index(drop=False, inplace=True)
-#renewal_point.find_renewal_points(t, sample)
+bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
+print(bic_tree.to_str())
+# import code; code.interact(local=dict(globals(), **locals()))
+# bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
+
+#champion_trees_bp, opt_idx_ep = run_smc(X_bp, instance_name='bp')
+#champion_trees_ep, opt_idx_ep = run_smc(X_ep, instance_name='ep')
 
 #import code; code.interact(local=dict(globals(), **locals()))
-
-
-import pandas as pd
-#df2 = pd.read_csv('/home/arthur/tmp/sample98_c0.18050.csv', sep=';', dtype={'node': object})
-#import code; code.interact(local=dict(globals(), **locals()))
-sample = [x for x in fetch_samples('model1', '5000', 10)][1][1]
-bic = BIC(0.166982, max_depth).fit(sample).context_tree
-df = bic.df
-df[['node', 'freq']]
-
-#import code; code.interact(local=dict(globals(), **locals()))
-
-
-
-
-
-#aa = ['0', '00', '000', '0000', '00010', '0010', '01010', '1010']
-#rr = df[df.node.isin(aa)][['node', 'likelihood_pen', 'p_chapeu', 'produtoria_filhos']].sort_values('node')
-#rr
-
-
-
-
-smc = SMC(max_depth, penalty_interval=(0, 1000), epsilon=0.00001)
-champion_trees = smc.fit(sample).context_trees
-
-import code; code.interact(local=dict(globals(), **locals()))
-#
-#
-#pp = Prune().fit(sample).context_trees
-#BIC(c, max_depth).fit(sample).context_tree
-
-#t_orig = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.original)
-#t_incr = tree.ContextTree(X, max_depth=4, tree_initialization_method=gen.incremental)
-#CTM(t_incr).execute(0.08).to_str()
-#CTM2(t_incr).execute(0.8).to_str()
-
