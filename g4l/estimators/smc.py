@@ -5,9 +5,11 @@ from g4l.estimators.logics import smc as smc
 class SMC(CollectionBase):
     """
     Context tree selection using the Smallest Maximizer Criterion
-    (see article Galves, A. et. al., Annals of Applied Statistics,
-    Volume 6, Number 1 (2012), 186-209)
-    DOI: 10.1214/11-AOAS511
+    Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2010).
+    Context tree selection and linguistic rhythm retrieval from written texts.
+    Annals of Applied Statistics, 4(1), 186–209.
+    https://doi.org/10.1214/11-AOAS511
+
     Download available at https://arxiv.org/abs/0902.3619
 
     ...
@@ -64,4 +66,11 @@ class SMC(CollectionBase):
         self.tresholds = []
 
     def fit(self, X):
+        """
+        Parameters
+        ----------
+        X : g4l.data.Sample
+            A sample object
+
+        """
         return smc.fit(self, X)
