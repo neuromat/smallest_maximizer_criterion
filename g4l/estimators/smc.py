@@ -12,6 +12,8 @@ class SMC(CollectionBase):
 
     Download available at https://arxiv.org/abs/0902.3619
 
+    # adicionar contato
+
     ...
 
     Attributes
@@ -56,7 +58,7 @@ class SMC(CollectionBase):
 
         """
         assert max_depth > 0, 'max depth must be greater than zero'
-        assert(epsilon > 0), 'epsilon must be greater than zero'
+        assert epsilon > 0, 'epsilon must be greater than zero'
         super().__init__()
         self.max_depth = max_depth
         self.penalty_interval = penalty_interval
@@ -71,6 +73,8 @@ class SMC(CollectionBase):
         ----------
         X : g4l.data.Sample
             A sample object
+
+        ## informar dados da saída
 
         """
         return smc.fit(self, X)

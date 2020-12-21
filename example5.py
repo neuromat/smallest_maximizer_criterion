@@ -26,6 +26,7 @@ logging.basicConfig(
     ]
 )
 
+
 # Create a sample object instance
 
 filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_5000.csv"
