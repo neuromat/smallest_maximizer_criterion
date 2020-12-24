@@ -14,7 +14,7 @@ import numpy as np
 
 import logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         #logging.FileHandler("examples/example1/debug.log"),
@@ -27,7 +27,7 @@ def run_smc(X, instance_name='bp'):
     L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
     n_sizes = (int(len(X.data) * 0.3), int(len(X.data) * 0.9)) # 29337, 88011
     smc = SMC(max_depth,
-              penalty_interval=(0.1, 400),
+              penalty_interval=(0.1, 800),
               epsilon=0.01,
               cache_dir=cache_folder)
     smc.fit(X)
@@ -48,14 +48,14 @@ def run_smc(X, instance_name='bp'):
 
     diffs = bootstrap.calculate_diffs(L)
     opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
-    return champion_trees, opt_idx
+    return champion_trees, opt_idx, smc
 
 
 
 
 
 # Create a sample object instance
-cache_folder = "examples/linguistic_case_study/cache/smc2"
+cache_folder = "examples/linguistic_case_study/cache/smc5"
 samples_folder = "examples/linguistic_case_study"
 max_depth = 4
 NUM_RESAMPLES = 200
@@ -68,13 +68,23 @@ resamples_folder = '%s/resamples' % cache_folder
 resamples_file = "%s/resamples.txt" % resamples_folder
 
 
-
+#bic_tree = BIC(0.336811872024198, max_depth).fit(X_ep, df_method='perl').context_tree
+#print(bic_tree.to_str(reverse=True))
+#import code; code.interact(local=dict(globals(), **locals()))
 # bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
-# bic_tree.to_str()
-# import code; code.interact(local=dict(globals(), **locals()))
-# bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
 
-champion_trees_bp, opt_idx_ep = run_smc(X_bp, instance_name='bp')
-champion_trees_ep, opt_idx_ep = run_smc(X_ep, instance_name='ep')
+champion_trees_bp, opt_idx_bp, smc_bp = run_smc(X_bp, instance_name='bp')
+champion_trees_ep, opt_idx_ep, smc_ep = run_smc(X_ep, instance_name='ep')
+
+print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str())
+[print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_bp)]
+
+print("Selected tree for EP: ", champion_trees_ep[opt_idx_ep].to_str())
+[print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_ep)]
+
+
 
 import code; code.interact(local=dict(globals(), **locals()))
+
+
+

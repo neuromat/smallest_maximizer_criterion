@@ -38,9 +38,21 @@ resamples_file = "%s/resamples.txt" % resamples_folder
 
 
 
-bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
-print(bic_tree.to_str())
-# import code; code.interact(local=dict(globals(), **locals()))
+#bic_tree = BIC(154, max_depth).fit(X_bp).context_tree
+#print(bic_tree.to_str())
+import pandas as pd
+for i, row in pd.read_csv('tests/perl_bic_results_folha.csv').iterrows():
+    c = row[0]
+    print(i, 'c = ', c)
+    bic_tree = BIC(c, max_depth).fit(X_bp).context_tree
+    if not (bic_tree.to_str() == row[1].strip()):
+        print('diff ', c)
+        print(bic_tree.to_str())
+        print(row[1].strip())
+        #import code; code.interact(local=dict(globals(), **locals()))
+
+
+
 # bic_tree = BIC(164.648626714437, max_depth).fit(X_bp).context_tree
 
 #champion_trees_bp, opt_idx_ep = run_smc(X_bp, instance_name='bp')

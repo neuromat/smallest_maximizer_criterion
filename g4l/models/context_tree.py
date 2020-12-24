@@ -117,13 +117,18 @@ class ContextTree():
     def __str__(self):
         return self.to_str()
 
-    def to_str(self):
+    def to_str(self, reverse=False):
         """ Represents context tree as a string
 
         TODO: add `reverse=False` parameter to display contexts as root->leaf
         """
 
-        return ' '.join(self.leaves())
+        ret = ' '.join(self.leaves())
+        if reverse:
+            s1 = sorted([x[::-1] for x in ret.split()])
+            s2 = [x[::-1] for x in s1]
+            ret = ' '.join(s2)
+        return ret
 
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
