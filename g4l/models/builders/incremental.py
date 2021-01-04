@@ -46,6 +46,7 @@ def count_subsequence_frequencies(df, sample, max_depth, scan_offset=0):
     #for d in range(1, context_tree.max_depth + 1):
     dct_transition = defaultdict(lambda: np.zeros(len(sample.A)))
     dct_node_freq = defaultdict(lambda: 0)
+
     for d in range(max_depth + 1):
         # create a dataframe with all subsequences and their frequencies
         # aqui
@@ -56,12 +57,18 @@ def count_subsequence_frequencies(df, sample, max_depth, scan_offset=0):
             dct_transition[node][sample.A.index(a)] += 1
 
     dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
-
     df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
     df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0
     df = create_indexes(df)
-    transition_probs = calculate_transition_probs(df, dct_transition, dct_node_freq, sample.A)
+
+    df2 = pd.DataFrame.from_dict(dct_transition, orient='index')
+    df2['idx'] = df.reset_index().set_index('node')['node_idx']
+    df2 = df2.melt(id_vars=['idx'], var_name='next_symbol', value_name='freq')
+    df2 = df2.sort_values(['idx', 'next_symbol']).reset_index(drop=True).set_index('idx')
+    df2.freq = df2.freq.astype(int)
+    df2['prob'] = df2.freq / df.freq
+    transition_probs = df2.reset_index()
     return df, transition_probs
 
 
@@ -81,6 +88,8 @@ def calculate_transition_probs(df, dct_transition, dct_node_freq, A):
                              .to_dict()['node_idx'])
     transition_columns = ['idx', 'next_symbol', 'freq', 'prob']
     probs = pd.DataFrame(columns=transition_columns)
+    # TODO: make it more efficient
+
     for node in dct_transition.keys():
         for a in A:
             node_idx = node_idxs[node]

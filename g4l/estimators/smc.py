@@ -12,8 +12,6 @@ class SMC(CollectionBase):
 
     Download available at https://arxiv.org/abs/0902.3619
 
-    # adicionar contato
-
     ...
 
     Attributes
@@ -77,4 +75,5 @@ class SMC(CollectionBase):
         ## informar dados da saída
 
         """
-        return smc.fit(self, X)
+        smc.fit(self, X)
+        return self

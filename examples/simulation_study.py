@@ -1,5 +1,8 @@
-import math
+import sys
 import os
+sys.path.insert(0, os.path.abspath('..'))
+import math
+
 import pandas as pd
 from g4l.estimators import BIC
 from g4l.estimators import SMC
@@ -9,7 +12,9 @@ from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
 import logging
 
-
+samples_path = os.path.abspath('./simulation_study/samples')
+temp_folder = os.path.abspath('./simulation_study/bb/tmp')
+results_folder = os.path.abspath('./simulation_study/bb/results')
 A = ['0', '1']
 SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
@@ -69,6 +74,11 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                            'opt_idx': opt_idx}
                     use_header = (not os.path.exists(results_file))
                     df = pd.DataFrame.from_dict([obj])
+
+                    outdir = os.path.dirname(results_file)
+                    if not os.path.exists(outdir):
+                        os.makedirs(outdir, exist_ok=True)
+
                     df.to_csv(results_file, mode='a',
                               index=False,
                               header=use_header)
@@ -125,3 +135,13 @@ def fetch_samples(model_name, sample_size, path, max_samples=math.inf):
             break
         i += 1
         yield i, s
+
+run_simulation('model1',
+               temp_folder,
+               results_folder,
+               samples_path)
+
+run_simulation('model2',
+               temp_folder,
+               results_folder,
+               samples_path)
