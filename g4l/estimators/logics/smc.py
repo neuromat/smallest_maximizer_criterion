@@ -35,8 +35,8 @@ def fit(estimator, X):
     estimator.initial_tree = ContextTree.init_from_sample(X, max_depth)
     min_c, max_c = estimator.penalty_interval
     estimator.trees_constructed = 0
-    tree_a = bic(estimator, min_c)
-    tree_b = tree_f = bic(estimator, max_c)
+    tree_a = calc_bic(estimator, min_c)
+    tree_b = tree_f = calc_bic(estimator, max_c)
     add_tree(estimator, tree_a, min_c)
 
     a, b = (min_c, max_c)
@@ -61,7 +61,7 @@ def fit(estimator, X):
     return estimator
 
 
-def bic(estimator, c):
+def calc_bic(estimator, c, df_method):
     """
     Estimate a context tree using the BIC estimator
 
@@ -75,7 +75,7 @@ def bic(estimator, c):
     """
     sample = estimator.initial_tree.sample
     estimator.trees_constructed += 1
-    bic_estimator = BIC(c, estimator.max_depth, df_method=self.df_method).fit(sample)
+    bic_estimator = BIC(c, estimator.max_depth, df_method=df_method).fit(sample)
     return bic_estimator.context_tree
 
 
@@ -119,7 +119,7 @@ def strategy_dynamic(estimator, c):
         estimator.intervals = dict()
     t = cached_trees(estimator, c)
     if not t:
-        t = bic(estimator, c)
+        t = calc_bic(estimator, c)
         __add_tree(estimator, c, t)
         print("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
     else:
@@ -127,7 +127,7 @@ def strategy_dynamic(estimator, c):
     return t
 
 
-def strategy_default(estimator, c):
+def strategy_default(estimator, c, df_method):
     """
     Computes the context tree using the BIC estimator for
     a given penalty value `c`
@@ -141,7 +141,7 @@ def strategy_default(estimator, c):
         The penalty value used to estimate the tree
     """
 
-    bic = bic(estimator, c)
+    bic = calc_bic(estimator, c, df_method)
     logging.debug('c=%s; \t\tt=%s' % (round(c, 4), bic.to_str()))
     return bic
 
