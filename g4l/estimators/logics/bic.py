@@ -11,9 +11,9 @@ def fit(X, c, max_depth, df_method):
     df, transition_probs = full_tree.df, full_tree.transition_probs
     # likelihood_pen => n^{-c \dot df(w)}L_{w}(X^{n}_{1})
     deg_f = degrees_of_freedom(df_method, full_tree)
-    df['likelihood_pen'] = df.likelihood
+    #df['likelihood_pen'] = df.likelihood
     penalty = penalty_term(len(X.data), c, deg_f)
-    df.likelihood_pen += penalty
+    df['likelihood_pen'] = penalty + df.likelihood
     full_tree.df = assign_values(max_depth, df[df.freq >= 1])
     full_tree.prune_unique_context_paths()
     return clean_columns(full_tree)
@@ -76,11 +76,11 @@ def g4l(t):
     d = t.transition_probs
     num_nodes = d[d.freq > 0].groupby(['idx']).count().next_symbol
     #t.df.num_child_nodes = num_nodes
-    return num_nodes
+    return -num_nodes
 
 
 def csizar_and_talata(t):
-    return (1 - len(t.sample.A)) / 2
+    return ((1 - len(t.sample.A)) / 2)
 
 
 def original_perl(t):
@@ -88,11 +88,11 @@ def original_perl(t):
     The perl version of this algorithm uses df = |A|-1
     perl: $LPS = $LPMLS - log($LD) * ( ( $LA - 1 ) * $Pena );
     """
-    return len(t.sample.A)-1
+    return -(len(t.sample.A)-1)
 
 
 def penalty_term(sample_len, c, degr_freedom):
-    return -(np.log(sample_len) * c * degr_freedom)
+    return np.log(sample_len) * c * degr_freedom
 
 
 def clean_columns(t):
