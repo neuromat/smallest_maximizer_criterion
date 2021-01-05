@@ -31,7 +31,7 @@ class SMC(CollectionBase):
     """
 
     def __init__(self, max_depth, penalty_interval=(0.1, 400),
-                 epsilon=0.01, cache_dir=None, callback_fn=None):
+                 epsilon=0.01, cache_dir=None, callback_fn=None, df_method='perl'):
         """
         Parameters
         ----------
@@ -53,7 +53,11 @@ class SMC(CollectionBase):
             Whenever a new tree is found, the estimator yields to this callback
             method (when provided). This might is useful for logging and
             interfacing purposes
-
+        df_method : str
+            The method used by BIC to calculate degrees_of_freedom. Options:
+            - 'perl': uses the same df as the original implementation in perl
+            - 'g4l': uses the method as described in the paper (slightly different)
+            - 'csizar_and_talata': uses df as described in Csizar and Talata (2006)
         """
         assert max_depth > 0, 'max depth must be greater than zero'
         assert epsilon > 0, 'epsilon must be greater than zero'
@@ -61,6 +65,7 @@ class SMC(CollectionBase):
         self.max_depth = max_depth
         self.penalty_interval = penalty_interval
         self.epsilon = epsilon
+        self.df_method = df_method
         self.cache_dir = cache_dir
         self.callback_fn = callback_fn
         self.tresholds = []

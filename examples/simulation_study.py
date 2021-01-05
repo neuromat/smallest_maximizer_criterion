@@ -13,10 +13,10 @@ from g4l.bootstrap.resampling import BlockResampling
 import logging
 
 samples_path = os.path.abspath('./simulation_study/samples')
-temp_folder = os.path.abspath('./simulation_study/bb/tmp')
-results_folder = os.path.abspath('./simulation_study/bb/results')
+temp_folder = os.path.abspath('./simulation_study/csizar_and_talata/tmp')
+results_folder = os.path.abspath('./simulation_study/csizar_and_talata/results')
 A = ['0', '1']
-SAMPLE_SIZES = [5000, 10000, 20000]
+SAMPLE_SIZES = [20000, 10000, 5000]
 NUM_RESAMPLES = 200
 NUM_CORES = 6
 RENEWAL_POINT = 1
@@ -113,6 +113,7 @@ def smc(sample, temp_folder):
 
     smc = SMC(max_depth, penalty_interval=(0, 500),
               epsilon=0.00001,
+              df_method='csizar_and_talata',
               cache_dir=cache_dir)
     trees = smc.fit(sample).context_trees
     return sort_trees(trees)

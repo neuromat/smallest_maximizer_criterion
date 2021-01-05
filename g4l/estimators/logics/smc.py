@@ -75,7 +75,7 @@ def bic(estimator, c):
     """
     sample = estimator.initial_tree.sample
     estimator.trees_constructed += 1
-    bic_estimator = BIC(c, estimator.max_depth).fit(sample)
+    bic_estimator = BIC(c, estimator.max_depth, df_method=self.df_method).fit(sample)
     return bic_estimator.context_tree
 
 
