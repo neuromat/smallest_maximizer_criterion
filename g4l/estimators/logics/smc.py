@@ -28,6 +28,7 @@ def fit(estimator, X):
     """
 
     estimator.tresholds = []
+    df_method = estimator.df_method
     max_depth = estimator.max_depth
     estimator.intervals = None
     if cache.load_cache(estimator, X):
@@ -35,8 +36,8 @@ def fit(estimator, X):
     estimator.initial_tree = ContextTree.init_from_sample(X, max_depth)
     min_c, max_c = estimator.penalty_interval
     estimator.trees_constructed = 0
-    tree_a = calc_bic(estimator, min_c)
-    tree_b = tree_f = calc_bic(estimator, max_c)
+    tree_a = calc_bic(estimator, min_c, df_method)
+    tree_b = tree_f = calc_bic(estimator, max_c, df_method)
     add_tree(estimator, tree_a, min_c)
 
     a, b = (min_c, max_c)
@@ -46,7 +47,7 @@ def fit(estimator, X):
                 old_b = b
                 old_tree_b = tree_b
                 b = (a + b)/2
-                tree_b = strategy_dynamic(estimator, b)
+                tree_b = strategy_dynamic(estimator, b, df_method)
             a = b
             b = old_b
             tree_b = old_tree_b
@@ -99,7 +100,7 @@ def add_tree(estimator, t, c):
         pass
 
 
-def strategy_dynamic(estimator, c):
+def strategy_dynamic(estimator, c, df_method):
     """
     This strategy avoids computing trees where the current c is between
     2 already computed values of c that have produced the same tree, for
@@ -119,7 +120,7 @@ def strategy_dynamic(estimator, c):
         estimator.intervals = dict()
     t = cached_trees(estimator, c)
     if not t:
-        t = calc_bic(estimator, c)
+        t = calc_bic(estimator, c, df_method)
         __add_tree(estimator, c, t)
         print("[new] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
     else:
