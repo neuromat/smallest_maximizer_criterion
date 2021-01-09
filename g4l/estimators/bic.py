@@ -30,7 +30,7 @@ class BIC(Base):
         Estimates champion trees for the given sample X and constant c
     """
 
-    def __init__(self, c, max_depth, df_method='perl'):
+    def __init__(self, c, max_depth, df_method='perl', scan_offset=0, perl_compatible=False):
         """
         Parameters
         ----------
@@ -43,11 +43,17 @@ class BIC(Base):
             - 'perl': uses the same df as the original implementation in perl
             - 'g4l': uses the method as described in the paper (slightly different)
             - 'csizar_and_talata': uses df as described in Csizar and Talata (2006)
+        scan_offset : int
+            Computes node frequencies starting from `scan_offset` position
+        perl_compatible : bool
+            Set algorithm to be compatible with the paper's perl version
         """
         assert max_depth > 0, 'max depth must be greater than zero'
         assert c >= 0, 'c must be at least zero'
         self.c, self.max_depth = c, max_depth
         self.df_method = df_method
+        self.scan_offset = scan_offset
+        self.perl_compatible = perl_compatible
 
     def fit(self, X):
         """
@@ -59,5 +65,9 @@ class BIC(Base):
         ## informar dados da saída
 
         """
-        self.context_tree = bic.fit(X, self.c, self.max_depth, self.df_method)
+        self.context_tree = bic.fit(X, self.c,
+                                    self.max_depth,
+                                    self.df_method,
+                                    self.scan_offset,
+                                    self.perl_compatible)
         return self

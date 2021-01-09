@@ -4,23 +4,25 @@ import pytest
 import numpy as np
 
 sys.path.insert(0, os.path.abspath('.'))
-from examples.example2 import models
+#import code; code.interact(local=dict(globals(), **locals()))
+from examples.simulation_study import get_model
+
 from g4l.util.mat import MatSamples
 from g4l.estimators import SMC
 from g4l.bootstrap.bootstrap import Bootstrap
 
 largest_tree = '000000 000010 000100 001000 001010 1 10000 100000 100010 10010 100100 10100 101000 101010'
 resamples_folder = os.path.abspath('tests/simulation/fixtures/%s_n%s.txt')
-samples_folder = os.path.abspath('./examples/example2/samples')
+samples_folder = os.path.abspath('./examples/simulation_study/samples')
 cache_folder = os.path.abspath('tests/cache')
 model_name = 'model1'
-model = models.get_model(model_name)
+model = get_model(model_name)
 sample_size = 5000
 resample_sizes = (1500, 4500)
 sample_idx = 14
 max_depth = 6
 A = [0, 1]
-num_cores = 6
+num_cores = 4
 
 
 @pytest.fixture(scope='function')
@@ -30,6 +32,7 @@ def tree_resources(request):
     cachefld = '%s/smc' % cache_folder
     smc = SMC(max_depth, penalty_interval=(0, 1000),
               epsilon=0.00001,
+              df_method='csizar_and_talata',
               cache_dir=cachefld)
     champion_trees = smc.fit(sample).context_trees
     return sample, samples_n1, samples_n2, champion_trees

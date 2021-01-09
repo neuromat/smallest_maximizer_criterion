@@ -5,7 +5,7 @@ from collections import defaultdict
 from . import resources as rsc
 
 
-def run(sample, max_depth, scan_offset=0):
+def run(sample, max_depth, scan_offset):
     """
     Creates contexts and transition probabilites given the
     sample and a maximum depth value:
@@ -40,7 +40,7 @@ def transition_sum_log_probs(df_children):
     return np.sum(np.log(df_children[df_children.node_prob > 0].node_prob))
 
 
-def count_subsequence_frequencies(df, sample, max_depth, scan_offset=0):
+def count_subsequence_frequencies(df, sample, max_depth, scan_offset):
     sample_data = sample.data
     # for each position in a sliding window of size max_depth over sample_data,
     #for d in range(1, context_tree.max_depth + 1):
@@ -55,8 +55,7 @@ def count_subsequence_frequencies(df, sample, max_depth, scan_offset=0):
             a = sample_data[i]
             dct_node_freq[node] += 1
             dct_transition[node][sample.A.index(a)] += 1
-
-    dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
+    #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
     df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
     df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0

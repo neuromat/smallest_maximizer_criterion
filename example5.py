@@ -19,7 +19,7 @@ from g4l.data import Sample
 import logging
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         #logging.FileHandler("examples/example1/debug.log"),
@@ -30,25 +30,30 @@ logging.basicConfig(
 
 # Create a sample object instance
 
-filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_5000.csv"
+filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_20000.csv"
 max_depth = 6
 ff = [x.replace(',', '') for x in open(filename).read().split('\n')]
-samp = ff[0]
+samp = ff[87]
 X = Sample(None, [0, 1], data=samp)
 
-c = 0.16698
-print(BIC(c, 6, df_method='csizar_and_talata').fit(X).context_tree.to_str())
-b = BIC(c, 6).fit(X).context_tree
-df = b.df
+c = 0.15
+b = BIC(c, 6, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
+b = BIC(c, 6, scan_offset=6, df_method='csizar_and_talata', perl_compatible=False).fit(X).context_tree
+#print(b.to_str())
+#df = b.df
+#import code; code.interact(local=dict(globals(), **locals()))
+
 
 smc = SMC(max_depth,
-          penalty_interval=(0.1, 400),
+          penalty_interval=(0, 100),
           epsilon=0.01,
           cache_dir=None,
           callback_fn=None,
-          df_method='csizar_and_talata')
+          scan_offset=6,
+          df_method='csizar_and_talata',
+          perl_compatible=False)
 smc.fit(X)
 for tree in smc.context_trees:
-    print(tree.to_str())
+    print(tree.to_str(), tree.log_likelihood())
 
 import code; code.interact(local=dict(globals(), **locals()))

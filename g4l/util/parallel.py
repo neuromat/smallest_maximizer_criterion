@@ -15,7 +15,6 @@ def calc_likelihood_process(args):
     tree = get_tree(trees_folder, tree_idx)
     data = resamples(resamples_file)[resample_idx][:int(resample_size)]
     resample = Sample(None, tree.sample.A, data=data)
-
     ret, _ = tree.sample_likelihood(resample, buf=buf)
     return ret
 
@@ -28,7 +27,6 @@ def calculate_likelihoods(temp_folder, champion_trees, resamples_file,
     persist_trees(champion_trees, trees_folder)
     pr = list(product(range(num_trees), range(num_resamples)))
 
-    #import code; code.interact(local=dict(globals(), **locals()))
     samples = resamples(resamples_file)
     A = champion_trees[0].sample.A
     buf = [champion_trees[0].calculate_node_transitions(s[:resample_size], A) for s in samples]

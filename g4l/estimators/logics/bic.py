@@ -3,27 +3,29 @@ from g4l.models import ContextTree
 from g4l.models.builders import incremental
 
 
-def fit(X, c, max_depth, df_method):
+def fit(X, c, max_depth, df_method, scan_offset, comp):
     """ Estimates Context Tree model using BIC """
+
     full_tree = ContextTree.init_from_sample(X, max_depth,
                                              force_admissible=False,
-                                             initialization_method=incremental)
+                                             initialization_method=incremental,
+                                             scan_offset=scan_offset)
     df, transition_probs = full_tree.df, full_tree.transition_probs
     # likelihood_pen => n^{-c \dot df(w)}L_{w}(X^{n}_{1})
     deg_f = degrees_of_freedom(df_method, full_tree)
     #df['likelihood_pen'] = df.likelihood
     penalty = penalty_term(len(X.data), c, deg_f)
     df['likelihood_pen'] = penalty + df.likelihood
-    full_tree.df = assign_values(max_depth, df[df.freq >= 1])
+    full_tree.df = assign_values(max_depth, df[df.freq >= 1], comp)
     full_tree.prune_unique_context_paths()
     return clean_columns(full_tree)
 
 
-def calc_sum_v_children(df, level):
+def calc_sum_v_children(df, level, max_depth):
     parents = df[(df.depth == level) & (df.freq >= 1)]
     ch = df[(df.parent_idx.isin(parents.node_idx)) & (df.freq >= 1)]
-    ch_vals = ch.groupby([df.parent_idx]).apply(lambda x: x['v_node'].sum())
-    ch_vals.name = 'sum_v_children'
+    ch_vals = ch.groupby([df.parent_idx]).v_sum.sum()
+    ch_vals.name = 'v_sum'
     ch_vals = ch_vals.to_frame().reset_index()
     ch_vals.rename(columns={'parent_idx': 'node_idx'}, inplace=True)
     ch_vals = ch_vals.set_index('node_idx')
@@ -31,24 +33,40 @@ def calc_sum_v_children(df, level):
     return df.reset_index(drop=False)
 
 
-def assign_values(max_depth, df):
-
+def assign_values(max_depth, df, comp=False):
     # v_node = V^{c}_{w}(X^{n}_{1})
     df.loc[df.depth == max_depth, 'v_node'] = df.likelihood_pen
+    df.loc[df.depth == max_depth, 'v_node_sum'] = df.likelihood_pen
     df['active'] = 0
     df['indicator'] = 0
 
+    df.set_index('node_idx', inplace=True)
     for d in reversed(range(0, max_depth)):
-        df = calc_sum_v_children(df, d)
-        depth_df = df.loc[df.depth == d]
-        df.loc[df.depth == d, 'v_node'] = depth_df[['likelihood_pen', 'sum_v_children']].max(axis=1)
+        parents = df[(df.depth == d) & (df.freq >= 1)]
+        ch = df[(df.parent_idx.isin(parents.index)) & (df.freq >= 1)]
+        ch_vals = ch.groupby([df.parent_idx]).v_node.sum()
+        df.loc[ch_vals.index, 'v_node_sum'] = ch_vals
+        df.loc[ch_vals.index, 'v_node'] = df.loc[ch_vals.index][['likelihood_pen', 'v_node_sum']].max(axis=1)
+        df['comp_aux'] = df.v_node_sum > df.v_node
 
-    cond = (df.depth < max_depth) & (df.sum_v_children > df.likelihood_pen)
+        #ch2 = df[(df.parent_idx.isin(parents.index)) & (df.freq > 1)]
 
+        #df = calc_sum_v_children(df, d, max_depth)
+        #depth_df = df.loc[df.depth == d]
+        #df.loc[df.depth == d, 'v_node'] = depth_df[['likelihood_pen', 'v_node']].max(axis=1)
+
+    cond = (df.depth < max_depth) & (df.v_node > df.likelihood_pen)
     # indicator => \delta_{w}^{c}(X^{n}_{1})
     df.loc[cond, 'indicator'] = 1
-    df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
 
+    # df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
+
+
+    if comp==True:
+        # Make the code compatible with the perl version
+        df.loc[(cond & (df.num_child_nodes <= 1)), 'indicator'] = 0
+        df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
+    #import code; code.interact(local=dict(globals(), **locals()))
     for d in range(max_depth + 1):
         candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
         for idx, row in candidate_nodes.iterrows():
@@ -58,6 +76,7 @@ def assign_values(max_depth, df):
             suffixes = df[df['node'].isin(node_suffixes)]
             if suffixes['indicator'].product() == 1 and row.indicator == 0:
                 df.loc[(df.node == row.node), 'active'] = 1
+
     return df
 
 
@@ -92,6 +111,7 @@ def original_perl(t):
 
 
 def penalty_term(sample_len, c, degr_freedom):
+
     return np.log(sample_len) * c * degr_freedom
 
 

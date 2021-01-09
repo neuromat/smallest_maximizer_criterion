@@ -59,9 +59,15 @@ class Bootstrap():
         d1, d2 = diffs
         t = len(d1)
         pvalue = 1
+
+        #from scipy.stats import ttest_rel
+
+        #[ttest_rel(d1[tx], d2[tx], alternative='greater') for tx in [5, 4, 3, 2, 1]]
+        #[t_test(d1[tx], d2[tx], alternative='greater') for tx in [5, 4, 3, 2, 1]]
         while pvalue > alpha and t > 0:
             t -= 1
             pvalue = t_test(d1[t], d2[t], alternative='greater')
+        #import code; code.interact(local=dict(globals(), **locals()))
         return t+1
 
     def _initialize_diffs(self, num_trees, num_resamples):

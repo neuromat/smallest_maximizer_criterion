@@ -31,7 +31,8 @@ class SMC(CollectionBase):
     """
 
     def __init__(self, max_depth, penalty_interval=(0.1, 400),
-                 epsilon=0.01, cache_dir=None, callback_fn=None, df_method='perl'):
+                 epsilon=0.01, cache_dir=None, callback_fn=None,
+                 scan_offset=0, df_method='perl', perl_compatible=False):
         """
         Parameters
         ----------
@@ -58,6 +59,11 @@ class SMC(CollectionBase):
             - 'perl': uses the same df as the original implementation in perl
             - 'g4l': uses the method as described in the paper (slightly different)
             - 'csizar_and_talata': uses df as described in Csizar and Talata (2006)
+        scan_offset : int
+            Computes node frequencies starting from `scan_offset` position
+        perl_compatible : int
+            Makes algorithm compatible with the paper's perl code
+
         """
         assert max_depth > 0, 'max depth must be greater than zero'
         assert epsilon > 0, 'epsilon must be greater than zero'
@@ -68,7 +74,9 @@ class SMC(CollectionBase):
         self.df_method = df_method
         self.cache_dir = cache_dir
         self.callback_fn = callback_fn
+        self.scan_offset = scan_offset
         self.tresholds = []
+        self.perl_compatible = perl_compatible
 
     def fit(self, X):
         """

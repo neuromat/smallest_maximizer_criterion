@@ -8,25 +8,26 @@ import sys, os
 sys.path.insert(0, os.path.abspath('..'))
 from g4l.estimators.bic import BIC
 from g4l.estimators.smc import SMC
+from g4l.estimators.prune import Prune
 from g4l.data import Sample
 from g4l.bootstrap.resampling import BlockResampling
 from g4l.bootstrap import Bootstrap
 import numpy as np
 
-cache_folder = "linguistic_case_study/cache/smc3"
+cache_folder = "linguistic_case_study/cache/prune"
 resamples_folder = '%s/resamples' % cache_folder
 samples_folder = "linguistic_case_study"
 max_depth = 4
 num_resamples = 200
 num_cores = 6
-penalty_interval = (0.1, 800)
+penalty_interval = (0.1, 400)
 epsilon = 0.01
 renewal_point = '4'
 
 
 def run_smc(X, instance_name='bp'):
     L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
-    resamples_file = "%s/resamples.txt" % resamples_folder
+    resamples_file = "%s/resamples.%s.txt" % (resamples_folder, instance_name)
     data_len = len(X.data)
     n_sizes = (int(data_len * 0.3), int(data_len * 0.9))
 
@@ -34,7 +35,8 @@ def run_smc(X, instance_name='bp'):
     smc = SMC(max_depth,
               penalty_interval=penalty_interval,
               epsilon=epsilon,
-              cache_dir=cache_folder)
+              cache_dir=cache_folder, perl_compatible=True)
+    smc = Prune(max_depth)
     smc.fit(X)
     champion_trees = smc.context_trees
 
@@ -45,7 +47,7 @@ def run_smc(X, instance_name='bp'):
         L = np.load(L_path)
     except:
         # Generate samples using block resampling strategy
-        resample_fctry = BlockResampling(X_bp, resamples_file,
+        resample_fctry = BlockResampling(X, resamples_file,
                                          n_sizes,
                                          renewal_point)
         resample_fctry.generate(num_resamples, num_cores=num_cores)

@@ -17,13 +17,14 @@ samples_path = os.path.abspath('./simulation_study/samples')
 temp_folder = os.path.abspath('./simulation_study/%s/tmp' % DF_METHOD)
 results_folder = os.path.abspath('./simulation_study/%s/results' % DF_METHOD)
 A = ['0', '1']
-SAMPLE_SIZES = [20000, 10000, 5000]
+SAMPLE_SIZES = [5000, 10000, 20000]
 NUM_RESAMPLES = 200
+PENALTY_INTERVAL = (0, 100)
 NUM_CORES = 6
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
-C = 2
+C = 0.5
 MAX_SAMPLES = math.inf
 max_depth = 6
 
@@ -60,8 +61,9 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                 L = bootstrap.calculate_likelihoods(resamples_folder,
                                                     num_cores=NUM_CORES)
 
-                diffs = bootstrap.calculate_diffs(L)
-                opt_idx = bootstrap.find_optimal_tree(diffs, alpha=0.01)
+                #import code; code.interact(local=dict(globals(), **locals()))
+                #diffs = bootstrap.calculate_diffs(L)
+                opt_idx = bootstrap.find_optimal_tree(L, alpha=0.01)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
@@ -112,7 +114,7 @@ def smc(sample, temp_folder):
     else:
         cache_dir = '%s/trees' % temp_folder
 
-    smc = SMC(max_depth, penalty_interval=(0, 500),
+    smc = SMC(max_depth, penalty_interval=PENALTY_INTERVAL,
               epsilon=0.00001,
               df_method=DF_METHOD,
               cache_dir=cache_dir)

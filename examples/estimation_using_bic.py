@@ -16,7 +16,7 @@ X = Sample('./linguistic_case_study/folha.txt', [0, 1, 2, 3, 4])
 max_depth = 4
 c = 0.34
 # Instantiate BIC object and use the 'fit' method
-bic = BIC(c, max_depth, df_method='g4l').fit(X)
+bic = BIC(c, max_depth, df_method='g4l', scan_offset=6).fit(X)
 
 print("\nNodes: \n", bic.context_tree.tree()[['node', 'freq', 'likelihood']])
 print("\n\nTransition probs: \n", bic.context_tree.transition_probs.head(10))
