@@ -11,22 +11,99 @@ from g4l.data import persistence
 from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
 import logging
+import argparse
 
-DF_METHOD = 'csizar_and_talata'
-samples_path = os.path.abspath('./simulation_study/samples')
-temp_folder = os.path.abspath('./simulation_study/%s/tmp' % DF_METHOD)
-results_folder = os.path.abspath('./simulation_study/%s/results' % DF_METHOD)
+
+parser = argparse.ArgumentParser(description='Run simulation study')
+parser.add_argument('instance_name',
+                    type=str,
+                    help='Select model')
+parser.add_argument('--model',
+                    choices=['model1', 'model2'],
+                    default='model1',
+                    help='Select model')
+parser.add_argument('--df',
+                    choices=['csizar_and_talata', 'perl', 'g4l'],
+                    default='csizar_and_talata',
+                    help='penalization strategy')
+parser.add_argument('--resamples',
+                    type=int,
+                    default='200',
+                    help='number of bootstrap samples used')
+parser.add_argument('--num_cores',
+                    type=int,
+                    default=0,
+                    help='number of processors for parallel processing')
+parser.add_argument('--samples_path',
+                    type=str,
+                    default='./simulation_study/samples',
+                    help='path containing the samples')
+parser.add_argument('--temp_folder',
+                    type=str,
+                    default='',
+                    help='path for temporary files')
+parser.add_argument('--results_folder',
+                    type=str,
+                    default='',
+                    help='path for results')
+parser.add_argument('--penalty_interval',
+                    nargs=2,
+                    type=float,
+                    metavar=('pen_min', 'pen_max'),
+                    default=(0, 100),
+                    help='Penalization constant intervals for BIC',
+                    )
+parser.add_argument('--scan_offset',
+                    type=int,
+                    default='0',
+                    help='start reading sample from this index on')
+parser.add_argument('--perl_compatible',
+                    type=bool,
+                    default=False,
+                    help='keeps compatibility with original version in perl')
+#parser.add_argument('model', metavar='N', type=int, nargs='+',
+                    #help='an integer for the accumulator')
+#parser.add_argument('--sum', dest='accumulate', action='store_const',
+                    #const=sum, default=max,
+                    #help='sum the integers (default: find the max)')
+
+args = parser.parse_args()
+#print(args.accumulate(args.integers))
+
+
+DF_METHOD = args.df
+INSTANCE_NAME = args.instance_name
+NUM_RESAMPLES = args.resamples
+NUM_CORES = None if args.num_cores == 0 else args.num_cores
+SCAN_OFFSET = args.scan_offset
+PERL_COMPATIBLE = args.perl_compatible
+samples_path = args.samples_path
+
+opt_tmp_fld = os.path.abspath('./simulation_study/instances/%s/tmp' % INSTANCE_NAME)
+opt_results_folder = os.path.abspath('./simulation_study/instances/%s/results' % INSTANCE_NAME)
+temp_folder = args.temp_folder if args.temp_folder != '' else opt_tmp_fld
+results_folder = args.results_folder if args.results_folder != '' else opt_results_folder
+
 A = ['0', '1']
 SAMPLE_SIZES = [5000, 10000, 20000]
-NUM_RESAMPLES = 200
-PENALTY_INTERVAL = (0, 100)
-NUM_CORES = 6
+PENALTY_INTERVAL = tuple(args.penalty_interval)
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
 C = 0.5
 MAX_SAMPLES = math.inf
 max_depth = 6
+
+if not os.path.exists(results_folder):
+    os.makedirs(results_folder, exist_ok=True)
+summary_file = '%s/summary.csv' % results_folder
+all_vars = vars(args)
+all_vars['c_min'] = args.penalty_interval[0]
+all_vars['c_max'] = args.penalty_interval[1]
+del(all_vars['penalty_interval'])
+pd.DataFrame.from_dict(all_vars, orient='index').T.to_csv(summary_file, sep='\t', index=False)
+#import code; code.interact(local=dict(globals(), **locals()))
+
 
 
 def get_results_file(estimator, model_name, sample_size, results_folder):
@@ -117,6 +194,8 @@ def smc(sample, temp_folder):
     smc = SMC(max_depth, penalty_interval=PENALTY_INTERVAL,
               epsilon=0.00001,
               df_method=DF_METHOD,
+              scan_offset=SCAN_OFFSET,
+              perl_compatible=PERL_COMPATIBLE,
               cache_dir=cache_dir)
     trees = smc.fit(sample).context_trees
     return sort_trees(trees)
@@ -140,12 +219,7 @@ def fetch_samples(model_name, sample_size, path, max_samples=math.inf):
         i += 1
         yield i, s
 
-run_simulation('model1',
-               temp_folder,
-               results_folder,
-               samples_path)
-
-run_simulation('model2',
+run_simulation(args.model,
                temp_folder,
                results_folder,
                samples_path)
