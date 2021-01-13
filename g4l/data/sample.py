@@ -28,7 +28,7 @@ class Sample():
                 logging.warning('Invalid characters were filtered from the provided sample (%s occurrences)' % len_diff)
         else:
             if separator == None:
-                self.A = np.unique([c for c in self.data])
+                self.A = list(np.unique([c for c in self.data]))
             else:
                 self.A = np.unique(self.data.split(separator))
 
