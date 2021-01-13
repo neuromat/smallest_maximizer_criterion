@@ -46,21 +46,26 @@ def count_subsequence_frequencies(df, sample, max_depth, scan_offset):
     #for d in range(1, context_tree.max_depth + 1):
     dct_transition = defaultdict(lambda: np.zeros(len(sample.A)))
     dct_node_freq = defaultdict(lambda: 0)
-
+    dct_node_freq[''] = 0
     for d in range(max_depth + 1):
         # create a dataframe with all subsequences and their frequencies
         # aqui
         for i in range(scan_offset, len(sample_data)):
             node = sample_data[i-d:i]
             a = sample_data[i]
-            dct_node_freq[node] += 1
-            dct_transition[node][sample.A.index(a)] += 1
+            if node!='':
+                dct_node_freq[node] += 1
+                dct_transition[node][sample.A.index(a)] += 1
     #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
+    # TODO: melhorar estratégia de contagem do nó vazio
+    dct_node_freq[''] = sum([dct_node_freq[a] for a in sample.A])
+    for ii, a in enumerate(sample.A):
+        dct_transition[''][ii] = dct_node_freq[a]
+    #import code; code.interact(local=dict(globals(), **locals()))
     df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
     df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0
     df = create_indexes(df)
-
     df2 = pd.DataFrame.from_dict(dct_transition, orient='index')
     df2['idx'] = df.reset_index().set_index('node')['node_idx']
     df2 = df2.melt(id_vars=['idx'], var_name='next_symbol', value_name='freq')

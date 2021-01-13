@@ -64,19 +64,33 @@ def assign_values(max_depth, df, comp=False):
 
     if comp==True:
         # Make the code compatible with the perl version
+        # this one fits condition in line 581
+        # ( $TREE[ $l + 1 ][ ( $m + $j ) ][2] > 1 )
+        for i, r in df.iterrows():
+            ch = df[df.parent_idx==i]
+            df.loc[df.index==i, 'num_child_nodes'] = len(ch[ch.freq > 1])
         df.loc[(cond & (df.num_child_nodes <= 1)), 'indicator'] = 0
         df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
-    #import code; code.interact(local=dict(globals(), **locals()))
+    else:
+        if df[df.node==''].indicator.values[0] == 0:
+            df.loc[df.node=='', 'active'] = 1
+        return df
+
+
     for d in range(max_depth + 1):
         candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
         for idx, row in candidate_nodes.iterrows():
             node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
-            if row.depth == 1:
+            if comp==False:
                 node_suffixes += ['']
+            #if row.depth == 1:
+            #   node_suffixes += ['']
+            #import code; code.interact(local=dict(globals(), **locals()))
             suffixes = df[df['node'].isin(node_suffixes)]
             if suffixes['indicator'].product() == 1 and row.indicator == 0:
                 df.loc[(df.node == row.node), 'active'] = 1
 
+    #import code; code.interact(local=dict(globals(), **locals()))
     return df
 
 
@@ -111,7 +125,6 @@ def original_perl(t):
 
 
 def penalty_term(sample_len, c, degr_freedom):
-
     return np.log(sample_len) * c * degr_freedom
 
 

@@ -14,12 +14,12 @@ from g4l.bootstrap.resampling import BlockResampling
 from g4l.bootstrap import Bootstrap
 import numpy as np
 
-cache_folder = "linguistic_case_study/cache/prune"
+cache_folder = "linguistic_case_study/cache/smc_matlab"
 resamples_folder = '%s/resamples' % cache_folder
 samples_folder = "linguistic_case_study"
 max_depth = 4
 num_resamples = 200
-num_cores = 6
+num_cores = 4
 penalty_interval = (0.1, 400)
 epsilon = 0.01
 renewal_point = '4'
@@ -35,8 +35,7 @@ def run_smc(X, instance_name='bp'):
     smc = SMC(max_depth,
               penalty_interval=penalty_interval,
               epsilon=epsilon,
-              cache_dir=cache_folder, perl_compatible=True)
-    smc = Prune(max_depth)
+              cache_dir=cache_folder, perl_compatible=False)
     smc.fit(X)
     champion_trees = smc.context_trees
 
@@ -68,8 +67,10 @@ X_ep = Sample('%s/publico.txt' % samples_folder, [0, 1, 2, 3, 4])
 
 
 # Execute the method above for each sample (EP and BP)
-champion_trees_bp, opt_idx_bp, smc_bp = run_smc(X_bp, instance_name='bp')
 champion_trees_ep, opt_idx_ep, smc_ep = run_smc(X_ep, instance_name='ep')
+#import code; code.interact(local=dict(globals(), **locals()))
+champion_trees_bp, opt_idx_bp, smc_bp = run_smc(X_bp, instance_name='bp')
+
 
 print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str())
 [print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_bp)]

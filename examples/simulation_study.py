@@ -61,14 +61,7 @@ parser.add_argument('--perl_compatible',
                     type=bool,
                     default=False,
                     help='keeps compatibility with original version in perl')
-#parser.add_argument('model', metavar='N', type=int, nargs='+',
-                    #help='an integer for the accumulator')
-#parser.add_argument('--sum', dest='accumulate', action='store_const',
-                    #const=sum, default=max,
-                    #help='sum the integers (default: find the max)')
-
 args = parser.parse_args()
-#print(args.accumulate(args.integers))
 
 
 DF_METHOD = args.df
@@ -102,7 +95,6 @@ all_vars['c_min'] = args.penalty_interval[0]
 all_vars['c_max'] = args.penalty_interval[1]
 del(all_vars['penalty_interval'])
 pd.DataFrame.from_dict(all_vars, orient='index').T.to_csv(summary_file, sep='\t', index=False)
-#import code; code.interact(local=dict(globals(), **locals()))
 
 
 
@@ -137,9 +129,6 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                 resamples_folder = '%s/likelihoods' % folder
                 L = bootstrap.calculate_likelihoods(resamples_folder,
                                                     num_cores=NUM_CORES)
-
-                #import code; code.interact(local=dict(globals(), **locals()))
-                #diffs = bootstrap.calculate_diffs(L)
                 opt_idx = bootstrap.find_optimal_tree(L, alpha=0.01)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)

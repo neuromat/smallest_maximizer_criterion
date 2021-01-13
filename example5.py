@@ -30,16 +30,17 @@ logging.basicConfig(
 
 # Create a sample object instance
 
-filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/model1_20000.csv"
+filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/20000.csv"
+filename = "/home/arthur/tmp/x/5000.csv"
 max_depth = 6
 ff = [x.replace(',', '') for x in open(filename).read().split('\n')]
-samp = ff[87]
+samp = ff[1]
 X = Sample(None, [0, 1], data=samp)
 
-c = 0.15
+c = 0
 b = BIC(c, 6, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
-b = BIC(c, 6, scan_offset=6, df_method='csizar_and_talata', perl_compatible=False).fit(X).context_tree
-#print(b.to_str())
+#b = BIC(c, 6, scan_offset=6, df_method='csizar_and_talata', perl_compatible=False).fit(X).context_tree
+print(b.to_str())
 #df = b.df
 #import code; code.interact(local=dict(globals(), **locals()))
 

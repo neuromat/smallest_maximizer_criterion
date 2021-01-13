@@ -7,18 +7,18 @@ def calculate_num_child_nodes(df):
     the number of (immediate) children
     """
     df['active_children'] = 0
-    num_child_nodes = (df[df.depth > 1]
+    num_child_nodes = (df[df.depth >= 1]
                        .reset_index(drop=False)
                        .groupby(['parent_idx'])
                        .apply(lambda x: x.count().node_idx))
 
-    active_children = (df[df.depth > 1]
+    active_children = (df[df.depth >= 1]
                        .reset_index(drop=False)
                        .groupby(['parent_idx'])
                        .apply(lambda x: x.sum().active))
 
 
-    if df.index.name is not 'node_idx':
+    if df.index.name != 'node_idx':
         df.set_index('node_idx', inplace=True)
     try:
         df['num_child_nodes'] = num_child_nodes
