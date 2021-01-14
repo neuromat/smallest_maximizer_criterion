@@ -35,7 +35,7 @@ import logging
 
 
 def dir_path_force(temp_folder):
-    dir_path(temp_folder, force=True)
+    return dir_path(temp_folder, force=True)
 
 
 def dir_path(temp_folder, force=False):
