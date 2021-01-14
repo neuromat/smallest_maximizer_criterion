@@ -71,6 +71,7 @@ NUM_CORES = None if args.num_cores == 0 else args.num_cores
 SCAN_OFFSET = args.scan_offset
 PERL_COMPATIBLE = args.perl_compatible
 samples_path = args.samples_path
+ESTIMATORS = ['smc'] # ['smc', 'prune']
 
 opt_tmp_fld = os.path.abspath('./simulation_study/instances/%s/tmp' % INSTANCE_NAME)
 opt_results_folder = os.path.abspath('./simulation_study/instances/%s/results' % INSTANCE_NAME)
@@ -89,6 +90,7 @@ max_depth = 6
 
 if not os.path.exists(results_folder):
     os.makedirs(results_folder, exist_ok=True)
+    logging.info("Creating folder %s" % results_folder)
 summary_file = '%s/summary.csv' % results_folder
 all_vars = vars(args)
 all_vars['c_min'] = args.penalty_interval[0]
@@ -118,7 +120,7 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                                      folder,
                                      n_sizes,
                                      samples_path)
-        for estimator in ['smc', 'prune']:
+        for estimator in ESTIMATORS:
             results_file = get_results_file(estimator, model_name, sample_size, results_folder)
             for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path):
                 print('sample:', sample_size, sample_idx)
@@ -148,6 +150,7 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                     if not os.path.exists(outdir):
                         os.makedirs(outdir, exist_ok=True)
 
+                    logging.info("Writing result to file %s" % results_file)
                     df.to_csv(results_file, mode='a',
                               index=False,
                               header=use_header)
