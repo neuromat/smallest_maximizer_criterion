@@ -20,7 +20,7 @@ X = Sample('examples/linguistic_case_study/publico.txt', [0, 1, 2, 3, 4])
 
 
 c = 0
-b = BIC(c, 4, scan_offset=0, df_method='csizar_and_talata', perl_compatible=False).fit(X).context_tree
+b = BIC(c, 4, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
 df = b.df
 df = df.drop('comp_aux', axis=1)
 print(df[df.depth <= 1] )
@@ -29,15 +29,16 @@ import code; code.interact(local=dict(globals(), **locals()))
 
 max_depth = 4
 smc = SMC(max_depth,
-          penalty_interval=(0, 400),
+          penalty_interval=(0.1, 400),
           epsilon=0.01,
           cache_dir=None,
           callback_fn=None,
           scan_offset=0,
-          df_method='csizar_and_talata',
+          df_method='perl',
           perl_compatible=False)
 smc.fit(X)
+import code; code.interact(local=dict(globals(), **locals()))
 for tree in smc.context_trees:
-    print(tree.to_str(), tree.log_likelihood())
+    print("%s\t%s" % (tree.num_contexts(), tree.to_str()))
 
 #

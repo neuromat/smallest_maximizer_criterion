@@ -80,8 +80,6 @@ def assign_values(max_depth, df, comp=False):
             node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
             if comp==False:
                 node_suffixes += ['']
-            #if row.node=='0000':
-
             #if row.depth == 1:
                #node_suffixes += ['']
             #import code; code.interact(local=dict(globals(), **locals()))

@@ -2,7 +2,7 @@ python simulation_study.py model1_csz_200_off6 \
 	--model model1 \
 	--df csizar_and_talata \
 	--resamples 200 \
-	--num_cores 10 \
+	--num_cores 4 \
 	--penalty_interval 0 500 \
 	--scan_offset 6 \
 	--perl_compatible 0 \
