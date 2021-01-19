@@ -8,7 +8,12 @@ class Sample():
     A = None
     indexes = []
 
-    def __init__(self, filename, A, data=None, separator=None):
+    def __init__(self, filename, A,
+                 data=None,
+                 separator=None,
+                 subsamples_separator=None):
+
+        self.subsamples_separator = subsamples_separator
         try:
             self.filename = os.path.abspath(filename)
         except:
@@ -22,7 +27,8 @@ class Sample():
         if A is not None:
             data_len = len(self.data)
             self.A = [str(a) for a in A]
-            self.data = ''.join(c for c in self.data if c in self.A)
+            #self.data = ''.join(c for c in self.data if c in self.A)
+            self.data = ''.join(c for c in self.data)
             len_diff = data_len - len(self.data)
             if len_diff > 0:
                 logging.warning('Invalid characters were filtered from the provided sample (%s occurrences)' % len_diff)
@@ -47,3 +53,9 @@ class Sample():
         with open(self.filename, 'r') as f:
             txt = f.read()
         return txt.rstrip()
+
+    def subsamples(self):
+        sep = self.subsamples_separator
+        if sep is None:
+            return [self]
+        return [Sample(None, self.A, data=dt) for dt in self.data.split(sep)]

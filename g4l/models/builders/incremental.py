@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from collections import Counter
+from operator import add
 from collections import defaultdict
 from . import resources as rsc
 
@@ -40,28 +41,54 @@ def transition_sum_log_probs(df_children):
     return np.sum(np.log(df_children[df_children.node_prob > 0].node_prob))
 
 
+def merge_freqs(dicts):
+    d = dicts[0]
+    for d2 in dicts[1:]:
+        for k in d2.keys():
+            d[k] += d2[k]
+    return d
+
+
+def merge_trans(dicts):
+    d = dicts[0]
+    for d2 in dicts[1:]:
+        for k in d2.keys():
+            list(map(add, d[k], d2[k]))
+            d[k] += d2[k]
+    return d
+
+
 def count_subsequence_frequencies(df, sample, max_depth, scan_offset):
-    sample_data = sample.data
-    # for each position in a sliding window of size max_depth over sample_data,
-    #for d in range(1, context_tree.max_depth + 1):
-    dct_transition = defaultdict(lambda: np.zeros(len(sample.A)))
-    dct_node_freq = defaultdict(lambda: 0)
-    dct_node_freq[''] = 0
-    for d in range(max_depth + 1):
-        # create a dataframe with all subsequences and their frequencies
-        # aqui
-        for i in range(scan_offset, len(sample_data)):
-            node = sample_data[i-d:i]
-            a = sample_data[i]
-            if node!='':
-                dct_node_freq[node] += 1
-                dct_transition[node][sample.A.index(a)] += 1
-    #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
-    # TODO: melhorar estratégia de contagem do nó vazio
-    dct_node_freq[''] = sum([dct_node_freq[a] for a in sample.A])
-    for ii, a in enumerate(sample.A):
-        dct_transition[''][ii] = dct_node_freq[a]
-    #import code; code.interact(local=dict(globals(), **locals()))
+    freqs = []
+    trns = []
+    for smpl in sample.subsamples():
+        sample_data = smpl.data
+        A = sample.A
+        # for each position in a sliding window of size max_depth over sample_data,
+        #for d in range(1, context_tree.max_depth + 1):
+        dct_transition = defaultdict(lambda: np.zeros(len(A)))
+        dct_node_freq = defaultdict(lambda: 0)
+        dct_node_freq[''] = 0
+        for d in range(max_depth + 1):
+            # create a dataframe with all subsequences and their frequencies
+            # aqui
+            for i in range(scan_offset, len(sample_data)):
+                node = sample_data[i-d:i]
+                a = sample_data[i]
+                if node != '':
+                    dct_node_freq[node] += 1
+                    dct_transition[node][A.index(a)] += 1
+        #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
+        # TODO: melhorar estratégia de contagem do nó vazio
+        dct_node_freq[''] = sum([dct_node_freq[a] for a in A])
+        for ii, a in enumerate(A):
+            dct_transition[''][ii] = dct_node_freq[a]
+        freqs.append(dct_node_freq)
+        trns.append(dct_transition)
+
+    dct_node_freq = merge_freqs(freqs)
+    dct_transition = merge_trans(trns)
+
     df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
     df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0
