@@ -55,7 +55,7 @@ prune.fit(X)
 print("Estimated trees:")
 [print(x.log_likelihood(), '\t', x.to_str()) for x in prune.context_trees]
 
-datalen = len(X.data)
+datalen = X.len()
 resampling_factory = BlockResampling(X, renewal_point='1')
 bootstrap = Bootstrap(resampling_factory,
                       '%s/resamples/%s' % (cache_dir, 'bp'),

@@ -27,8 +27,9 @@ class Sample():
         if A is not None:
             data_len = len(self.data)
             self.A = [str(a) for a in A]
-            #self.data = ''.join(c for c in self.data if c in self.A)
+            #self.data_len = len(''.join(c for c in self.data if c in self.A))
             self.data = ''.join(c for c in self.data)
+            self.data_len = len(self.data)
             len_diff = data_len - len(self.data)
             if len_diff > 0:
                 logging.warning('Invalid characters were filtered from the provided sample (%s occurrences)' % len_diff)
@@ -37,6 +38,9 @@ class Sample():
                 self.A = list(np.unique([c for c in self.data]))
             else:
                 self.A = np.unique(self.data.split(separator))
+
+    def len(self):
+        return self.data_len
 
     def to_a(self):
         if len(self.indexes) == 0:

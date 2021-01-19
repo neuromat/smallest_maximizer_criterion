@@ -59,9 +59,9 @@ def check_admissibility(t, X):
     nodes_with_transition_freq = t.tree().set_index('node_idx')[transitions>0]
     assert len(nodes_with_transition_freq) == len(t.tree()), "Nodes without transition"
 
-    for j in range(t.max_depth, len(X.data)):
-        if (j % math.floor(len(X.data)/100)) == 0: # for visualization purposes only
-            tx = 'Checking admissibility: %s ' % round(j/len(X.data)*100, 0)
+    for j in range(t.max_depth, X.len()):
+        if (j % math.floor(X.len()/100)) == 0: # for visualization purposes only
+            tx = 'Checking admissibility: %s ' % round(j/X.len()*100, 0)
             logging.debug(tx + "%")
         possible_suffixes = [X.data[j-i-1:j] for i in range(min(j, t.max_depth))]
         assert t.tree().node.isin(possible_suffixes).astype(int).sum() == 1, "Not admissible"
@@ -74,9 +74,9 @@ def satisfies_completeness(t, X):
     is suffix of X1..Xj## for any j = max_depth..(n-1), there is a context
     in t which is suffix of X1..Xj
     """
-    for j in range(t.max_depth, len(X.data)):
-        if (j % math.floor(len(X.data)/100))==0:
-            tx = 'Checking completeness: %s ' % round(j/len(X.data)*100, 0)
+    for j in range(t.max_depth, X.len()):
+        if (j % math.floor(X.len()/100))==0:
+            tx = 'Checking completeness: %s ' % round(j/X.len()*100, 0)
             logging.debug(tx + "%")
         possible_suffixes = [X.data[j-i-1:j] for i in range(min(j, t.max_depth))]
         return t.tree().node.isin(possible_suffixes).astype(int).sum()==1

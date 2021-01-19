@@ -20,7 +20,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_perl_g4l_fix"
+cache_folder = "linguistic_case_study/cache/smc_perl_compat"
 resamples_folder = '%s/resamples' % cache_folder
 samples_folder = "linguistic_case_study"
 max_depth = 4
@@ -34,13 +34,13 @@ renewal_point = '4'
 def run_smc(X, instance_name='bp'):
     L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
     resamples_file = "%s/resamples.%s.txt" % (resamples_folder, instance_name)
-    data_len = len(X.data)
+    data_len = X.len()
     n_sizes = (int(data_len * 0.3), int(data_len * 0.9))
 
     # Execute SMC to estimate champion trees
     smc = SMC(max_depth,
               penalty_interval=penalty_interval,
-              epsilon=epsilon, scan_offset=0, df_method='g4l',
+              epsilon=epsilon, scan_offset=0, df_method='perl',
               cache_dir=cache_folder, perl_compatible=True)
     smc.fit(X)
     champion_trees = smc.context_trees
@@ -78,10 +78,11 @@ champion_trees_ep, opt_idx_ep, smc_ep = run_smc(X_ep, instance_name='ep')
 champion_trees_bp, opt_idx_bp, smc_bp = run_smc(X_bp, instance_name='bp')
 
 print("--------------------------")
-print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str())
+print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str(reverse=True))
 [print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_bp)]
 
 print("--------------------------")
-print("Selected tree for EP: ", champion_trees_ep[opt_idx_ep].to_str())
+print("Selected tree for EP: ", champion_trees_ep[opt_idx_ep].to_str(reverse=True))
 [print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_ep)]
 
+import code; code.interact(local=dict(globals(), **locals()))

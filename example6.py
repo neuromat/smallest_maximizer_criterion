@@ -16,10 +16,10 @@ from g4l.data import Sample
 import logging
 
 # Create a sample object instance
-X = Sample('examples/linguistic_case_study/publico.txt.bkp', [0, 1, 2, 3, 4], subsamples_separator='>')
+X = Sample('examples/linguistic_case_study/folha.txt.bkp', [0, 1, 2, 3, 4], subsamples_separator='>')
 
 
-c = 0.5
+c = 160
 b = BIC(c, 4, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
 df = b.df
 df = df.drop('comp_aux', axis=1)
@@ -35,7 +35,7 @@ smc = SMC(max_depth,
           callback_fn=None,
           scan_offset=0,
           df_method='perl',
-          perl_compatible=False)
+          perl_compatible=True)
 smc.fit(X)
 import code; code.interact(local=dict(globals(), **locals()))
 for tree in smc.context_trees:

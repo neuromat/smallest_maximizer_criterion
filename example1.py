@@ -25,7 +25,7 @@ logging.basicConfig(
 
 def run_smc(X, instance_name='bp'):
     L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
-    n_sizes = (int(len(X.data) * 0.3), int(len(X.data) * 0.9)) # 29337, 88011
+    n_sizes = (int(X.len() * 0.3), int(X.len() * 0.9)) # 29337, 88011
     smc = SMC(max_depth,
               penalty_interval=(0.1, 800),
               epsilon=0.01,

@@ -25,7 +25,7 @@ logging.basicConfig(
 
 def run_method(X, instance_name='bp'):
     L_path = "%s/L_%s.npy" % (resamples_folder, instance_name)
-    n_sizes = (int(len(X.data) * 0.3), int(len(X.data) * 0.9)) # 29337, 88011
+    n_sizes = (int(X.len() * 0.3), int(X.len() * 0.9)) # 29337, 88011
     method = Prune(max_depth)
     method.fit(X)
     champion_trees = method.context_trees

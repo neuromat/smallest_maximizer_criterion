@@ -19,7 +19,7 @@ from g4l.data import Sample
 
 
 # def test_suffix_property():
-#   data_len = len(X.data)
+#   data_len = X.len()
 #   initial_tree = ContextTree(X, max_depth=max_depth, tree_initialization_method=g4l.tree.generation.original)
 #   p = prune.Prune(initial_tree)
 #   p.execute()

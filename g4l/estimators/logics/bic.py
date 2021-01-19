@@ -14,7 +14,7 @@ def fit(X, c, max_depth, df_method, scan_offset, comp):
     # likelihood_pen => n^{-c \dot df(w)}L_{w}(X^{n}_{1})
     deg_f = degrees_of_freedom(df_method, full_tree)
     #df['likelihood_pen'] = df.likelihood
-    penalty = penalty_term(len(X.data), c, deg_f)
+    penalty = penalty_term(X.len(), c, deg_f)
     df['likelihood_pen'] = penalty + df.likelihood
     full_tree.df = assign_values(max_depth, df[df.freq >= 1], comp)
     full_tree.prune_unique_context_paths()
