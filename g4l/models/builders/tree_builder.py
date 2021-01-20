@@ -1,7 +1,5 @@
 import pandas as pd
 import numpy as np
-#sys.path.insert(0, os.path.abspath('.'))
-#from . import incremental
 from . import resources as rsc
 from collections import defaultdict
 

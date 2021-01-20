@@ -1,2 +1,2 @@
 instance_name	model	df	resamples	num_cores	samples_path	temp_folder	results_folder	scan_offset	perl_compatible	c_min	c_max
-model1_csz_200_off0	model1	csizar_and_talata	200	4	./simulation_study/samples			0	True	0.0	500.0
+model1_csz_200_off0	model1	csizar_and_talata	200	3	./simulation_study/samples			0	True	0.0	500.0

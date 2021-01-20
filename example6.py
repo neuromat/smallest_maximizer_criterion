@@ -16,7 +16,7 @@ from g4l.data import Sample
 import logging
 
 # Create a sample object instance
-X = Sample('examples/linguistic_case_study/folha.txt.bkp', [0, 1, 2, 3, 4], subsamples_separator='>')
+X = Sample('examples/linguistic_case_study/publico.txt.bkp', [0, 1, 2, 3, 4], subsamples_separator='>')
 
 
 c = 160
