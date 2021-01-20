@@ -8,7 +8,7 @@ import pytest
 sys.path.insert(0, os.path.abspath('.'))
 #from examples.example2 import simulation
 
-results_folder = os.path.abspath('./examples/example2/results')
+results_folder = os.path.abspath('./examples/simulation_study/results')
 trees_folder = os.path.abspath('./fixtures/champion_trees/2')
 
 
@@ -54,7 +54,7 @@ def test_compare_trees():
 
 
 
-    samples_path = os.path.abspath('./examples/example2/samples')
+    samples_path = os.path.abspath('./examples/simulation_study/samples')
     mat_file = '%s/model1_5000.mat' % (samples_path)
     f = io.loadmat(mat_file)
     sample = ''.join(f['model1_5000'][98].astype(str))

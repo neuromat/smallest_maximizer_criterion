@@ -3,11 +3,14 @@ from g4l.util import parallel as prl
 from g4l.util.stats import t_test
 from numba import jit
 from pathlib import Path
+import warnings
+import pandas as pd
+warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 
 
 @jit(nopython=True)
-def jit_calculate_diffs(resample_sizes, L):
-    num_resample_sizes, num_trees, num_resamples = L.shape
+def jit_calculate_diffs(resample_sizes, L, num_resample_sizes, num_trees, num_resamples):
+    # import code; code.interact(local=dict(globals(), **locals()))
     m = np.zeros((num_trees-1, num_resamples))
     diffs = (m, m.copy())
     l_current = np.zeros((num_resamples, 2))
@@ -46,15 +49,25 @@ class Bootstrap():
         Path(temp_folder).mkdir(parents=True, exist_ok=True)
 
     def calculate_diffs(self, L):
-        return jit_calculate_diffs(self.resample_sizes, L)
+        num_resample_sizes, num_trees, num_resamples = np.array(L).shape
+        return jit_calculate_diffs(self.resample_sizes, L, num_resample_sizes, num_trees, num_resamples)
 
-    def find_optimal_tree(self, diffs, alpha=0.01):
-        t = len(self.champion_trees)-1
+    def find_optimal_tree(self, L, alpha=0.01):
+        diffs = self.calculate_diffs(np.array(L))
+        #t = len(self.champion_trees)-1
+        #import code; code.interact(local=dict(globals(), **locals()))
         d1, d2 = diffs
+        t = len(d1)
         pvalue = 1
+
+        #from scipy.stats import ttest_rel
+
+        #[ttest_rel(d1[tx], d2[tx], alternative='greater') for tx in [5, 4, 3, 2, 1]]
+        #[t_test(d1[tx], d2[tx], alternative='greater') for tx in [5, 4, 3, 2, 1]]
         while pvalue > alpha and t > 0:
             t -= 1
             pvalue = t_test(d1[t], d2[t], alternative='greater')
+        #import code; code.interact(local=dict(globals(), **locals()))
         return t+1
 
     def _initialize_diffs(self, num_trees, num_resamples):

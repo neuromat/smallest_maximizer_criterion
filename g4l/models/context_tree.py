@@ -16,21 +16,22 @@ class ContextTree():
     transition_probs = None
 
     def __init__(self, max_depth, contexts_dataframe,
-                 transition_probs, source_sample=None):
+                 transition_probs, source_sample=None, scan_offset=0):
         self.max_depth = max_depth
         self.df = contexts_dataframe
         self.transition_probs = transition_probs
         self.sample = source_sample
+        self.scan_offset = scan_offset
         #self.df = calculate_num_child_nodes(self.df)
         #self.df.loc[self.df.num_child_nodes.isna(), 'active'] = 1
 
     @classmethod
     def init_from_sample(cls, X, max_depth, initialization_method=incremental,
-                         force_admissible=True):
+                         force_admissible=True, scan_offset=0):
         """ Builds a full initial tree from a given sample """
 
-        contexts, transition_probs = initialization_method.run(X, max_depth)
-        t = ContextTree(max_depth, contexts, transition_probs, X)
+        contexts, transition_probs = initialization_method.run(X, max_depth, scan_offset)
+        t = ContextTree(max_depth, contexts, transition_probs, X, scan_offset)
         contexts = calculate_num_child_nodes(contexts)
         contexts.loc[contexts.num_child_nodes.isna(), 'active'] = 1
         if force_admissible:
@@ -117,13 +118,18 @@ class ContextTree():
     def __str__(self):
         return self.to_str()
 
-    def to_str(self):
+    def to_str(self, reverse=False):
         """ Represents context tree as a string
 
         TODO: add `reverse=False` parameter to display contexts as root->leaf
         """
 
-        return ' '.join(self.leaves())
+        ret = ' '.join(self.leaves())
+        if reverse:
+            s1 = sorted([x[::-1] for x in ret.split()])
+            s2 = [x[::-1] for x in s1]
+            ret = ' '.join(s2)
+        return ret
 
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
@@ -183,7 +189,9 @@ class ContextTree():
 
     def calculate_node_frequency(self):
         for i, row in self.df.iterrows():
-            self.df.at[i, 'freq'] = gen.calc_node_frequency(row.node, self.sample.data)
+            self.df.at[i, 'freq'] = gen.calc_node_frequency(row.node,
+                                                            self.sample.data,
+                                                            self.scan_offset)
 
     def calculate_node_prob(self):
         sample_len = len(self.sample.data)

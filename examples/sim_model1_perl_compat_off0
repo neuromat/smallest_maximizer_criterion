@@ -1,0 +1,8 @@
+python simulation_study.py model1_perl_200_off0 \
+	--model model1 \
+	--df perl \
+	--resamples 200 \
+	--num_cores 10 \
+	--penalty_interval 0 100 \
+	--scan_offset 0 \
+	--perl_compatible 1 \
