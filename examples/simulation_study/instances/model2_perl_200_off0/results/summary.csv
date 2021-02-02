@@ -1,0 +1,2 @@
+instance_name	model	df	resamples	num_cores	samples_path	temp_folder	results_folder	scan_offset	perl_compatible	c_min	c_max
+model2_perl_200_off0	model2	perl	200	4	./simulation_study/samples			0	True	0.0	100.0

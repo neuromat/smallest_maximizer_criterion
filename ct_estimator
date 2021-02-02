@@ -17,10 +17,11 @@ python ct_estimator.py -d 4 \
 
 [BIC]
 
-python ct_estimator.py -d 4 \
-    -s examples/linguistic_case_study/folha.txt \
-    -j 1 \
-    bic -c 0.5
+python ct_estimator.py -s fixtures/sample20000.txt \
+                       -d 6 \
+                       -r ../test/trees/bic
+                       -j 1 \
+                       bic -c 0.5
 
 """
 
@@ -110,6 +111,10 @@ def run_bic(X):
     tree = bic.context_tree
     logging.info("Tree found:")
     logging.info(tree.to_str(reverse=True))
+    filename = '%s/bic.tree' % args.results_folder
+    logging.info("File saved at: %s" % filename)
+    tree.save(filename)
+    #import code; code.interact(local=dict(globals(), **locals()))
     pass
 
 if __name__ == '__main__':
@@ -154,11 +159,12 @@ if __name__ == '__main__':
                             help='Renewal point')
     parser.add_argument('-d', '--max_depth',
                         type=int,
-                        default=4,
+                        required=True,
                         help='Max tree depth')
 
     parser.add_argument('-s', '--sample_path',
                         type=argparse.FileType('r'),
+                        required=True,
                         help='Sample path')
     parser.add_argument('-t', '--temp_folder',
                         type=dir_path_force,
@@ -166,7 +172,7 @@ if __name__ == '__main__':
                         help='Path for temporary files')
     parser.add_argument('-r', '--results_folder',
                         type=dir_path_force,
-                        default='./results',
+                        required=True,
                         help='Path for results')
     parser.add_argument('-o', '--scan_offset',
                         type=int,

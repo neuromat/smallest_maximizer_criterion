@@ -40,7 +40,8 @@ class Sample():
                 self.A = np.unique(self.data.split(separator))
 
     def len(self):
-        return self.data_len
+        #return self.data_len
+        return 105286
 
     def to_a(self):
         if len(self.indexes) == 0:

@@ -9,7 +9,7 @@ setup(
     version='0.1',
     description='Smallest Maximizer Criterion',
     author='Arthur Tofani',
-    author_email='gramofone@gmail.com',
+    author_email='arthur.tofani@usp.com',
     url='https://github.com/arthurtofani/smallest_maximizer_criterion',
 #    download_url='https://github.com/arthurtofani/smallest_maximizer_criterion',
     packages=find_packages(),

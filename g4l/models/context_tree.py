@@ -118,27 +118,60 @@ class ContextTree():
     def __str__(self):
         return self.to_str()
 
+    def to_ete(self):
+        from ete3 import TreeNode
+        def connect_node(node, dic, df, parent_idx):
+            if parent_idx < 0:
+                return
+            parent_node = df.loc[parent_idx]
+            try:
+                parent = dic[parent_node.node]
+            except KeyError:
+                parent = TreeNode(name=parent_node.node)
+                parent.add_feature('freq', parent_node.freq)
+                parent.add_feature('context', parent_node.node)
+                parent.add_feature('idx', parent_idx)
+                dic[parent_node.node] = parent
+            if len(parent.search_nodes(name=node.name)) == 0:
+                parent.add_child(node)
+            connect_node(parent, dic, df, parent_node.parent_idx)
+        dic = dict()
+        root_node = self.df.set_index('node').loc['']
+        root = TreeNode(name='')
+        root.add_feature('freq', root_node.freq)
+        root.add_feature('context', '')
+        root.add_feature('idx', root_node.node_idx)
+        dic[''] = root
+
+        df = self.df.set_index('node_idx')
+        for i, x in self.tree().iterrows():
+            l = TreeNode(name=x.node)
+            l.add_feature('freq', x.freq)
+            l.add_feature('context', x.node)
+            l.add_feature('idx', x.node_idx)
+            dic[x.node] = l
+            connect_node(l, dic, df, x.parent_idx)
+        return root
+
     def to_str(self, reverse=False):
         """ Represents context tree as a string
 
         TODO: add `reverse=False` parameter to display contexts as root->leaf
         """
 
-        ret = ' '.join(self.leaves())
+        ret = ' '.join([s.strip() for s in self.leaves()])
         if reverse:
             s1 = sorted([x[::-1] for x in ret.split()])
             s2 = [x[::-1] for x in s1]
             ret = ' '.join(s2)
-        return ret
+        return ret.strip()
 
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
-        df = self.tree().set_index(['node_idx'])
-        sample = df[df.depth == self.max_depth].sample()
-
-        node_idx = sample.index[0]
+        df = self.df.set_index(['node_idx'])
         M = np.zeros((len(df), len(A)))
         trs = self.transition_probs.reset_index()
+        trs.next_symbol = trs.next_symbol.astype(str)
         for i in range(len(df)):
             for jj in range(len(A)):
                 try:
@@ -146,6 +179,10 @@ class ContextTree():
                 except IndexError:
                     M[i, jj] = 0
         contexts = self.tree().set_index('node')['node_idx']
+
+        dd = self.tree().set_index(['node_idx'])
+        sample = dd[dd.depth == dd.depth.max()].sample()
+        node_idx = sample.index[0]
         smpl = sample.node.values[0]
         while len(smpl) < sample_size:
             smpl += self._next_symbol(node_idx, A, M)

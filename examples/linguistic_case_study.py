@@ -39,9 +39,9 @@ X_ep = Sample('%s/publico.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], subsamples
 
 
 # Execute the method above for each sample (EP and BP)
-champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, instance_name='ep')
+champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder, instance_name='ep')
 #import code; code.interact(local=dict(globals(), **locals()))
-champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, instance_name='bp')
+champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder, instance_name='bp')
 
 print("--------------------------")
 print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str(reverse=True))

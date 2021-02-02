@@ -22,6 +22,30 @@ def log_likelihood_per_leaves(smc_instances, labels):
     plt.grid()
     plt.legend()
 
+
+def toytree(tree, layout='l', width=300, height=350):
+    import toytree
+    tt = tree.to_ete()
+    tre0 = toytree.tree(tt.write(format=8))
+    tre0.draw(
+        layout=layout,
+        tree_style='c',
+        #node_labels=True,
+        tip_labels=True,
+        tip_labels_align=False,
+        node_sizes=[6 if i else 0 for i in tre0.get_node_values()],
+        node_style={"stroke": "black", "fill": "black"},
+        node_labels_style={
+            "fill": "#262626",
+            "font-size": "10px",
+            "-toyplot-anchor-shift": "12px",
+        },
+        scalebar=False,
+        width=width,
+        height=height,
+    )
+
+
 def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):
     if isinstance(tree, str):
       t = tree
