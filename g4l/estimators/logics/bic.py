@@ -1,6 +1,8 @@
 import numpy as np
 from g4l.models import ContextTree
 from g4l.models.builders import incremental
+import logging
+from tqdm import tqdm
 
 
 def fit(X, c, max_depth, df_method, scan_offset, comp):
@@ -10,7 +12,6 @@ def fit(X, c, max_depth, df_method, scan_offset, comp):
                                              initialization_method=incremental,
                                              scan_offset=scan_offset)
     df, transition_probs = full_tree.df, full_tree.transition_probs
-    # likelihood_pen => n^{-c \dot df(w)}L_{w}(X^{n}_{1})
     deg_f = degrees_of_freedom(df_method, full_tree)
     #df['likelihood_pen'] = df.likelihood
     penalty = penalty_term(X.len(), c, deg_f)
@@ -38,7 +39,6 @@ def assign_values(max_depth, df, comp=False):
     df.loc[df.depth == max_depth, 'v_node_sum'] = df.likelihood_pen
     df['active'] = 0
     df['indicator'] = 0
-    nd = df.set_index('node')
     df.set_index('node_idx', inplace=True)
 
     for d in reversed(range(0, max_depth)):
@@ -70,12 +70,17 @@ def assign_values(max_depth, df, comp=False):
         df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
     else:
         if df[df.node==''].indicator.values[0] == 0:
+            #import code; code.interact(local=dict(globals(), **locals()))
             df.loc[df.node=='', 'active'] = 1
             return df
-    for d in range(max_depth + 1):
 
+    nd = df.set_index('node')
+    for d in range(max_depth + 1):
         candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
-        for idx, row in candidate_nodes.iterrows():
+        itr = candidate_nodes.iterrows()
+        if logging.getLogger().level == logging.DEBUG:
+            itr = tqdm(itr, total=len(candidate_nodes))
+        for idx, row in itr:
             node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
             if comp==False:
                 node_suffixes += ['']
@@ -84,7 +89,7 @@ def assign_values(max_depth, df, comp=False):
             #import code; code.interact(local=dict(globals(), **locals()))
             suffixes = nd.loc[node_suffixes]
             if suffixes['indicator'].product() == 1 and row.indicator == 0:
-                nd.loc[row.node, 'active'] = 1
+                df.loc[idx, 'active'] = 1
     #import code; code.interact(local=dict(globals(), **locals()))
     return df
 
@@ -124,6 +129,7 @@ def penalty_term(sample_len, c, degr_freedom):
 
 
 def clean_columns(t):
+    import code; code.interact(local=dict(globals(), **locals()))
     """
     Removes unused columns
     """

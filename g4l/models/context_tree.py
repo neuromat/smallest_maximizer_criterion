@@ -7,7 +7,8 @@ from numpy.matlib import repmat
 import numpy as np
 import math
 import regex as re
-
+from tqdm import tqdm
+import logging
 
 class ContextTree():
     sample = None
@@ -30,8 +31,10 @@ class ContextTree():
                          force_admissible=True, scan_offset=0):
         """ Builds a full initial tree from a given sample """
 
+        logging.debug("Initializing tree...")
         contexts, transition_probs = initialization_method.run(X, max_depth, scan_offset)
         t = ContextTree(max_depth, contexts, transition_probs, X, scan_offset)
+        logging.debug("Calculating child nodes")
         contexts = calculate_num_child_nodes(contexts)
         contexts.loc[contexts.num_child_nodes.isna(), 'active'] = 1
         if force_admissible:
@@ -89,9 +92,10 @@ class ContextTree():
         while True:
             df = calculate_num_child_nodes(self.df)
             leaves = df[(df.active_children == 0) & (df.active == 1)]
-            parents_idx = [x for x in leaves.parent_idx.unique() if x is not None]
+            parents_idx = [x for x in leaves.parent_idx.unique() if x not in [None, -1]]
             #df[df.parent_idx]
             #leaves = df.loc[(~df.node_idx.isin(df.parent_idx)) & (df.active == 1)]
+
             lv_par = df.loc[parents_idx]  # single leaves' parents
             lv_par = lv_par[lv_par.num_child_nodes == 1]
             nodes_to_remove = df[df.parent_idx.isin(lv_par.index)]
@@ -183,10 +187,10 @@ class ContextTree():
         node_idx = sample.index[0]
         smpl = sample.node.values[0]
         print("c")
-        while len(smpl) < sample_size:
+        for i in tqdm(range(sample_size)):
+        # while len(smpl) < sample_size:
             symb = self._next_symbol(node_idx, A, trs)
             smpl += symb
-            print(symb)
             suffixes = [smpl[-i:] for i in range(1, self.max_depth+1)]
             node_idx = contexts[contexts.index.isin(suffixes)].iloc[0]
         return smpl

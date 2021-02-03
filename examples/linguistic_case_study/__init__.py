@@ -7,7 +7,7 @@ from g4l.bootstrap import Bootstrap
 import numpy as np
 
 
-def run_smc(X, cache_folder, instance_name='bp', num_cores=1):
+def run_smc(X, cache_folder, instance_name='bp', num_cores=1, perl_compatible=True):
     max_depth = 4
     num_resamples = 200
     penalty_interval = (0.1, 400)
@@ -23,7 +23,7 @@ def run_smc(X, cache_folder, instance_name='bp', num_cores=1):
     smc = SMC(max_depth,
               penalty_interval=penalty_interval,
               epsilon=epsilon, scan_offset=0, df_method='perl',
-              cache_dir=cache_folder, perl_compatible=True)
+              cache_dir=cache_folder, perl_compatible=perl_compatible)
     smc.fit(X)
     champion_trees = smc.context_trees
 

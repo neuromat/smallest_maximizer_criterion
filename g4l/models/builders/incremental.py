@@ -4,7 +4,7 @@ from collections import Counter
 from operator import add
 from collections import defaultdict
 from . import resources as rsc
-
+import logging
 
 def run(sample, max_depth, scan_offset):
     """
@@ -12,7 +12,6 @@ def run(sample, max_depth, scan_offset):
     sample and a maximum depth value:
     """
     # scan_offset = max_depth  # <== SeqROCTM uses it
-
     df = pd.DataFrame()
     # count frequencies of each unique subsequence of size 1..max_depth
     df, transition_probs = count_subsequence_frequencies(df, sample, max_depth, scan_offset)

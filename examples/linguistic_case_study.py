@@ -21,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_perl_compat"
+cache_folder = "linguistic_case_study/cache/smc_matlab_compat"
 
 samples_folder = "linguistic_case_study"
 max_depth = 4
@@ -30,6 +30,7 @@ num_cores = 6
 penalty_interval = (0.1, 400)
 epsilon = 0.01
 renewal_point = '4'
+perl_compatible = False
 
 #(X, sample_file, cache_folder, instance_name='bp', num_cores=1):
 
@@ -39,9 +40,8 @@ X_ep = Sample('%s/publico.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], subsamples
 
 
 # Execute the method above for each sample (EP and BP)
-champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder, instance_name='ep')
-#import code; code.interact(local=dict(globals(), **locals()))
-champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder, instance_name='bp')
+champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder, instance_name='ep', perl_compatible=perl_compatible, num_cores=num_cores)
+champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder, instance_name='bp', perl_compatible=perl_compatible, num_cores=num_cores)
 
 print("--------------------------")
 print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str(reverse=True))
