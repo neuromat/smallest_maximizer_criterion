@@ -78,14 +78,17 @@ class ContextTree():
     def sample_likelihood(self, sample, buf=(None, None)):
         all_contexts, N = buf
         contexts = list(self.tree().node.values)
-        if N is None:
-            all_contexts, N = self.calculate_node_transitions(sample.data, sample.A)
-        ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
-        N2 = N[ctx_idx]
-        ss = np.array([sum(x) for x in N2])
-        ind = N2 > 0
-        B = repmat(ss, len(sample.A), 1).T
-        L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
+        #if N is None:
+        all_contexts, N = self.calculate_node_transitions(sample.data, sample.A)
+        try:
+            ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
+            N2 = N[ctx_idx]
+            ss = np.array([sum(x) for x in N2])
+            ind = N2 > 0
+            B = repmat(ss, len(sample.A), 1).T
+            L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
+        except:
+            import code; code.interact(local=dict(globals(), **locals()))
         return L, (all_contexts, N)
 
     def prune_unique_context_paths(self):
@@ -247,5 +250,7 @@ class ContextTree():
             self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)
 
     def _next_symbol(self, node_idx, A, trs):
-        p = trs.loc[node_idx].prob
-        return np.random.choice(A, 1, p=p)[0]
+        #p = trs.loc[node_idx].prob
+        #import code; code.interact(local=dict(globals(), **locals()))
+        s = trs.loc[node_idx].sample(1, weights='prob').index[0]
+        return A[s]

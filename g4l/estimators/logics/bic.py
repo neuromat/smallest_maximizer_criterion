@@ -12,6 +12,7 @@ def fit(X, c, max_depth, df_method, scan_offset, comp):
                                              initialization_method=incremental,
                                              scan_offset=scan_offset)
     df, transition_probs = full_tree.df, full_tree.transition_probs
+    # likelihood_pen => n^{-c \dot df(w)}L_{w}(X^{n}_{1})
     deg_f = degrees_of_freedom(df_method, full_tree)
     #df['likelihood_pen'] = df.likelihood
     penalty = penalty_term(X.len(), c, deg_f)
@@ -129,10 +130,16 @@ def penalty_term(sample_len, c, degr_freedom):
 
 
 def clean_columns(t):
-    import code; code.interact(local=dict(globals(), **locals()))
+    logging.debug('Cleaning...')
     """
-    Removes unused columns
+    Removes non-relevant info
     """
+    t.df = t.tree()
+    node_idxs = t.df.node_idx.unique()
+    tr = t.transition_probs.set_index('idx').loc[node_idxs]
+    tr = tr[tr.prob > 0]
+    t.transition_probs = tr
+
     # fs = ['node', 'node_idx', 'parent_idx', 'freq', 'likelihood', 'depth', 'active', 'likelihood_pen']
     # t.df = t.df[fs]
     return t

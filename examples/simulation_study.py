@@ -1,3 +1,39 @@
+"""
+usage: simulation_study.py [-h] [--model {model1,model2}] [--df {csizar_and_talata,perl,g4l}] [--resamples RESAMPLES] [--num_cores NUM_CORES]
+                           [--samples_path SAMPLES_PATH] [--temp_folder TEMP_FOLDER] [--results_folder RESULTS_FOLDER] [--penalty_interval pen_min pen_max]
+                           [--scan_offset SCAN_OFFSET] [--perl_compatible PERL_COMPATIBLE]
+                           instance_name
+
+Run simulation study
+
+positional arguments:
+  instance_name         Select model
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --model {model1,model2}
+                        Select model
+  --df {csizar_and_talata,perl,g4l}
+                        penalization strategy
+  --resamples RESAMPLES
+                        number of bootstrap samples used
+  --num_cores NUM_CORES
+                        number of processors for parallel processing
+  --samples_path SAMPLES_PATH
+                        path containing the samples
+  --temp_folder TEMP_FOLDER
+                        path for temporary files
+  --results_folder RESULTS_FOLDER
+                        path for results
+  --penalty_interval pen_min pen_max
+                        Penalization constant intervals for BIC
+  --scan_offset SCAN_OFFSET
+                        start reading sample from this index on
+  --perl_compatible PERL_COMPATIBLE
+                        keeps compatibility with original version in perl
+"""
+
+
 import sys
 import os
 sys.path.insert(0, os.path.abspath('..'))
@@ -8,10 +44,13 @@ from g4l.estimators import BIC
 from g4l.estimators import SMC
 from g4l.estimators import Prune
 from g4l.data import persistence
+from tqdm import tqdm
 from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
 import logging
 import argparse
+
+#logging.basicConfig(level=logging.INFO)
 
 
 parser = argparse.ArgumentParser(description='Run simulation study')
@@ -85,7 +124,7 @@ RENEWAL_POINT = 1
 N1_FACTOR = 0.3
 N2_FACTOR = 0.9
 C = 0.5
-MAX_SAMPLES = math.inf
+MAX_SAMPLES = 100  # math.inf
 max_depth = 6
 
 if not os.path.exists(results_folder):
@@ -114,7 +153,7 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
     for sample_size in SAMPLE_SIZES:
         folder = "%s/%s/%s" % (temp_folder, model_name, sample_size)
         n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
-        print("Generating resamples")
+        print("Generating resamples:", folder)
         generate_bootstrap_resamples(model_name,
                                      sample_size,
                                      folder,
@@ -162,7 +201,7 @@ def resample_file(folder, sample_idx):
 
 def generate_bootstrap_resamples(model_name, sample_size, folder, larger_size, samples_path):
     args = (model_name, sample_size, samples_path, MAX_SAMPLES)
-    for sample_idx, sample in fetch_samples(*args):
+    for sample_idx, sample in tqdm(fetch_samples(*args), total=MAX_SAMPLES):
         file = resample_file(folder, sample_idx)
         resample_fctry = BlockResampling(sample, file, larger_size,
                                          RENEWAL_POINT)

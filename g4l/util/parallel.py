@@ -11,6 +11,7 @@ from hashlib import md5
 
 
 def calc_likelihood_process(args):
+
     trees_folder, resamples_file, resample_size, buf, tree_idx, resample_idx = args
     tree = get_tree(trees_folder, tree_idx)
     data = resamples(resamples_file)[resample_idx][:int(resample_size)]
@@ -31,7 +32,6 @@ def calculate_likelihoods(temp_folder, champion_trees, resamples_file,
     A = champion_trees[0].sample.A
     buf = [champion_trees[0].calculate_node_transitions(s[:resample_size], A) for s in samples]
     params = [(trees_folder, resamples_file, resample_size, buf[j], i, j) for i, j in pr]
-    #import code; code.interact(local=dict(globals(), **locals()))
     if num_cores is None:
         result = map(calc_likelihood_process, params)
     else:
