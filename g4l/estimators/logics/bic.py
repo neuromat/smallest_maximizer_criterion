@@ -5,7 +5,6 @@ from g4l.models.builders import incremental
 
 def fit(X, c, max_depth, df_method, scan_offset, comp):
     """ Estimates Context Tree model using BIC """
-
     full_tree = ContextTree.init_from_sample(X, max_depth,
                                              force_admissible=False,
                                              initialization_method=incremental,
@@ -39,8 +38,9 @@ def assign_values(max_depth, df, comp=False):
     df.loc[df.depth == max_depth, 'v_node_sum'] = df.likelihood_pen
     df['active'] = 0
     df['indicator'] = 0
-
+    nd = df.set_index('node')
     df.set_index('node_idx', inplace=True)
+
     for d in reversed(range(0, max_depth)):
         parents = df[(df.depth == d) & (df.freq >= 1)]
         ch = df[(df.parent_idx.isin(parents.index)) & (df.freq >= 1)]
@@ -54,7 +54,6 @@ def assign_values(max_depth, df, comp=False):
         #df = calc_sum_v_children(df, d, max_depth)
         #depth_df = df.loc[df.depth == d]
         #df.loc[df.depth == d, 'v_node'] = depth_df[['likelihood_pen', 'v_node']].max(axis=1)
-
     cond = (df.depth < max_depth) & (df.v_node > df.likelihood_pen)
     # indicator => \delta_{w}^{c}(X^{n}_{1})
     df.loc[cond, 'indicator'] = 1
@@ -73,8 +72,8 @@ def assign_values(max_depth, df, comp=False):
         if df[df.node==''].indicator.values[0] == 0:
             df.loc[df.node=='', 'active'] = 1
             return df
-
     for d in range(max_depth + 1):
+
         candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
         for idx, row in candidate_nodes.iterrows():
             node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
@@ -83,10 +82,9 @@ def assign_values(max_depth, df, comp=False):
             #if row.depth == 1:
                #node_suffixes += ['']
             #import code; code.interact(local=dict(globals(), **locals()))
-            suffixes = df[df['node'].isin(node_suffixes)]
+            suffixes = nd.loc[node_suffixes]
             if suffixes['indicator'].product() == 1 and row.indicator == 0:
-                df.loc[(df.node == row.node), 'active'] = 1
-
+                nd.loc[row.node, 'active'] = 1
     #import code; code.interact(local=dict(globals(), **locals()))
     return df
 

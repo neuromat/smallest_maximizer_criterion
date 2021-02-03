@@ -51,7 +51,7 @@ print("--------------------------")
 print("Selected tree for EP: ", champion_trees_ep[opt_idx_ep].to_str(reverse=True))
 [print(x.num_contexts(), '\t', x.to_str(reverse=True)) for x in reversed(champion_trees_ep)]
 
-import code; code.interact(local=dict(globals(), **locals()))
+#import code; code.interact(local=dict(globals(), **locals()))
 
-champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder, instance_name='bp', num_cores=4)
-champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder, instance_name='ep', num_cores=4)
+#champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder, instance_name='bp', num_cores=4)
+#champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder, instance_name='ep', num_cores=4)

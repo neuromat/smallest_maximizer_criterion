@@ -5,4 +5,3 @@ python simulation_study.py model2_csz_200_off6 \
 	--num_cores 10 \
 	--penalty_interval 0 500 \
 	--scan_offset 6 \
-	--perl_compatible 0 \

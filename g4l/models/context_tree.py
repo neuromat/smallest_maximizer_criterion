@@ -169,23 +169,24 @@ class ContextTree():
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
         df = self.df.set_index(['node_idx'])
-        M = np.zeros((len(df), len(A)))
         trs = self.transition_probs.reset_index()
-        trs.next_symbol = trs.next_symbol.astype(str)
-        for i in range(len(df)):
-            for jj in range(len(A)):
-                try:
-                    M[i, jj] = trs[(trs.idx == i) & (trs.next_symbol == A[jj])].iloc[0].prob
-                except IndexError:
-                    M[i, jj] = 0
+        #trs.next_symbol = trs.next_symbol.astype(str)
+        trs.set_index(['idx', 'next_symbol'], inplace=True)
+        print("a")
+        print(len(df), len(A))
         contexts = self.tree().set_index('node')['node_idx']
-
+        print("b")
         dd = self.tree().set_index(['node_idx'])
+        if len(dd) == 0:
+            return ''
         sample = dd[dd.depth == dd.depth.max()].sample()
         node_idx = sample.index[0]
         smpl = sample.node.values[0]
+        print("c")
         while len(smpl) < sample_size:
-            smpl += self._next_symbol(node_idx, A, M)
+            symb = self._next_symbol(node_idx, A, trs)
+            smpl += symb
+            print(symb)
             suffixes = [smpl[-i:] for i in range(1, self.max_depth+1)]
             node_idx = contexts[contexts.index.isin(suffixes)].iloc[0]
         return smpl
@@ -241,5 +242,6 @@ class ContextTree():
             self.df.at[i, 'transition_probs'] = list(pb)
             self.df.at[i, 'likelihood'] = gen.calc_lpmls(fr, pb)
 
-    def _next_symbol(self, node_idx, A, M):
-        return np.random.choice(A, 1, p=M[node_idx])[0]
+    def _next_symbol(self, node_idx, A, trs):
+        p = trs.loc[node_idx].prob
+        return np.random.choice(A, 1, p=p)[0]
