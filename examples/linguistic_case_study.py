@@ -21,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_matlab_compat"
+cache_folder = "linguistic_case_study/cache/smc_matlab_compat2"
 
 samples_folder = "linguistic_case_study"
 max_depth = 4
