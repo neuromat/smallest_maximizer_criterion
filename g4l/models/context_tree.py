@@ -80,15 +80,12 @@ class ContextTree():
         contexts = list(self.tree().node.values)
         #if N is None:
         all_contexts, N = self.calculate_node_transitions(sample.data, sample.A)
-        try:
-            ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
-            N2 = N[ctx_idx]
-            ss = np.array([sum(x) for x in N2])
-            ind = N2 > 0
-            B = repmat(ss, len(sample.A), 1).T
-            L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
-        except:
-            import code; code.interact(local=dict(globals(), **locals()))
+        ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
+        N2 = N[ctx_idx]
+        ss = np.array([sum(x) for x in N2])
+        ind = N2 > 0
+        B = repmat(ss, len(sample.A), 1).T
+        L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
         return L, (all_contexts, N)
 
     def prune_unique_context_paths(self):
@@ -143,11 +140,12 @@ class ContextTree():
                 parent.add_child(node)
             connect_node(parent, dic, df, parent_node.parent_idx)
         dic = dict()
-        root_node = self.df.set_index('node').loc['']
+
+        #root_node = self.df.set_index('node').loc['']
         root = TreeNode(name='')
-        root.add_feature('freq', root_node.freq)
-        root.add_feature('context', '')
-        root.add_feature('idx', root_node.node_idx)
+        #root.add_feature('freq', root_node.freq)
+        #root.add_feature('context', '')
+        #root.add_feature('idx', root_node.node_idx)
         dic[''] = root
 
         df = self.df.set_index('node_idx')

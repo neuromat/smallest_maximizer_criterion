@@ -67,6 +67,7 @@ class Bootstrap():
         while pvalue > alpha and t > 0:
             t -= 1
             pvalue = t_test(d1[t], d2[t], alternative='greater')
+            print(t, pvalue)
         #import code; code.interact(local=dict(globals(), **locals()))
         return t+1
 

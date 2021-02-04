@@ -89,15 +89,21 @@ def run_smc(X):
         used_c = smc.tresholds[i]
         logging.info("c:%s\t%s" % (used_c, tree.to_str()))
 
+    logging.info("------------------------")
     logging.info("Finding optimal tree:")
-    opt_idx = smc.optimal_tree('%s/resamples' % args.results_folder,
-                               args.resamples,
-                               args.n_sizes,
-                               args.alpha,
-                               args.renewal_point,
-                               num_cores=args.num_cores)
+    num_cores = 1
+    if args.num_cores > 1:
+        num_cores = args.num_cores
+    #import code; code.interact(local=dict(globals(), **locals()))
+    n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
+    tree_found = smc.optimal_tree('%s/resamples' % args.results_folder,
+                                           args.resamples,
+                                           n_sizes,
+                                           args.alpha,
+                                           args.renewal_point,
+                                           num_cores=num_cores)
+    #import code; code.interact(local=dict(globals(), **locals()))
     logging.info("Tree found:")
-    tree_found = smc.context_trees[opt_idx]
     logging.info(tree_found.to_str(reverse=True))
 
 

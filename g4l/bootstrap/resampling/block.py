@@ -23,6 +23,7 @@ def generate_sample(params):
     idx = idx[:nrenewals].astype(int)
     l_idx = len(idx)
     #blocks = cell(l_idx - 1, 1)
+    #import code; code.interact(local=dict(globals(), **locals()))
     blocks = np.empty(l_idx - 1, dtype='object')
     for i in range(l_idx-1):
         blocks[i] = X[idx[i]: idx[i+1]]
@@ -89,7 +90,8 @@ class BlockResampling(ResamplingBase):
             f.write('')
         prms = (data, self.file, self.renewal_point, max(self.resample_sizes))
         params = [prms for i in range(num_resamples)]
-        if num_cores is None:
+        #import code; code.interact(local=dict(globals(), **locals()))
+        if num_cores in [None, 0, 1]:
             for p in params:
                 generate_sample(p)
         else:

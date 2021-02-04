@@ -3,6 +3,7 @@ from g4l.estimators.logics import smc as smc
 from g4l.bootstrap.resampling import BlockResampling
 from g4l.bootstrap import Bootstrap
 import numpy as np
+import os
 import logging
 
 
@@ -105,10 +106,10 @@ class SMC(CollectionBase):
         resamples_file = resamples_folder + "/resamples.txt"
         bootstrap = Bootstrap(self.context_trees, resamples_file, n_sizes)
         L_path = "%s/L.npy" % (resamples_folder)
-        try:
+        if os.path.isfile(L_path):
             # Use precomputed likelihoods when available
             L = np.load(L_path)
-        except:
+        else:
             # Generate samples using block resampling strategy
             resample_fctry = BlockResampling(self.X, resamples_file,
                                              n_sizes,
