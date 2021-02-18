@@ -30,7 +30,7 @@ class BIC(Base):
         Estimates champion trees for the given sample X and constant c
     """
 
-    def __init__(self, c, max_depth, df_method='perl', scan_offset=0, perl_compatible=False):
+    def __init__(self, c, max_depth, df_method='perl', scan_offset=0, keep_data=False, perl_compatible=False):
         """
         Parameters
         ----------
@@ -53,6 +53,7 @@ class BIC(Base):
         self.c, self.max_depth = c, max_depth
         self.df_method = df_method
         self.scan_offset = scan_offset
+        self.keep_data = keep_data
         self.perl_compatible = perl_compatible
 
     def fit(self, X):
@@ -69,5 +70,6 @@ class BIC(Base):
                                     self.max_depth,
                                     self.df_method,
                                     self.scan_offset,
-                                    self.perl_compatible)
+                                    self.perl_compatible,
+                                    keep_data=self.keep_data)
         return self

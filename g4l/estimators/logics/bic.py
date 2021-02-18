@@ -5,7 +5,7 @@ import logging
 from tqdm import tqdm
 
 
-def fit(X, c, max_depth, df_method, scan_offset, comp):
+def fit(X, c, max_depth, df_method, scan_offset, comp, keep_data=False, clean=True):
     """ Estimates Context Tree model using BIC """
     full_tree = ContextTree.init_from_sample(X, max_depth,
                                              force_admissible=False,
@@ -19,7 +19,7 @@ def fit(X, c, max_depth, df_method, scan_offset, comp):
     df['likelihood_pen'] = penalty + df.likelihood
     full_tree.df = assign_values(max_depth, df[df.freq >= 1], comp)
     full_tree.prune_unique_context_paths()
-    return clean_columns(full_tree)
+    return clean_columns(full_tree, keep_data)
 
 
 def calc_sum_v_children(df, level, max_depth):
@@ -129,12 +129,13 @@ def penalty_term(sample_len, c, degr_freedom):
     return np.log(sample_len) * c * degr_freedom
 
 
-def clean_columns(t):
+def clean_columns(t, keep_data):
     logging.debug('Cleaning...')
     """
     Removes non-relevant info
     """
-    t.df = t.tree()
+    if keep_data:
+        t.df = t.tree()
     node_idxs = t.df.node_idx.unique()
     tr = t.transition_probs.set_index('idx').loc[node_idxs]
     tr = tr[tr.prob > 0]

@@ -1,7 +1,6 @@
 from .builders import incremental
 from . import persistence as per
 from collections import Counter
-from .builders.tree_builder import ContextTreeBuilder
 from .builders.resources import calculate_num_child_nodes
 from numpy.matlib import repmat
 import numpy as np
@@ -9,6 +8,7 @@ import math
 import regex as re
 from tqdm import tqdm
 import logging
+
 
 class ContextTree():
     sample = None
@@ -124,6 +124,7 @@ class ContextTree():
 
     def to_ete(self):
         from ete3 import TreeNode
+
         def connect_node(node, dic, df, parent_idx):
             if parent_idx < 0:
                 return
@@ -173,23 +174,16 @@ class ContextTree():
 
     def generate_sample(self, sample_size, A):
         """ Generates a sample using this model """
-        df = self.df.set_index(['node_idx'])
         trs = self.transition_probs.reset_index()
-        #trs.next_symbol = trs.next_symbol.astype(str)
         trs.set_index(['idx', 'next_symbol'], inplace=True)
-        print("a")
-        print(len(df), len(A))
         contexts = self.tree().set_index('node')['node_idx']
-        print("b")
         dd = self.tree().set_index(['node_idx'])
         if len(dd) == 0:
             return ''
         sample = dd[dd.depth == dd.depth.max()].sample()
         node_idx = sample.index[0]
         smpl = sample.node.values[0]
-        print("c")
         for i in tqdm(range(sample_size)):
-        # while len(smpl) < sample_size:
             symb = self._next_symbol(node_idx, A, trs)
             smpl += symb
             suffixes = [smpl[-i:] for i in range(1, self.max_depth+1)]
@@ -209,9 +203,8 @@ class ContextTree():
     def tree(self):
         """ Returns the tree with all active contexts ascending by nodes"""
 
-        return self.contexts().sort_values(
-                    by=['node'],
-                    ascending=(True))
+        return self.contexts().sort_values(by=['node'],
+                                           ascending=(True))
 
     def contexts(self, active_only=True):
         """ Returns the tree with all active contexts"""
@@ -237,11 +230,6 @@ class ContextTree():
                                                             self.scan_offset)
 
     def calculate_node_prob(self):
-        sample_len = len(self.sample.data)
-        transition_probs_idx = self.df.columns.get_loc('transition_probs')
-        # calculates prob of occurrence for each node
-        # self.df.ps = self.df.node_freq / (sample_len - self.df.l + 1)
-        # calculates child nodes' probs
         for i, row in self.df.iterrows():
             fr, pb = gen.children_freq_prob(row.node, row.node_freq, self.A, self.sample.data)
             self.df.at[i, 'transition_probs'] = list(pb)

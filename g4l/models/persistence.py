@@ -1,27 +1,55 @@
 import h5py
 import pandas as pd
 from g4l.data import Sample
+import os
+import tempfile
+import pickle
+import tarfile
 
 
 def load_model(filename):
     """ Loads model from file """
 
-    with h5py.File(filename, 'r') as h5obj:
-        sample = _read_sample(h5obj)
-        max_depth = h5obj.attrs['max_depth']
-    contexts = pd.read_hdf(filename, 'contexts')
-    transition_probs = pd.read_hdf(filename, 'transition_probs')
-    return sample, max_depth, contexts, transition_probs
+    with tarfile.open(filename, mode='r:') as tar:
+        contexts = load_tar_file(tar, 'contexts.pkl')
+        transition_probs = load_tar_file(tar, 'transitions.pkl')
+        mtd = load_tar_file(tar, 'metadata.pkl')
 
+    sample = Sample(None, mtd['A'],
+                    data = '',
+                    separator=mtd['sample_separator'],
+                    subsamples_separator=mtd['sample_subseparator'])
+    sample.filename = mtd['sample_filename']
+    return sample, mtd['max_depth'], contexts, transition_probs
+
+
+def load_tar_file(tar, file):
+    f = [x for x in tar.getmembers() if x.name==file][0]
+    return pickle.load(tar.extractfile(f))
 
 def save_model(context_tree, filename):
     """ Saves the model into a file """
-    context_tree.df['active2'] = context_tree.df.active
-    context_tree.df.to_hdf(filename, 'contexts', mode='w')
-    context_tree.transition_probs.to_hdf(filename, 'transition_probs', mode='a')
-    with h5py.File(filename, 'a') as h5obj:
-        h5obj.attrs['max_depth'] = context_tree.max_depth
-        _write_sample(h5obj, context_tree.sample)
+
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        context_tree.df.to_pickle(os.path.join(tmpdirname, 'contexts.pkl'))
+        context_tree.transition_probs.to_pickle(os.path.join(tmpdirname, 'transitions.pkl'))
+        metadata = {
+            'A': context_tree.sample.A,
+            'max_depth': context_tree.max_depth,
+            'sample_filename': context_tree.sample.filename,
+            'sample_separator': context_tree.sample.separator,
+            'sample_subseparator': context_tree.sample.subsamples_separator
+        }
+        with open(os.path.join(tmpdirname, 'metadata.pkl'), 'wb') as mfile:
+            pickle.dump(metadata, mfile)
+        _make_tarfile(filename, tmpdirname)
+
+
+def _make_tarfile(output_filename, source_dir):
+    with tarfile.open(output_filename, "w") as tar:
+        for filename in os.listdir(source_dir):
+            #import code; code.interact(local=dict(globals(), **locals()))
+            tar.add(os.path.join(source_dir, filename), arcname=filename)
 
 
 def _write_sample(h5obj, sample):
@@ -32,16 +60,3 @@ def _write_sample(h5obj, sample):
             h5obj.attrs['sample.A'] = sample.A
         if sample.separator is not None:
             h5obj.attrs['sample.separator'] = sample.separator
-
-
-def _read_sample(h5obj):
-    return Sample(  try_key(h5obj, 'sample.filename'),
-                                    try_key(h5obj, 'sample.A'),
-                                    try_key(h5obj, 'sample.separator'))
-
-
-def try_key(h5obj, attr_key):
-    try:
-        return h5obj.attrs[attr_key]
-    except KeyError:
-        return ''
