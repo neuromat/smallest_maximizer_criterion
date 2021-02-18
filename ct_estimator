@@ -31,6 +31,7 @@ import os
 from pathlib import Path
 from g4l.estimators.smc import SMC
 from g4l.estimators.bic import BIC
+from g4l.estimators.prune import Prune
 from g4l.data import Sample
 import logging
 
@@ -74,6 +75,16 @@ def set_log(log_file=None, lvl='info'):
     )
 
 
+def write_champion_trees(meth):
+    logging.info("Champions tree found:")
+    for i, tree in enumerate(meth.context_trees):
+        try:
+            used_c = meth.tresholds[i]
+        except:
+            used_c = '-'
+        logging.info("c:%s\t%s" % (used_c, tree.to_str()))
+
+
 def run_smc(X):
     logging.info("Estimating champion trees:")
     smc = SMC(args.max_depth,
@@ -84,10 +95,7 @@ def run_smc(X):
               df_method=args.df,
               perl_compatible=args.perl_compatible)
     smc.fit(X)
-    logging.info("Champions tree found:")
-    for i, tree in enumerate(smc.context_trees):
-        used_c = smc.tresholds[i]
-        logging.info("c:%s\t%s" % (used_c, tree.to_str()))
+    write_champion_trees(smc)
 
     logging.info("------------------------")
     logging.info("Finding optimal tree:")
@@ -97,6 +105,31 @@ def run_smc(X):
     #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
     tree_found = smc.optimal_tree('%s/resamples' % args.results_folder,
+                                           args.resamples,
+                                           n_sizes,
+                                           args.alpha,
+                                           args.renewal_point,
+                                           num_cores=num_cores)
+    #import code; code.interact(local=dict(globals(), **locals()))
+    logging.info("Tree found:")
+    logging.info(tree_found.to_str(reverse=True))
+
+
+def run_prune(X):
+    logging.info("Estimating champion trees:")
+    prune = Prune(args.max_depth,
+                  cache_dir=args.temp_folder)
+    prune.fit(X)
+    write_champion_trees(prune)
+
+    logging.info("------------------------")
+    logging.info("Finding optimal tree:")
+    num_cores = 1
+    if args.num_cores > 1:
+        num_cores = args.num_cores
+    #import code; code.interact(local=dict(globals(), **locals()))
+    n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
+    tree_found = prune.optimal_tree('%s/resamples' % args.results_folder,
                                            args.resamples,
                                            n_sizes,
                                            args.alpha,
@@ -131,13 +164,34 @@ if __name__ == '__main__':
     parser_bic = subparsers.add_parser('bic', help='Bayesian information criteria parameters')
     parser_bic.add_argument('-c', '--penalty', type=float, help='Penalty constant')
 
+    parser_prune = subparsers.add_parser('prune', help='Prune by the less contributive branches')
+    parser_prune.add_argument('-p', '--renewal_point',
+                              type=str,
+                              default=None,
+                              help='Renewal point')
+    parser_prune.add_argument('-S', '--n_sizes',
+                              nargs=2,
+                              type=float,
+                              metavar=('j1', 'j2'),
+                              default=(0.3, 0.9),
+                              help='Bootstrap sample sizes factor for j = 1, 2'
+                              )
+    parser_prune.add_argument('-b', '--resamples',
+                              type=int,
+                              default='200',
+                              help='Number of bootstrap samples used')
+    parser_prune.add_argument('-a', '--alpha',
+                              type=float,
+                              default='0.01',
+                              help='Alpha value for t-test')
+
     parser_smc = subparsers.add_parser('smc', help='Smallest Maximizer Criterion parameters')
     parser_smc.add_argument('-S', '--n_sizes',
                             nargs=2,
                             type=float,
                             metavar=('j1', 'j2'),
                             default=(0.3, 0.9),
-                            help='Bootstrap sample sizes factor for j = 1, 2',
+                            help='Bootstrap sample sizes factor for j = 1, 2'
                             )
 
     parser_smc.add_argument('-c', '--penalty_interval',
@@ -210,7 +264,8 @@ if __name__ == '__main__':
     set_log(args.log_file, args.log_level)
     {
         'smc': run_smc,
-        'bic': run_bic
+        'bic': run_bic,
+        'prune': run_prune
     }[args.method](Sample(args.sample_path.name, None))
 
 
