@@ -129,4 +129,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     set_log(args.log_file, args.log_level)
-    run_bic(Sample(args.sample_path.name, None))
+    run_bic(Sample(args.sample_path.name, None, args.max_depth))

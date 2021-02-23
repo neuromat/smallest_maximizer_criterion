@@ -104,6 +104,7 @@ args = parser.parse_args()
 
 
 DF_METHOD = args.df
+ALPHA = 0.01
 INSTANCE_NAME = args.instance_name
 NUM_RESAMPLES = args.resamples
 NUM_CORES = None if args.num_cores == 0 else args.num_cores
@@ -164,13 +165,16 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
             for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path):
                 print('sample:', sample_size, sample_idx)
                 print("estimating champion trees")
-                champion_trees = estimators[estimator](sample, temp_folder)
-                resamples_file = resample_file(folder, sample_idx)
-                bootstrap = Bootstrap(champion_trees, resamples_file, n_sizes)
-                resamples_folder = '%s/likelihoods' % folder
-                L = bootstrap.calculate_likelihoods(resamples_folder,
-                                                    num_cores=NUM_CORES)
-                opt_idx = bootstrap.find_optimal_tree(L, alpha=0.01)
+                m = estimators[estimator](sample, temp_folder)
+                champion_trees = m.context_trees
+                tree_found = m.optimal_tree(temp_folder,
+                                            MAX_SAMPLES,
+                                            n_sizes,
+                                            ALPHA,
+                                            RENEWAL_POINT,
+                                            num_cores=NUM_CORES)
+                #import code; code.interact(local=dict(globals(), **locals()))
+                opt_idx = champion_trees.index(tree_found)
                 for tree_idx, champion_tree in enumerate(champion_trees):
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
@@ -222,18 +226,18 @@ def smc(sample, temp_folder):
     else:
         cache_dir = '%s/trees' % temp_folder
 
-    smc = SMC(max_depth, penalty_interval=PENALTY_INTERVAL,
-              epsilon=0.00001,
-              df_method=DF_METHOD,
-              scan_offset=SCAN_OFFSET,
-              perl_compatible=PERL_COMPATIBLE,
-              cache_dir=cache_dir)
-    trees = smc.fit(sample).context_trees
-    return sort_trees(trees)
+    m = SMC(max_depth, penalty_interval=PENALTY_INTERVAL,
+            epsilon=0.00001,
+            df_method=DF_METHOD,
+            scan_offset=SCAN_OFFSET,
+            perl_compatible=PERL_COMPATIBLE,
+            cache_dir=cache_dir)
+    m.fit(sample)
+    return m
 
 
 def prune(sample, temp_folder):
-    return sort_trees(Prune(max_depth).fit(sample).context_trees)
+    return Prune(max_depth).fit(sample)
 
 
 def sort_trees(context_trees):
@@ -244,7 +248,7 @@ def fetch_samples(model_name, sample_size, path, max_samples=math.inf):
     i = -1
     key = '%s_%s' % (model_name, sample_size)
     filename = '%s/%s.mat' % (path, key)
-    for s in persistence.iterate_from_mat(filename, key, A):
+    for s in persistence.iterate_from_mat(filename, key, A, max_depth):
         if i > max_samples:
             break
         i += 1

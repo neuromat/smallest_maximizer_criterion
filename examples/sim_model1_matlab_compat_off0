@@ -1,4 +1,4 @@
-python simulation_study.py model1_csz_200_off0b \
+python simulation_study.py model1_csz_200_off0x2 \
 	--model model1 \
 	--df csizar_and_talata \
 	--resamples 200 \

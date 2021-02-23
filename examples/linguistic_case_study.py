@@ -2,7 +2,7 @@
 '''
 Linguistic case study
 
-Usage: ./example1.py
+Usage: python ./linguistic_case_study.py
 '''
 import sys, os
 sys.path.insert(0, os.path.abspath('..'))
@@ -21,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_matlab_compat2"
+cache_folder = "linguistic_case_study/cache/smc_matlab_compat2x"
 
 samples_folder = "linguistic_case_study"
 max_depth = 4
@@ -35,8 +35,8 @@ perl_compatible = False
 #(X, sample_file, cache_folder, instance_name='bp', num_cores=1):
 
 # Create sample objects
-X_bp = Sample('%s/folha.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], subsamples_separator='>')
-X_ep = Sample('%s/publico.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], subsamples_separator='>')
+X_bp = Sample('%s/folha.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], max_depth, subsamples_separator='>')
+X_ep = Sample('%s/publico.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], max_depth, subsamples_separator='>')
 
 
 # Execute the method above for each sample (EP and BP)

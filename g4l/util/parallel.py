@@ -11,13 +11,20 @@ import logging
 
 def calc_likelihood_process(args):
 
-    trees_folder, resamples_file, resample_size, tree_idx, resample_idx = args
+    (trees_folder,
+     resamples_file,
+     resample_size,
+     tree_idx,
+     resample_idx,
+     subsamples_separator) = args
     tree = get_tree(trees_folder, tree_idx)
     data = resamples(resamples_file)[resample_idx][:int(resample_size)]
     cache_file = os.path.join(buffer_folder(resamples_file), '%s.cache' % resample_idx)
+    #import code; code.interact(local=dict(globals(), **locals()))
     resample = Sample(None, tree.sample.A,
                       tree.max_depth,
                       data=data,
+                      subsamples_separator=tree.sample.subsamples_separator,
                       cache_file=cache_file)
     return tree.buffered_sample_likelihood(resample)
 
@@ -28,14 +35,15 @@ def buffer_folder(resamples_file):
 
 
 def calculate_likelihoods(temp_folder, champion_trees_folder,
-                          resamples_file, resample_size, num_cores=None):
+                          resamples_file, resample_size,
+                          subsamples_separator=None, num_cores=None):
     champion_trees = [ContextTree.load_from_file(f) for f in list_files(champion_trees_folder)]
 
     num_resamples = len(resamples(resamples_file))
     num_trees = len(champion_trees)
     pr = list(product(range(num_trees), range(num_resamples)))
 
-    params = [(champion_trees_folder, resamples_file, resample_size, i, j) for i, j in pr]
+    params = [(champion_trees_folder, resamples_file, resample_size, i, j, subsamples_separator) for i, j in pr]
     if num_cores in [None, 0, 1]:
         result = tqdm.tqdm(map(calc_likelihood_process, params), total=len(params))
     else:
