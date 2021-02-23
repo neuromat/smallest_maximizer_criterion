@@ -8,7 +8,6 @@ Example:
 
 ./ctm fit -s fixtures/sample20000.txt -d 6 -c 0.5 -o ./bic.tree
 
-./ctm gen -m ./bic.tree -o sample.txt -s 10000
 
 """
 

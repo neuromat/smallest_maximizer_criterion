@@ -7,21 +7,14 @@ Example:
 
 [SMC]
 
-python ct_estimator.py -d 4 \
+./smc -d 4 \
     -s examples/linguistic_case_study/folha.txt \
     -t ../test/tmp \
     -r ../test/results \
     -j 1 \
+    -p 4 \
     --num_cores 4 \
-    smc -p 4
-
-[BIC]
-
-python ct_estimator.py -s fixtures/sample20000.txt \
-                       -d 6 \
-                       -r ../test/trees/bic
-                       -j 1 \
-                       bic -c 0.5
+    smc
 
 """
 
@@ -30,7 +23,6 @@ import argparse
 import os
 from pathlib import Path
 from g4l.estimators.smc import SMC
-from g4l.estimators.bic import BIC
 from g4l.estimators.prune import Prune
 from g4l.data import Sample
 import logging
@@ -104,13 +96,12 @@ def run_smc(X):
         num_cores = args.num_cores
     #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
-    tree_found = smc.optimal_tree('%s/resamples' % args.results_folder,
-                                           args.resamples,
-                                           n_sizes,
-                                           args.alpha,
-                                           args.renewal_point,
-                                           num_cores=num_cores)
-    #import code; code.interact(local=dict(globals(), **locals()))
+    tree_found = smc.optimal_tree(args.results_folder,
+                                  args.resamples,
+                                  n_sizes,
+                                  args.alpha,
+                                  args.renewal_point,
+                                  num_cores=num_cores)
     logging.info("Tree found:")
     logging.info(tree_found.to_str(reverse=True))
 
@@ -129,7 +120,7 @@ def run_prune(X):
         num_cores = args.num_cores
     #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
-    tree_found = prune.optimal_tree('%s/resamples' % args.results_folder,
+    tree_found = prune.optimal_tree(args.results_folder,
                                            args.resamples,
                                            n_sizes,
                                            args.alpha,
@@ -140,35 +131,14 @@ def run_prune(X):
     logging.info(tree_found.to_str(reverse=True))
 
 
-def run_bic(X):
-    logging.info("Estimating BIC tree:")
-    bic = BIC(args.penalty, args.max_depth,
-              scan_offset=args.scan_offset,
-              df_method=args.df,
-              perl_compatible=args.perl_compatible)
-    bic.fit(X)
-    tree = bic.context_tree
-    logging.info("Tree found:")
-    logging.info(tree.to_str(reverse=True))
-    filename = '%s/bic.tree' % args.results_folder
-    logging.info("File saved at: %s" % filename)
-    tree.save(filename)
-    #import code; code.interact(local=dict(globals(), **locals()))
-    pass
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(description='Estimates context tree')
     subparsers = parser.add_subparsers(dest='method', help='Estimation method')
     subparsers.required = True
-    parser_bic = subparsers.add_parser('bic', help='Bayesian information criteria parameters')
-    parser_bic.add_argument('-c', '--penalty', type=float, help='Penalty constant')
 
     parser_prune = subparsers.add_parser('prune', help='Prune by the less contributive branches')
-    parser_prune.add_argument('-p', '--renewal_point',
-                              type=str,
-                              default=None,
-                              help='Renewal point')
     parser_prune.add_argument('-S', '--n_sizes',
                               nargs=2,
                               type=float,
@@ -201,27 +171,26 @@ if __name__ == '__main__':
                             default=(0, 100),
                             help='Penalization constant intervals for BIC',
                             )
-    parser_smc.add_argument('-b', '--resamples',
-                            type=int,
-                            default='200',
-                            help='Number of bootstrap samples used')
-    parser_smc.add_argument('-a', '--alpha',
-                            type=float,
-                            default='0.01',
-                            help='Alpha value for t-test')
+    parser.add_argument('-b', '--resamples',
+                        type=int,
+                        default='200',
+                        help='Number of bootstrap samples used')
+    parser.add_argument('-a', '--alpha',
+                        type=float,
+                        default='0.01',
+                        help='Alpha value for t-test')
     parser_smc.add_argument('-e', '--epsilon',
                             type=float,
                             default='0.01',
                             help='SMC stop condition value')
-    parser_smc.add_argument('-p', '--renewal_point',
-                            type=str,
-                            default=None,
-                            help='Renewal point')
     parser.add_argument('-d', '--max_depth',
                         type=int,
                         required=True,
                         help='Max tree depth')
-
+    parser.add_argument('-p', '--renewal_point',
+                              type=str,
+                              default=None,
+                              help='Renewal point')
     parser.add_argument('-s', '--sample_path',
                         type=argparse.FileType('r'),
                         required=True,
@@ -262,11 +231,13 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     set_log(args.log_file, args.log_level)
+    sample_cache_file = os.path.join(args.temp_folder, 'sample.pkl')
     {
         'smc': run_smc,
-        'bic': run_bic,
         'prune': run_prune
-    }[args.method](Sample(args.sample_path.name, None))
+    }[args.method](Sample(args.sample_path.name,
+                          None, args.max_depth,
+                          cache_file=sample_cache_file))
 
 
 

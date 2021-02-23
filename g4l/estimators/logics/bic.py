@@ -134,7 +134,7 @@ def clean_columns(t, keep_data):
     """
     Removes non-relevant info
     """
-    if keep_data:
+    if not keep_data:
         t.df = t.tree()
     node_idxs = t.df.node_idx.unique()
     tr = t.transition_probs.set_index('idx').loc[node_idxs]

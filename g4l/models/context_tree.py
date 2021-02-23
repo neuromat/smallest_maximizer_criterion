@@ -64,9 +64,12 @@ class ContextTree():
 
         per.save_model(self, file_path)
 
-    def _count_context_freqs(self, ctx, sample_data, A):
-        idxs = [m.end(0) for m in re.finditer(ctx, sample_data, overlapped=True)]
+    def _count_context_freqs(self, node, sample_data, A):
+        # get the index of each occurrence of each node
+        idxs = [m.end(0) for m in re.finditer(node, sample_data, overlapped=True)]
+        # count frequencies
         ctr = Counter([sample_data[i] for i in idxs if i < len(sample_data)])
+        # return array with freqs for each symbol in alphabet
         return [ctr[a] for a in A]
 
     def calculate_node_transitions(self, sample_data, A):
@@ -75,18 +78,45 @@ class ContextTree():
         transitions = np.hstack(trs).reshape(len(all_contexts), len(A))
         return all_contexts, transitions
 
-    def sample_likelihood(self, sample, buf=(None, None)):
-        all_contexts, N = buf
-        contexts = list(self.tree().node.values)
+    def buffered_sample_likelihood(self, sample):
+        #all_contexts, N = buf
+
+        #contexts = list(self.tree().node.values)
+        contexts = self.tree().node.values
+        trn_freqs = sample.F[sample.F.index.isin(contexts)]
+        node_freqs = trn_freqs.T.sum()
+
         #if N is None:
-        all_contexts, N = self.calculate_node_transitions(sample.data, sample.A)
-        ctx_idx = [all_contexts.index(ctx) for ctx in contexts]
-        N2 = N[ctx_idx]
+        #import code; code.interact(local=dict(globals(), **locals()))
+        #freqs_trs = sample.freqs_and_transitions(self.max_depth)
+
+        #all_nodes, N = self.calculate_node_transitions(sample.data, sample.A)
+        #N2 = N[[all_nodes.index(ctx) for ctx in contexts]]
+        #ss = np.array([sum(x) for x in N2])
+        N2 = trn_freqs.to_numpy()
+        ind = N2 > 0
+        pos_freqs = N2[ind]
+
+        sum_freqs = repmat(node_freqs.values, len(sample.A), 1).T[ind]
+        L = np.sum(np.multiply(pos_freqs, np.log(pos_freqs) - np.log(sum_freqs)))
+
+        return L
+
+    def sample_likelihood(self, sample):
+        #all_contexts, N = buf
+        #contexts = list(self.tree().node.values)
+        contexts = self.tree().node.values
+        #if N is None:
+        all_nodes, N = self.calculate_node_transitions(sample.data, sample.A)
+        N2 = N[[all_nodes.index(ctx) for ctx in contexts]]
         ss = np.array([sum(x) for x in N2])
         ind = N2 > 0
-        B = repmat(ss, len(sample.A), 1).T
-        L = np.sum(np.multiply(N2[ind], np.log(N2[ind]) - np.log(B[ind])))
-        return L, (all_contexts, N)
+        pos_freqs = N2[ind]
+
+        sum_freqs = repmat(ss, len(sample.A), 1).T[ind]
+        L = np.sum(np.multiply(pos_freqs, np.log(pos_freqs) - np.log(sum_freqs)))
+
+        return L, (all_nodes, N)
 
     def prune_unique_context_paths(self):
         while True:
@@ -208,12 +238,12 @@ class ContextTree():
 
     def contexts(self, active_only=True):
         """ Returns the tree with all active contexts"""
-
-        df = self.df
-        r = df[~df.node_idx.isin(df[df.active == 1].parent_idx)]
-        if active_only:
-            r = r[r.active == 1]
-        return r
+        return self.df[self.df.active == 1]
+        #df = self.df
+        #r = df[~df.node_idx.isin(df[df.active == 1].parent_idx)]
+        #if active_only:
+        #    r = r[r.active == 1]
+        #return r
 
     def leaves(self):
         return np.sort(list(self.tree()['node']))

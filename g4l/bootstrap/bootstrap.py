@@ -28,8 +28,8 @@ def jit_calculate_diffs(resample_sizes, L, num_resample_sizes, num_trees, num_re
 
 
 class Bootstrap():
-    def __init__(self, champion_trees, resample_file, resample_sizes):
-        self.champion_trees = champion_trees
+    def __init__(self, champion_trees_folder, resample_file, resample_sizes):
+        self.champion_trees_folder = champion_trees_folder
         self.resample_file = resample_file
         self.resample_sizes = resample_sizes
 
@@ -39,7 +39,7 @@ class Bootstrap():
             print("Calculating likelihood j=", j+1)
             self.create_temp_folder(temp_folder)
             L[j] = prl.calculate_likelihoods(temp_folder,
-                                             self.champion_trees,
+                                             self.champion_trees_folder,
                                              self.resample_file,
                                              int(resample_size),
                                              num_cores=num_cores)

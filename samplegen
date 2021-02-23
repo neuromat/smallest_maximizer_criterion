@@ -5,7 +5,8 @@ Generates samples for a tree
 
 Example:
 
-./samplegen -t bic.tree -o sample.txt -s 5000 --num_cores 4
+
+./samplegen -t bic.tree  -s 5000 sample.txt
 
 """
 
@@ -75,10 +76,6 @@ if __name__ == '__main__':
                         type=int,
                         required=True,
                         help='Sample size')
-    parser.add_argument('-o', '--output_file',
-                        type=argparse.FileType('w'),
-                        default='./sample.out.txt',
-                        help='Output sample file.')
     parser.add_argument('--num_cores',
                         type=int,
                         default=1,
@@ -92,6 +89,7 @@ if __name__ == '__main__':
                         choices=list(log_levels().keys()),
                         default='info',
                         help='Log level')
+    parser.add_argument('output_file', type=argparse.FileType('w'), default='./sample.out.txt', help='Output sample file.')
 
     args = parser.parse_args()
     set_log(args.log_file, args.log_level)

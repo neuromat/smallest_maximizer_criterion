@@ -16,15 +16,15 @@ def load_model(filename):
         mtd = load_tar_file(tar, 'metadata.pkl')
 
     sample = Sample(None, mtd['A'],
-                    data = '',
-                    separator=mtd['sample_separator'],
+                    mtd['max_depth'],
+                    data='',
                     subsamples_separator=mtd['sample_subseparator'])
     sample.filename = mtd['sample_filename']
     return sample, mtd['max_depth'], contexts, transition_probs
 
 
 def load_tar_file(tar, file):
-    f = [x for x in tar.getmembers() if x.name==file][0]
+    f = [x for x in tar.getmembers() if x.name == file][0]
     return pickle.load(tar.extractfile(f))
 
 def save_model(context_tree, filename):
@@ -37,7 +37,6 @@ def save_model(context_tree, filename):
             'A': context_tree.sample.A,
             'max_depth': context_tree.max_depth,
             'sample_filename': context_tree.sample.filename,
-            'sample_separator': context_tree.sample.separator,
             'sample_subseparator': context_tree.sample.subsamples_separator
         }
         with open(os.path.join(tmpdirname, 'metadata.pkl'), 'wb') as mfile:
@@ -58,5 +57,3 @@ def _write_sample(h5obj, sample):
             h5obj.attrs['sample.filename'] = sample.filename
         if sample.A:
             h5obj.attrs['sample.A'] = sample.A
-        if sample.separator is not None:
-            h5obj.attrs['sample.separator'] = sample.separator

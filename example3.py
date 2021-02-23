@@ -38,7 +38,8 @@ resamples_file = "%s/resamples.txt" % resamples_folder
 
 
 
-#bic_tree = BIC(154, max_depth).fit(X_bp).context_tree
+bic_tree = BIC(154, max_depth).fit(X_bp).context_tree
+
 #print(bic_tree.to_str())
 import pandas as pd
 for i, row in pd.read_csv('tests/perl_bic_results_folha.csv').iterrows():

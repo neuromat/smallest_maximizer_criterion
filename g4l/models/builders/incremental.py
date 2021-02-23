@@ -58,41 +58,45 @@ def merge_trans(dicts):
 
 
 def count_subsequence_frequencies(df, sample, max_depth, scan_offset):
-    freqs = []
-    trns = []
-    for smpl in sample.subsamples():
-        sample_data = smpl.data
-        A = sample.A
-        # for each position in a sliding window of size max_depth over sample_data,
-        #for d in range(1, context_tree.max_depth + 1):
-        dct_transition = defaultdict(lambda: np.zeros(len(A)))
-        dct_node_freq = defaultdict(lambda: 0)
-        dct_node_freq[''] = 0
-        for d in range(max_depth + 1):
-            # create a dataframe with all subsequences and their frequencies
-            # aqui
-            for i in range(scan_offset, len(sample_data)):
-                node = sample_data[i-d:i]
-                a = sample_data[i]
-                if node != '':
-                    dct_node_freq[node] += 1
-                    dct_transition[node][A.index(a)] += 1
-        #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
-        # TODO: melhorar estratégia de contagem do nó vazio
-        dct_node_freq[''] = sum([dct_node_freq[a] for a in A])
-        for ii, a in enumerate(A):
-            dct_transition[''][ii] = dct_node_freq[a]
-        freqs.append(dct_node_freq)
-        trns.append(dct_transition)
+    #    freqs = []
+    #    trns = []
+    #    for smpl in sample.subsamples():
+    #        sample_data = smpl.data
+    #        A = sample.A
+    #        # for each position in a sliding window of size max_depth over sample_data,
+    #        #for d in range(1, context_tree.max_depth + 1):
+    #        dct_transition = defaultdict(lambda: np.zeros(len(A)))
+    #        dct_node_freq = defaultdict(lambda: 0)
+    #        dct_node_freq[''] = 0
+    #        for d in range(max_depth + 1):
+    #            # create a dataframe with all subsequences and their frequencies
+    #            # aqui
+    #            for i in range(scan_offset, len(sample_data)):
+    #                node = sample_data[i-d:i]
+    #                a = sample_data[i]
+    #                if node != '':
+    #                    dct_node_freq[node] += 1
+    #                    dct_transition[node][A.index(a)] += 1
+    #        #dct_node_freq[sample_data[-1]] += 1  # pra compatibilizar com perl
+    #        # TODO: melhorar estratégia de contagem do nó vazio
+    #        dct_node_freq[''] = sum([dct_node_freq[a] for a in A])
+    #        for ii, a in enumerate(A):
+    #            dct_transition[''][ii] = dct_node_freq[a]
+    #        freqs.append(dct_node_freq)
+    #        trns.append(dct_transition)
+    #
+    #    dct_node_freq = merge_freqs(freqs)
+    #    dct_transition = merge_trans(trns)
 
-    dct_node_freq = merge_freqs(freqs)
-    dct_transition = merge_trans(trns)
+    cols = {'index': 'node', 0: 'freq'}
+    df = sample.F.T.sum().to_frame().reset_index().rename(columns=cols)
+    #import code; code.interact(local=dict(globals(), **locals()))
 
-    df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
-    df = df.rename(columns={'index':'node', 0:'freq'})
+    #df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
+    #df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0
     df = create_indexes(df)
-    df2 = pd.DataFrame.from_dict(dct_transition, orient='index')
+    df2 = sample.F
     df2['idx'] = df.reset_index().set_index('node')['node_idx']
     df2 = df2.melt(id_vars=['idx'], var_name='next_symbol', value_name='freq')
     df2 = df2.sort_values(['idx', 'next_symbol']).reset_index(drop=True).set_index('idx')
