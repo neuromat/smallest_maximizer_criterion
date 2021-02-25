@@ -19,7 +19,8 @@ def fit(X, c, max_depth, df_method, scan_offset, comp, keep_data=False, clean=Tr
     df['likelihood_pen'] = penalty + df.likelihood
     full_tree.df = assign_values(max_depth, df[df.freq >= 1], comp)
     full_tree.prune_unique_context_paths()
-    return clean_columns(full_tree, keep_data)
+    tt = clean_columns(full_tree, keep_data)
+    return tt
 
 
 def calc_sum_v_children(df, level, max_depth):

@@ -50,7 +50,14 @@ from g4l.bootstrap.resampling import BlockResampling
 import logging
 import argparse
 
-#logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        #logging.FileHandler("examples/example1/debug.log"),
+        logging.StreamHandler()
+    ]
+)
 
 
 parser = argparse.ArgumentParser(description='Run simulation study')
@@ -155,11 +162,11 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
         folder = "%s/%s/%s" % (temp_folder, model_name, sample_size)
         n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
         print("Generating resamples:", folder)
-        generate_bootstrap_resamples(model_name,
-                                     sample_size,
-                                     folder,
-                                     n_sizes,
-                                     samples_path)
+#        generate_bootstrap_resamples(model_name,
+#                                     sample_size,
+#                                     folder,
+#                                     n_sizes,
+#                                     samples_path)
         for estimator in ESTIMATORS:
             results_file = get_results_file(estimator, model_name, sample_size, results_folder)
             for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path):
@@ -167,19 +174,23 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                 print("estimating champion trees")
                 m = estimators[estimator](sample, temp_folder)
                 champion_trees = m.context_trees
-                tree_found = m.optimal_tree(temp_folder,
-                                            MAX_SAMPLES,
-                                            n_sizes,
-                                            ALPHA,
-                                            RENEWAL_POINT,
-                                            num_cores=NUM_CORES)
-                #import code; code.interact(local=dict(globals(), **locals()))
-                opt_idx = champion_trees.index(tree_found)
+                tree_found, opt_idx = m.optimal_tree(NUM_RESAMPLES,
+                                                     n_sizes,
+                                                     ALPHA,
+                                                     RENEWAL_POINT,
+                                                     num_cores=NUM_CORES)
                 for tree_idx, champion_tree in enumerate(champion_trees):
+                    try:
+                        c = str(m.thresholds[tree_idx])
+                    except:
+                        c = '-'
+
+                    #import code; code.interact(local=dict(globals(), **locals()))
                     opt = int(tree_idx == opt_idx)
                     obj = {'model_name': model_name,
                            'sample_idx': sample_idx,
                            'method': estimator,
+                           'c': c,
                            'tree_idx': tree_idx,
                            'tree': champion_tree.to_str(),
                            'num_contexts': champion_tree.num_contexts(),
@@ -193,7 +204,7 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
                     if not os.path.exists(outdir):
                         os.makedirs(outdir, exist_ok=True)
 
-                    logging.info("Writing result to file %s" % results_file)
+                    #logging.info("Writing result to file %s" % results_file)
                     df.to_csv(results_file, mode='a',
                               index=False,
                               header=use_header)
@@ -204,7 +215,7 @@ def resample_file(folder, sample_idx):
 
 
 def generate_bootstrap_resamples(model_name, sample_size, folder, larger_size, samples_path):
-    args = (model_name, sample_size, samples_path, MAX_SAMPLES)
+    args = (model_name, sample_size, samples_path)
     for sample_idx, sample in tqdm(fetch_samples(*args), total=MAX_SAMPLES):
         file = resample_file(folder, sample_idx)
         resample_fctry = BlockResampling(sample, file, larger_size,

@@ -1,5 +1,6 @@
 from g4l.estimators.base import CollectionBase
 from g4l.estimators.logics import smc as smc
+from tempfile import TemporaryDirectory
 import numpy as np
 import os
 import logging
@@ -70,16 +71,21 @@ class SMC(CollectionBase):
         """
         assert max_depth > 0, 'max depth must be greater than zero'
         assert epsilon > 0, 'epsilon must be greater than zero'
-        super().__init__()
+        self.temp_cache = None
+        cache_dir = cache_dir or self._tempdir()
+        super().__init__(cache_dir)
         self.max_depth = max_depth
         self.penalty_interval = penalty_interval
         self.epsilon = epsilon
         self.df_method = df_method
-        self.cache_dir = cache_dir
         self.callback_fn = callback_fn
         self.scan_offset = scan_offset
-        self.tresholds = []
+        self.thresholds = []
         self.perl_compatible = perl_compatible
+
+    def clean(self):
+        if self.temp_cache is not None:
+            self.temp_cache.cleanup()
 
     def fit(self, X):
         """
@@ -95,4 +101,7 @@ class SMC(CollectionBase):
         self.X = X
         return self
 
+    def _tempdir(self):
+        self.temp_cache = TemporaryDirectory()
+        return self.temp_cache.name
 

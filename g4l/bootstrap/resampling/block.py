@@ -72,10 +72,10 @@ def generate_sample2(params):
 
 class BlockResampling(ResamplingBase):
 
-    def __init__(self, sample, file, resample_sizes, renewal_point):
+    def __init__(self, sample, file, resample_size, renewal_point):
         self.sample = sample
         self.file = file
-        self.resample_sizes = resample_sizes
+        self.resample_size = resample_size
         self.renewal_point = renewal_point
 
     def iterate(self, file):
@@ -88,7 +88,7 @@ class BlockResampling(ResamplingBase):
         os.makedirs(os.path.dirname(self.file), exist_ok=True)
         with open(self.file, 'w') as f:
             f.write('')
-        prms = (data, self.file, self.renewal_point, max(self.resample_sizes))
+        prms = (data, self.file, self.renewal_point, self.resample_size)
         params = [prms for i in range(num_resamples)]
         if num_cores in [None, 0, 1]:
             for p in params:

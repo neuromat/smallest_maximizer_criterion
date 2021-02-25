@@ -13,9 +13,11 @@ class Sample():
     def __init__(self, filename, A, max_depth,
                  data=None,
                  cache_file=None,
+                 scan_offset=0,
                  subsamples_separator=None):
         self.cache_file = cache_file
         self.max_depth = max_depth
+        self.scan_offset = scan_offset
         self.F = None
         self.subsamples_separator = subsamples_separator
         self._set_filename(filename)

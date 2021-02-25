@@ -19,7 +19,7 @@ from g4l.data import Sample
 import logging
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
         #logging.FileHandler("examples/example1/debug.log"),
@@ -29,18 +29,20 @@ logging.basicConfig(
 
 
 # Create a sample object instance
-
-filename = "/home/arthur/Documents/Neuromat/projects/SMC/arquivo/data/20000.csv"
-filename = "/home/arthur/tmp/x/5000.csv"
 max_depth = 6
-ff = [x.replace(',', '') for x in open(filename).read().split('\n')]
-samp = ff[1]
-X = Sample(None, [0, 1], data=samp)
-
+num_cores = 6
+sample_idx = 2
+from g4l.util.mat import MatSamples
+fld = 'examples/simulation_study/samples'
+X = MatSamples(fld, 'model1',
+               5000, [0, 1],
+               max_depth,
+               scan_offset=6).sample_by_idx(1)
+#
 c = 0
-b = BIC(c, 6, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
-#b = BIC(c, 6, scan_offset=6, df_method='csizar_and_talata', perl_compatible=False).fit(X).context_tree
-print(b.to_str())
+#b = BIC(c, 6, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
+#b = BIC(c, 6, scan_offset=6, df_method='perl', keep_data=True, perl_compatible=False).fit(X).context_tree
+#print(b.to_str())
 #df = b.df
 #import code; code.interact(local=dict(globals(), **locals()))
 
@@ -48,13 +50,20 @@ print(b.to_str())
 smc = SMC(max_depth,
           penalty_interval=(0, 100),
           epsilon=0.01,
-          cache_dir=None,
+          cache_dir='/home/arthur/tmp/smc/001',
           callback_fn=None,
-          scan_offset=6,
           df_method='csizar_and_talata',
           perl_compatible=False)
 smc.fit(X)
-for tree in smc.context_trees:
-    print(tree.to_str(), tree.log_likelihood())
+n_sizes = (X.len() * 0.3, X.len() * 0.9)
+RENEWAL_POINT = 1
+tree_found, _ = smc.optimal_tree(200, n_sizes, 0.01, RENEWAL_POINT, num_cores=num_cores)
 
+import code; code.interact(local=dict(globals(), **locals()))
+
+for i, tree in enumerate(smc.context_trees):
+    print(smc.thresholds[i], '\t', tree.to_str(), tree.log_likelihood())
+
+print("Found: ", tree_found)
+smc.clean()
 import code; code.interact(local=dict(globals(), **locals()))

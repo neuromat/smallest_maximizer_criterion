@@ -29,11 +29,10 @@ def run_smc(X, cache_folder, instance_name='bp', num_cores=1, perl_compatible=Tr
     smc.fit(X)
     champion_trees = smc.context_trees
 
-    t_hat = smc.optimal_tree(cache_folder,  num_resamples,
-                             n_sizes,
-                             alpha,
-                             renewal_point,
-                             num_cores=num_cores)
+    t_hat, opt_idx = smc.optimal_tree(num_resamples,
+                                      n_sizes,
+                                      alpha,
+                                      renewal_point,
+                                      num_cores=num_cores)
 
-    opt_idx = champion_trees.index(t_hat)
     return champion_trees, opt_idx, smc

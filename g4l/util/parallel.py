@@ -19,19 +19,21 @@ def calc_likelihood_process(args):
      subsamples_separator) = args
     tree = get_tree(trees_folder, tree_idx)
     data = resamples(resamples_file)[resample_idx][:int(resample_size)]
-    cache_file = os.path.join(buffer_folder(resamples_file), '%s.cache' % resample_idx)
+    cache_file = os.path.join(buffer_folder(resamples_file),
+                              str(resample_size),
+                              '%s.cache' % resample_idx)
     #import code; code.interact(local=dict(globals(), **locals()))
     resample = Sample(None, tree.sample.A,
                       tree.max_depth,
                       data=data,
                       subsamples_separator=tree.sample.subsamples_separator,
                       cache_file=cache_file)
-    return tree.buffered_sample_likelihood(resample)
+    #import code; code.interact(local=dict(globals(), **locals()))
+    return tree.sample_likelihood(resample)
 
 
 def buffer_folder(resamples_file):
     return os.path.join(os.path.dirname(resamples_file), 'resamples')
-
 
 
 def calculate_likelihoods(temp_folder, champion_trees_folder,
@@ -45,11 +47,14 @@ def calculate_likelihoods(temp_folder, champion_trees_folder,
 
     params = [(champion_trees_folder, resamples_file, resample_size, i, j, subsamples_separator) for i, j in pr]
     if num_cores in [None, 0, 1]:
-        result = tqdm.tqdm(map(calc_likelihood_process, params), total=len(params))
+        result = list(tqdm.tqdm(map(calc_likelihood_process, params), total=len(params)))
     else:
         with Pool(num_cores) as p:
             result = list(tqdm.tqdm(p.imap(calc_likelihood_process, params), total=len(params)))
-    return np.reshape(list(result), (num_trees, num_resamples))
+    rr = [r[0] for r in result]
+    xx = np.reshape(rr, (num_trees, num_resamples))
+    #xx = np.reshape(result, (num_trees, num_resamples))
+    return xx
 
 
 def get_tree(trees_folder, idx):
