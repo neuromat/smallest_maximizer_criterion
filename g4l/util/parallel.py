@@ -29,7 +29,7 @@ def calc_likelihood_process(args):
                       subsamples_separator=tree.sample.subsamples_separator,
                       cache_file=cache_file)
     #import code; code.interact(local=dict(globals(), **locals()))
-    return tree.sample_likelihood(resample)
+    return tree.buffered_sample_likelihood(resample)
 
 
 def buffer_folder(resamples_file):

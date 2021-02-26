@@ -61,7 +61,7 @@ def fit(estimator, X):
         tree_b = tree_f
     #if estimator.cache_dir is not None:
     #    cache.save_cache(estimator, X)
-    logging.info('Finished SMC')
+    logging.info('Finished CTM scanning')
     return estimator
 
 
@@ -100,6 +100,7 @@ def add_tree(estimator, t, c):
         The penalty value used to estimate the tree
 
     """
+    logging.info('%s\t%s' % (c, t.to_str()))
     estimator.add_tree(t)
     estimator.thresholds.append(c)
     try:

@@ -100,7 +100,7 @@ class ContextTree():
         sum_freqs = repmat(node_freqs.values, len(sample.A), 1).T[ind]
         L = np.sum(np.multiply(pos_freqs, np.log(pos_freqs) - np.log(sum_freqs)))
 
-        return L
+        return L, (None, None)
 
     def sample_likelihood(self, sample):
         #all_contexts, N = buf
