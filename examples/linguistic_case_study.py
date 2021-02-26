@@ -35,13 +35,23 @@ perl_compatible = True
 #(X, sample_file, cache_folder, instance_name='bp', num_cores=1):
 
 # Create sample objects
-X_bp = Sample('%s/folha.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], max_depth, subsamples_separator='>')
-X_ep = Sample('%s/publico.txt.bkp' % samples_folder, [0, 1, 2, 3, 4], max_depth, subsamples_separator='>')
+bp_cache = os.path.join(cache_folder, 'bp')
+ep_cache = os.path.join(cache_folder, 'ep')
+X_bp = Sample('%s/folha.txt.bkp' % samples_folder,
+              [0, 1, 2, 3, 4],
+              max_depth,
+              subsamples_separator='>',
+              cache_file=os.path.join(bp_cache, 'sample'))
+X_ep = Sample('%s/publico.txt.bkp' % samples_folder,
+              [0, 1, 2, 3, 4],
+              max_depth,
+              subsamples_separator='>',
+              cache_file=os.path.join(ep_cache, 'sample'))
 
 
 # Execute the method above for each sample (EP and BP)
-champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, cache_folder + '/ep', instance_name='ep', perl_compatible=perl_compatible, num_cores=num_cores)
-champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, cache_folder + '/bp', instance_name='bp', perl_compatible=perl_compatible, num_cores=num_cores)
+champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, ep_cache, instance_name='ep', perl_compatible=perl_compatible, num_cores=num_cores)
+champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, bp_cache, instance_name='bp', perl_compatible=perl_compatible, num_cores=num_cores)
 
 print("--------------------------")
 print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str(reverse=True))

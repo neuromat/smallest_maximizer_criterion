@@ -169,7 +169,7 @@ def run_simulation(model_name, temp_folder, results_folder, samples_path):
 #                                     samples_path)
         for estimator in ESTIMATORS:
             results_file = get_results_file(estimator, model_name, sample_size, results_folder)
-            for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path):
+            for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path, cache_dir=temp_folder):
                 print('sample:', sample_size, sample_idx)
                 print("estimating champion trees")
                 m = estimators[estimator](sample, temp_folder)
@@ -255,11 +255,11 @@ def sort_trees(context_trees):
     return sorted(context_trees, key=lambda x: -x.num_contexts())
 
 
-def fetch_samples(model_name, sample_size, path, max_samples=math.inf):
+def fetch_samples(model_name, sample_size, path, max_samples=math.inf, cache_dir=None):
     i = -1
     key = '%s_%s' % (model_name, sample_size)
     filename = '%s/%s.mat' % (path, key)
-    for s in persistence.iterate_from_mat(filename, key, A, max_depth):
+    for s in persistence.iterate_from_mat(filename, key, A, max_depth, cache_dir=cache_dir):
         if i > max_samples:
             break
         i += 1
