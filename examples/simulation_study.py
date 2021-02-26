@@ -68,6 +68,11 @@ parser.add_argument('--model',
                     choices=['model1', 'model2'],
                     default='model1',
                     help='Select model')
+parser.add_argument('--sample_size',
+                    type=int,
+                    choices=[5000, 10000, 20000],
+                    default=5000,
+                    help='Sample size')
 parser.add_argument('--df',
                     choices=['csizar_and_talata', 'perl', 'g4l'],
                     default='csizar_and_talata',
@@ -119,14 +124,18 @@ SCAN_OFFSET = args.scan_offset
 PERL_COMPATIBLE = args.perl_compatible
 samples_path = args.samples_path
 ESTIMATORS = ['smc'] # ['smc', 'prune']
+sample_size = args.sample_size
 
-opt_tmp_fld = os.path.abspath('./simulation_study/instances/%s/tmp' % INSTANCE_NAME)
-opt_results_folder = os.path.abspath('./simulation_study/instances/%s/results' % INSTANCE_NAME)
-temp_folder = args.temp_folder if args.temp_folder != '' else opt_tmp_fld
-results_folder = args.results_folder if args.results_folder != '' else opt_results_folder
+default_fld = os.path.join(os.path.abspath('./simulation_study/instances'), INSTANCE_NAME)
+main_folder = args.temp_folder if args.temp_folder != '' else default_fld
+main_folder = os.path.join(main_folder, str(sample_size))
+temp_folder = os.path.join(main_folder, 'tmp')
+results_folder = os.path.join(main_folder, 'results')
+
 
 A = ['0', '1']
-SAMPLE_SIZES = [5000, 10000, 20000]
+#SAMPLE_SIZES = [5000, 10000, 20000]
+#SAMPLE_SIZES = [5000]
 PENALTY_INTERVAL = tuple(args.penalty_interval)
 RENEWAL_POINT = 1
 N1_FACTOR = 0.3
@@ -158,56 +167,55 @@ def get_results_file(estimator, model_name, sample_size, results_folder):
 def run_simulation(model_name, temp_folder, results_folder, samples_path):
     estimators = {'prune': prune, 'smc': smc, 'bic': bic}
     logging.info("Running simulation with %s" % model_name)
-    for sample_size in SAMPLE_SIZES:
-        folder = "%s/%s/%s" % (temp_folder, model_name, sample_size)
-        n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
-        print("Generating resamples:", folder)
-#        generate_bootstrap_resamples(model_name,
-#                                     sample_size,
-#                                     folder,
-#                                     n_sizes,
-#                                     samples_path)
-        for estimator in ESTIMATORS:
-            results_file = get_results_file(estimator, model_name, sample_size, results_folder)
-            for sample_idx, sample in fetch_samples(model_name, sample_size, samples_path, cache_dir=temp_folder):
-                print('sample:', sample_size, sample_idx)
-                print("estimating champion trees")
-                m = estimators[estimator](sample, temp_folder)
-                champion_trees = m.context_trees
-                tree_found, opt_idx = m.optimal_tree(NUM_RESAMPLES,
-                                                     n_sizes,
-                                                     ALPHA,
-                                                     RENEWAL_POINT,
-                                                     num_cores=NUM_CORES)
-                for tree_idx, champion_tree in enumerate(champion_trees):
-                    try:
-                        c = str(m.thresholds[tree_idx])
-                    except:
-                        c = '-'
+    sample_size = args.sample_size
 
-                    #import code; code.interact(local=dict(globals(), **locals()))
-                    opt = int(tree_idx == opt_idx)
-                    obj = {'model_name': model_name,
-                           'sample_idx': sample_idx,
-                           'method': estimator,
-                           'c': c,
-                           'tree_idx': tree_idx,
-                           'tree': champion_tree.to_str(),
-                           'num_contexts': champion_tree.num_contexts(),
-                           'likelihood': champion_tree.log_likelihood(),
-                           'opt': opt,
-                           'opt_idx': opt_idx}
-                    use_header = (not os.path.exists(results_file))
-                    df = pd.DataFrame.from_dict([obj])
+    n_sizes = (sample_size * N1_FACTOR, sample_size * N2_FACTOR)
 
-                    outdir = os.path.dirname(results_file)
-                    if not os.path.exists(outdir):
-                        os.makedirs(outdir, exist_ok=True)
+    for estimator in ESTIMATORS:
+        results_file = get_results_file(estimator, model_name,
+                                        sample_size,
+                                        results_folder)
+        for sample_idx, sample in fetch_samples(model_name, sample_size,
+                                                samples_path,
+                                                cache_dir=temp_folder):
+            print('sample:', sample_size, sample_idx)
+            print("estimating champion trees")
+            m = estimators[estimator](sample, temp_folder)
+            champion_trees = m.context_trees
+            tree_found, opt_idx = m.optimal_tree(NUM_RESAMPLES,
+                                                 n_sizes,
+                                                 ALPHA,
+                                                 RENEWAL_POINT,
+                                                 num_cores=NUM_CORES)
+            for tree_idx, champion_tree in enumerate(champion_trees):
+                try:
+                    c = str(m.thresholds[tree_idx])
+                except:
+                    c = '-'
 
-                    #logging.info("Writing result to file %s" % results_file)
-                    df.to_csv(results_file, mode='a',
-                              index=False,
-                              header=use_header)
+                #import code; code.interact(local=dict(globals(), **locals()))
+                opt = int(tree_idx == opt_idx)
+                obj = {'model_name': model_name,
+                       'sample_idx': sample_idx,
+                       'method': estimator,
+                       'c': c,
+                       'tree_idx': tree_idx,
+                       'tree': champion_tree.to_str(),
+                       'num_contexts': champion_tree.num_contexts(),
+                       'likelihood': champion_tree.log_likelihood(),
+                       'opt': opt,
+                       'opt_idx': opt_idx}
+                use_header = (not os.path.exists(results_file))
+                df = pd.DataFrame.from_dict([obj])
+
+                outdir = os.path.dirname(results_file)
+                if not os.path.exists(outdir):
+                    os.makedirs(outdir, exist_ok=True)
+
+                #logging.info("Writing result to file %s" % results_file)
+                df.to_csv(results_file, mode='a',
+                          index=False,
+                          header=use_header)
 
 
 def resample_file(folder, sample_idx):
