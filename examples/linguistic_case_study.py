@@ -21,7 +21,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_matlab_compat6"
+cache_folder = "linguistic_case_study/cache/smc_ml_compat_VER"
 
 samples_folder = "linguistic_case_study"
 max_depth = 4
@@ -30,28 +30,41 @@ num_cores = 6
 penalty_interval = (0.1, 400)
 epsilon = 0.01
 renewal_point = '4'
-perl_compatible = True
+perl_compatible = False
 
 #(X, sample_file, cache_folder, instance_name='bp', num_cores=1):
 
 # Create sample objects
 bp_cache = os.path.join(cache_folder, 'bp')
 ep_cache = os.path.join(cache_folder, 'ep')
-X_bp = Sample('%s/folha.txt.bkp' % samples_folder,
-              [0, 1, 2, 3, 4],
-              max_depth,
-              subsamples_separator='>',
-              cache_file=os.path.join(bp_cache, 'sample'))
+
 X_ep = Sample('%s/publico.txt.bkp' % samples_folder,
               [0, 1, 2, 3, 4],
               max_depth,
+              perl_compatible=perl_compatible,
               subsamples_separator='>',
               cache_file=os.path.join(ep_cache, 'sample'))
 
 
+X_bp = Sample('%s/folha.txt.bkp' % samples_folder,
+              [0, 1, 2, 3, 4],
+              max_depth,
+              subsamples_separator='>',
+              perl_compatible=perl_compatible,
+              cache_file=os.path.join(bp_cache, 'sample'))
+
+#c = 0.2715885530863805
+#bic = BIC(c, 4, df_method='perl', scan_offset=0, keep_data=True, perl_compatible=True)
+#bic.fit(X_ep)
+#t = bic.context_tree
+#import code; code.interact(local=dict(globals(), **locals()))
+
 # Execute the method above for each sample (EP and BP)
 champion_trees_ep, opt_idx_ep, smc_ep = lng.run_smc(X_ep, ep_cache, instance_name='ep', perl_compatible=perl_compatible, num_cores=num_cores)
 champion_trees_bp, opt_idx_bp, smc_bp = lng.run_smc(X_bp, bp_cache, instance_name='bp', perl_compatible=perl_compatible, num_cores=num_cores)
+
+
+
 
 print("--------------------------")
 print("Selected tree for BP: ", champion_trees_bp[opt_idx_bp].to_str(reverse=True))

@@ -83,6 +83,7 @@ def calc_bic(estimator, c, df_method, scan_offset, perl_compatible):
     bic_estimator = BIC(c, estimator.max_depth,
                         df_method=df_method,
                         scan_offset=scan_offset,
+                        keep_data=True,
                         perl_compatible=perl_compatible)
     bic_estimator.fit(sample)
     return bic_estimator.context_tree
