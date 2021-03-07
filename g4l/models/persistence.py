@@ -1,4 +1,3 @@
-import h5py
 import pandas as pd
 from g4l.data import Sample
 import os

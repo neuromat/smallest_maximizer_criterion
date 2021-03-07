@@ -4,6 +4,16 @@ We introduce a new criterion to select in a consistent way the probabilistic con
 
 This study was motivated by the linguistic challenge of retrieving rhythmic features from written texts. Applied to a data set consisting of texts extracted from daily newspapers, our algorithm identifies different context trees for European Portuguese and Brazilian Portuguese. This is compatible with the long standing conjecture that European Portuguese and Brazilian Portuguese belong to different rhythmic classes. Moreover, these context trees have several interesting properties which are linguistically meaningful.
 
+
+## Requirements
+	python 3.8
+
+
+## Installation
+	`pip install -r requirements.txt`
+
+
+
 ## Examples
 
 #### Estimation by pruning

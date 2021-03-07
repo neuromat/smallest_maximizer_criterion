@@ -10,22 +10,35 @@ def calculate_num_child_nodes(df):
     num_child_nodes = (df[df.depth >= 1]
                        .reset_index(drop=False)
                        .groupby(['parent_idx'])
-                       .apply(lambda x: x.count().node_idx))
+                       .count()).node_idx
 
-    active_children = (df[df.depth >= 1]
+    active_children = (df[(df.depth >= 1) & (df.active == 1)]
                        .reset_index(drop=False)
                        .groupby(['parent_idx'])
-                       .apply(lambda x: x.sum().active))
+                       .sum()).active
+
+##    num_child_nodes = (df[df.depth >= 1].reset_index(drop=False).groupby(['parent_idx'])
+##                       .reset_index(drop=False)
+##                       .groupby(['parent_idx'])
+##                       .apply(lambda x: x.count().node_idx))
+##
+#    active_children = (df[df.depth >= 1]
+#                       .reset_index(drop=False)
+#                       .groupby(['parent_idx'])
+#                       .apply(lambda x: x.sum().active))
+
+
 
 
     if df.index.name != 'node_idx':
         df.set_index('node_idx', inplace=True)
-    try:
-        df['num_child_nodes'] = num_child_nodes
-        df['active_children'] = active_children
-        df['active_children'] = df['active_children'].fillna(0)
-    except ValueError:
-        df['num_child_nodes'] = 0
+    #try:
+    df['num_child_nodes'] = num_child_nodes
+    df['active_children'] = active_children
+        #df['active_children'] = df['active_children'].fillna(0)
+    #except ValueError:
+
+        #df['num_child_nodes'] = 0
 
     df.reset_index(inplace=True, drop=False)
     return df

@@ -94,8 +94,9 @@ def count_subsequence_frequencies(df, sample, max_depth, scan_offset):
     #df = pd.DataFrame.from_dict(dct_node_freq, orient='index').reset_index()
     #df = df.rename(columns={'index':'node', 0:'freq'})
     df['active'] = 0
+
     df = create_indexes(df)
-    df2 = sample.F[[int(x) for x in sample.A]].astype(int)
+    df2 = sample.F[[i for i in range(len(sample.A))]].astype(int)
     df2['idx'] = df.reset_index().set_index('node')['node_idx']
     df2 = df2.melt(id_vars=['idx'], var_name='next_symbol', value_name='freq')
     df2 = df2.sort_values(['idx', 'next_symbol']).reset_index(drop=True).set_index('idx')

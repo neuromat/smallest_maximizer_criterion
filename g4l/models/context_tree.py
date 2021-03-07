@@ -83,7 +83,7 @@ class ContextTree():
 
         #contexts = list(self.tree().node.values)
         contexts = self.tree().node.values
-        trn_freqs = sample.F[sample.F.index.isin(contexts)]
+        trn_freqs = sample.F[sample.F.index.isin(contexts)][[int(x) for x in sample.A]]
         node_freqs = trn_freqs.T.sum()
 
         #if N is None:

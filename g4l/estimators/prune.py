@@ -11,6 +11,8 @@ class Prune(CollectionBase):
     def __init__(self, max_depth, max_trees=None, cache_dir=None):
         self.max_depth = max_depth
         self.max_trees = max_trees
+        cache_dir = cache_dir or self._tempdir()
+        super().__init__(cache_dir)
         assert(max_depth > 0)
 
     def fit(self, X):

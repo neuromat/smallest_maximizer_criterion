@@ -37,6 +37,8 @@ def calc_sum_v_children(df, level, max_depth):
 
 def assign_values(max_depth, df, comp=False):
     # v_node = V^{c}_{w}(X^{n}_{1})
+    #import code; code.interact(local=dict(globals(), **locals()))
+    df = df.copy()
     df.loc[df.depth == max_depth, 'v_node'] = df.likelihood_pen
     df.loc[df.depth == max_depth, 'v_node_sum'] = df.likelihood_pen
     df['active'] = 0

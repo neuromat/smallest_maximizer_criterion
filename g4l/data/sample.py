@@ -3,6 +3,7 @@ import os
 from os.path import expanduser
 import pandas as pd
 import logging
+from tqdm import tqdm
 
 from collections import defaultdict
 
@@ -63,9 +64,11 @@ class Sample():
             return self._compat()
         d = defaultdict(lambda: np.zeros(len(self.A)))
         max_depth = self.max_depth
+        logging.debug('Calculating node frequencies in sample')
         for smpl in self.subsamples():
             dt = smpl.data
-            for i in range(len(dt) - max_depth):
+            ln = len(dt) - max_depth
+            for i in tqdm(range(ln), total=ln):
                 arr = dt[i: i + max_depth + 1]
                 for j in range(len(arr)-1):
                     d[arr[j:-1]][self.A.index(arr[-1])] += 1
@@ -130,11 +133,12 @@ class Sample():
 
         d = defaultdict(lambda: np.zeros(len(self.A)))
         dfreq = defaultdict(lambda: 0)
-        for r in range(self.max_depth):
+        for r in range(self.max_depth+1):
             nodes = [''.join(x) for x in list(product(self.A, repeat=r))]
             for node in nodes:
+
                 dfreq[node] = get_substring_count(self.data, node)
-                d[node] = [self.data.count(node + x) for x in self.A]
+                d[node] = [get_substring_count(self.data, node + x) for x in self.A]
 
         df = pd.DataFrame.from_dict(d).T
         df['N'] = [dfreq[x] for x in list(df.index)]

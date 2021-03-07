@@ -11,7 +11,7 @@ Example:
     -s examples/linguistic_case_study/folha.txt \
     -t ../test/tmp \
     -r ../test/results \
-    -j 1 \
+    -j 0 \
     -p 4 \
     --num_cores 4 \
     smc
@@ -96,17 +96,16 @@ def run_smc(X):
         num_cores = args.num_cores
     #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
-    tree_found = smc.optimal_tree(args.results_folder,
-                                  args.resamples,
-                                  n_sizes,
-                                  args.alpha,
-                                  args.renewal_point,
-                                  num_cores=num_cores)
+    tree_found, opt_idx = smc.optimal_tree(args.resamples,
+                                           n_sizes,
+                                           args.alpha,
+                                           args.renewal_point,
+                                           num_cores=num_cores)
     logging.info("Tree found:")
     logging.info(tree_found.to_str(reverse=True))
 
 
-def run_prune(X):
+def run_lcb(X):
     logging.info("Estimating champion trees:")
     prune = Prune(args.max_depth,
                   cache_dir=args.temp_folder)
@@ -120,12 +119,11 @@ def run_prune(X):
         num_cores = args.num_cores
     #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
-    tree_found = prune.optimal_tree(args.results_folder,
-                                           args.resamples,
-                                           n_sizes,
-                                           args.alpha,
-                                           args.renewal_point,
-                                           num_cores=num_cores)
+    tree_found, opt_idx = prune.optimal_tree(args.resamples,
+                                             n_sizes,
+                                             args.alpha,
+                                             args.renewal_point,
+                                             num_cores=num_cores)
     #import code; code.interact(local=dict(globals(), **locals()))
     logging.info("Tree found:")
     logging.info(tree_found.to_str(reverse=True))
@@ -138,7 +136,7 @@ if __name__ == '__main__':
     subparsers = parser.add_subparsers(dest='method', help='Estimation method')
     subparsers.required = True
 
-    parser_prune = subparsers.add_parser('prune', help='Prune by the less contributive branches')
+    parser_prune = subparsers.add_parser('lcb', help='Prune by the Less Contributive Branch')
     parser_prune.add_argument('-S', '--n_sizes',
                               nargs=2,
                               type=float,
@@ -234,7 +232,7 @@ if __name__ == '__main__':
     sample_cache_file = os.path.join(args.temp_folder, 'sample.pkl')
     {
         'smc': run_smc,
-        'prune': run_prune
+        'lcb': run_lcb
     }[args.method](Sample(args.sample_path.name,
                           None, args.max_depth,
                           cache_file=sample_cache_file))
