@@ -6,7 +6,7 @@ with open('README.md', 'r') as fdesc:
 
 setup(
     name='g4l',
-    version='0.1',
+    version='0.1.0',
     description='Smallest Maximizer Criterion',
     author='Arthur Tofani',
     author_email='arthur.tofani@usp.com',

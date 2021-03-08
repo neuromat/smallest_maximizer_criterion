@@ -1,2 +1,16 @@
 recursive-include examples *
 recursive-include fixtures *
+
+# docs subdirs we want to skip
+prune docs/build
+prune docs/gh-pages
+prune docs/dist
+prune examples/linguistic_case_study/cache
+prune examples/simulation_study/instances
+
+# Patterns to exclude from any directory
+global-exclude *~
+global-exclude *.pyc
+global-exclude *.pyo
+global-exclude .git
+global-exclude .ipynb_checkpoints
