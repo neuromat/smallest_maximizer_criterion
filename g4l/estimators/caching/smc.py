@@ -8,7 +8,7 @@ import os
 import pickle
 from hashlib import md5
 from g4l.models import ContextTree
-
+from g4l.util import hashstr
 
 def load_cache(estimator, X):
     """
@@ -35,7 +35,7 @@ def load_cache(estimator, X):
     estimator.penalty_interval = dic['penalty_interval']
     estimator.epsilon = dic['epsilon']
     estimator.cache_dir = dic['cache_dir']
-    estimator.tresholds = dic['tresholds']
+    estimator.thresholds = dic['thresholds']
     estimator.context_trees = []
     for i in range(dic['context_trees']):
         t = ContextTree.load_from_file('%s/%s.tree' % (cache_folder, i))
@@ -60,7 +60,7 @@ def cache_file(estimator, X):
     strg = 'SMC%s%s%s' % (X.data,
                           estimator.penalty_interval,
                           estimator.epsilon)
-    cachefile = md5((strg).encode('utf-8')).hexdigest()
+    cachefile = hashstr(strg)
     cachefile = '%s/%s/params.pkl' % (estimator.cache_dir, cachefile)
     folder = os.path.dirname(cachefile)
     return folder, cachefile
@@ -85,7 +85,7 @@ def save_cache(estimator, X):
            'penalty_interval': estimator.penalty_interval,
            'epsilon': estimator.epsilon,
            'cache_dir': estimator.cache_dir,
-           'tresholds': estimator.tresholds,
+           'thresholds': estimator.thresholds,
            'context_trees': len(estimator.context_trees)}
     with open(cachefile, 'wb') as f:
         pickle.dump(dic, f)

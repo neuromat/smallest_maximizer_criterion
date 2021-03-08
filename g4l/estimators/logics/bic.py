@@ -1,11 +1,12 @@
 import numpy as np
 from g4l.models import ContextTree
 from g4l.models.builders import incremental
+import logging
+from tqdm import tqdm
 
 
-def fit(X, c, max_depth, df_method, scan_offset, comp):
+def fit(X, c, max_depth, df_method, scan_offset, comp, keep_data=False, clean=True):
     """ Estimates Context Tree model using BIC """
-
     full_tree = ContextTree.init_from_sample(X, max_depth,
                                              force_admissible=False,
                                              initialization_method=incremental,
@@ -18,7 +19,8 @@ def fit(X, c, max_depth, df_method, scan_offset, comp):
     df['likelihood_pen'] = penalty + df.likelihood
     full_tree.df = assign_values(max_depth, df[df.freq >= 1], comp)
     full_tree.prune_unique_context_paths()
-    return clean_columns(full_tree)
+    tt = clean_columns(full_tree, keep_data)
+    return tt
 
 
 def calc_sum_v_children(df, level, max_depth):
@@ -35,12 +37,14 @@ def calc_sum_v_children(df, level, max_depth):
 
 def assign_values(max_depth, df, comp=False):
     # v_node = V^{c}_{w}(X^{n}_{1})
+    #import code; code.interact(local=dict(globals(), **locals()))
+    df = df.copy()
     df.loc[df.depth == max_depth, 'v_node'] = df.likelihood_pen
     df.loc[df.depth == max_depth, 'v_node_sum'] = df.likelihood_pen
     df['active'] = 0
     df['indicator'] = 0
-
     df.set_index('node_idx', inplace=True)
+
     for d in reversed(range(0, max_depth)):
         parents = df[(df.depth == d) & (df.freq >= 1)]
         ch = df[(df.parent_idx.isin(parents.index)) & (df.freq >= 1)]
@@ -54,7 +58,6 @@ def assign_values(max_depth, df, comp=False):
         #df = calc_sum_v_children(df, d, max_depth)
         #depth_df = df.loc[df.depth == d]
         #df.loc[df.depth == d, 'v_node'] = depth_df[['likelihood_pen', 'v_node']].max(axis=1)
-
     cond = (df.depth < max_depth) & (df.v_node > df.likelihood_pen)
     # indicator => \delta_{w}^{c}(X^{n}_{1})
     df.loc[cond, 'indicator'] = 1
@@ -71,22 +74,26 @@ def assign_values(max_depth, df, comp=False):
         df.loc[(df.depth == 1) & (df.indicator == 0), 'active'] = 1
     else:
         if df[df.node==''].indicator.values[0] == 0:
+            #import code; code.interact(local=dict(globals(), **locals()))
             df.loc[df.node=='', 'active'] = 1
             return df
 
+    nd = df.set_index('node')
     for d in range(max_depth + 1):
         candidate_nodes = df.loc[(df.depth == d) & (df.indicator == 0)]
-        for idx, row in candidate_nodes.iterrows():
+        itr = candidate_nodes.iterrows()
+        if logging.getLogger().level == logging.DEBUG:
+            itr = tqdm(itr, total=len(candidate_nodes))
+        for idx, row in itr:
             node_suffixes = [row.node[-(d - m):] for m in range(1, d)]
             if comp==False:
                 node_suffixes += ['']
             #if row.depth == 1:
                #node_suffixes += ['']
             #import code; code.interact(local=dict(globals(), **locals()))
-            suffixes = df[df['node'].isin(node_suffixes)]
+            suffixes = nd.loc[node_suffixes]
             if suffixes['indicator'].product() == 1 and row.indicator == 0:
-                df.loc[(df.node == row.node), 'active'] = 1
-
+                df.loc[idx, 'active'] = 1
     #import code; code.interact(local=dict(globals(), **locals()))
     return df
 
@@ -125,10 +132,18 @@ def penalty_term(sample_len, c, degr_freedom):
     return np.log(sample_len) * c * degr_freedom
 
 
-def clean_columns(t):
+def clean_columns(t, keep_data):
+    logging.debug('Cleaning...')
     """
-    Removes unused columns
+    Removes non-relevant info
     """
+    if not keep_data:
+        t.df = t.tree()
+    node_idxs = t.df.node_idx.unique()
+    tr = t.transition_probs.set_index('idx').loc[node_idxs]
+    tr = tr[tr.prob > 0]
+    t.transition_probs = tr
+
     # fs = ['node', 'node_idx', 'parent_idx', 'freq', 'likelihood', 'depth', 'active', 'likelihood_pen']
     # t.df = t.df[fs]
     return t

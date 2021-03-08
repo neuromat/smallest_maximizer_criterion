@@ -3,26 +3,26 @@ from g4l.models import ContextTree
 from .base import CollectionBase
 import logging
 
+# Less contributive branches
+
 
 class Prune(CollectionBase):
 
-    def __init__(self, max_depth, max_trees=None):
+    def __init__(self, max_depth, max_trees=None, cache_dir=None):
         self.max_depth = max_depth
         self.max_trees = max_trees
+        cache_dir = cache_dir or self._tempdir()
+        super().__init__(cache_dir)
         assert(max_depth > 0)
 
     def fit(self, X):
+        self.X = X
         t = ContextTree.init_from_sample(X, self.max_depth)
         self.trees_constructed = 0
         self.initialize_pruning(t)
         self.perform_pruning(t)
         #self.context_trees = list(reversed(self.context_trees))
         return self
-
-    def optimal_tree(self):
-        # TODO: implement as abstract method,
-        # use selection criteria instead returning first tree
-        return self.context_trees[0]
 
     def initialize_pruning(self, t):
         df = t.df.copy()

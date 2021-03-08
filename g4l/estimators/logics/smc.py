@@ -27,18 +27,19 @@ def fit(estimator, X):
 
     """
 
-    estimator.tresholds = []
+    estimator.thresholds = []
     scan_offset = estimator.scan_offset
     perl_compatible = estimator.perl_compatible
     df_method = estimator.df_method
     max_depth = estimator.max_depth
     estimator.intervals = None
-    if cache.load_cache(estimator, X):
-        return estimator
+    #if cache.load_cache(estimator, X):
+    #    return estimator
     estimator.initial_tree = ContextTree.init_from_sample(X, max_depth)
     min_c, max_c = estimator.penalty_interval
     estimator.trees_constructed = 0
     tree_a = calc_bic(estimator, min_c, df_method, scan_offset, perl_compatible)
+
     tree_b = tree_f = calc_bic(estimator, max_c, df_method, scan_offset, perl_compatible)
     add_tree(estimator, tree_a, min_c)
 
@@ -58,9 +59,9 @@ def fit(estimator, X):
         add_tree(estimator, tree_a, b)
         b = max_c
         tree_b = tree_f
-    if estimator.cache_dir is not None:
-        cache.save_cache(estimator, X)
-    logging.info('Finished SMC')
+    #if estimator.cache_dir is not None:
+    #    cache.save_cache(estimator, X)
+    logging.info('Finished CTM scanning')
     return estimator
 
 
@@ -82,6 +83,7 @@ def calc_bic(estimator, c, df_method, scan_offset, perl_compatible):
     bic_estimator = BIC(c, estimator.max_depth,
                         df_method=df_method,
                         scan_offset=scan_offset,
+                        keep_data=True,
                         perl_compatible=perl_compatible)
     bic_estimator.fit(sample)
     return bic_estimator.context_tree
@@ -99,8 +101,9 @@ def add_tree(estimator, t, c):
         The penalty value used to estimate the tree
 
     """
+    logging.info('%s\t%s' % (c, t.to_str()))
     estimator.add_tree(t)
-    estimator.tresholds.append(c)
+    estimator.thresholds.append(c)
     try:
         estimator.callback_fn((c, t))
     except TypeError:

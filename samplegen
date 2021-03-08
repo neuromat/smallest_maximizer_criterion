@@ -5,11 +5,8 @@ Generates samples for a tree
 
 Example:
 
-python ct_generator.py \
-    -t fixtures/example.tree \
-    -o ../test/results \
-    -n 5 \
-    --num_cores 4
+
+./samplegen -t bic.tree  -s 5000 sample.txt
 
 """
 
@@ -18,7 +15,6 @@ import argparse
 import os
 from pathlib import Path
 from g4l.models import ContextTree
-from g4l.data import Sample
 import logging
 
 
@@ -63,16 +59,11 @@ def set_log(log_file=None, lvl='info'):
 
 def create_samples(args):
     tree = ContextTree.load_from_file(args.tree.name)
-    for i in range(args.num_samples):
-        x = tree.generate_sample(args.size, tree.sample.A) + '\n'
-        if args.same_file == 1:
-            f = '%s/samples.txt' % (args.output_folder)
-            open(f, 'a').write(x)
-        else:
-            f = '%s/sample_%s.txt' % (args.output_folder, i)
-            open(f, 'w').write(x)
-    print("Samples generated in folder '%s'" % f)
-    print("Total samples: %s" % args.num_samples)
+    x = tree.generate_sample(args.size, tree.sample.A) + '\n'
+    fl = os.path.abspath(args.output_file.name)
+    open(fl, 'w').write(x)
+    logging.info("Sample '%s' generated" % fl)
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -85,22 +76,10 @@ if __name__ == '__main__':
                         type=int,
                         required=True,
                         help='Sample size')
-    parser.add_argument('-o', '--output_folder',
-                        type=dir_path_force,
-                        default='./output',
-                        help='Path for results.')
-    parser.add_argument('-n', '--num_samples',
-                        type=int,
-                        default=1,
-                        help='Number of processors for parallel processing')
     parser.add_argument('--num_cores',
                         type=int,
                         default=1,
                         help='Number of processors for parallel processing')
-    parser.add_argument('--same_file',
-                        type=int,
-                        default=0,
-                        help='When set to "1", it outputs all samples in a same file, separated by line breaks')
     parser.add_argument('-l', '--log_file',
                         type=argparse.FileType('w'),
                         default=None,
@@ -110,6 +89,7 @@ if __name__ == '__main__':
                         choices=list(log_levels().keys()),
                         default='info',
                         help='Log level')
+    parser.add_argument('output_file', type=argparse.FileType('w'), default='./sample.out.txt', help='Output sample file.')
 
     args = parser.parse_args()
     set_log(args.log_file, args.log_level)
