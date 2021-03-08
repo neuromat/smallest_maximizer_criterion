@@ -85,16 +85,22 @@ class CollectionBase(Base):
                                num_cores=0):
         champion_trees_folder = self._save_champion_trees()
         temp_folder = os.path.join(self.cache_dir, 'likelihoods')
-        L = [None, None]
-        for j, resample_size in enumerate(resample_sizes):
-            print("Calculating likelihood j=", j+1)
-            self.create_temp_folder(temp_folder)
-            L[j] = prl.calculate_likelihoods(temp_folder,
-                                             champion_trees_folder,
-                                             resamples_file,
-                                             int(resample_size),
-                                             num_cores=num_cores)
-        return np.array(L)
+        filename = os.path.join(temp_folder, 'L.npy')
+
+        try:
+            L = np.load(filename)
+            return L
+        except:
+            L = [None, None]
+            for j, resample_size in enumerate(resample_sizes):
+                print("Calculating likelihood j=", j+1)
+                self.create_temp_folder(temp_folder)
+                L[j] = prl.calculate_likelihoods(champion_trees_folder,
+                                                 resamples_file,
+                                                 int(resample_size),
+                                                 num_cores=num_cores)
+            np.save(filename, L)
+            return np.array(L)
 
     def _calculate_diffs(self, L, n_sizes):
         num_resample_sizes, num_trees, num_resamples = L.shape

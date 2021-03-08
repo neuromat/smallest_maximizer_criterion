@@ -2,33 +2,27 @@ import os
 import shutil
 import tqdm
 import numpy as np
-import pandas as pd
 from multiprocessing import Pool
 from g4l.models import ContextTree
 from g4l.data import Sample
 from itertools import product
-import logging
+
 
 def calc_likelihood_process(args):
 
-    (trees_folder,
-     resamples_file,
-     resample_size,
-     tree_idx,
-     resample_idx,
-     subsamples_separator) = args
+    (trees_folder, resamples_file, resample_size,
+     tree_idx, resample_idx, subsamples_separator) = args
+
     tree = get_tree(trees_folder, tree_idx)
     data = resamples(resamples_file)[resample_idx][:int(resample_size)]
     cache_file = os.path.join(buffer_folder(resamples_file),
                               str(resample_size),
                               '%s.cache' % resample_idx)
-    #import code; code.interact(local=dict(globals(), **locals()))
     resample = Sample(None, tree.sample.A,
                       tree.max_depth,
                       data=data,
                       subsamples_separator=tree.sample.subsamples_separator,
                       cache_file=cache_file)
-    #import code; code.interact(local=dict(globals(), **locals()))
     return tree.buffered_sample_likelihood(resample)
 
 
@@ -36,7 +30,7 @@ def buffer_folder(resamples_file):
     return os.path.join(os.path.dirname(resamples_file), 'resamples')
 
 
-def calculate_likelihoods(temp_folder, champion_trees_folder,
+def calculate_likelihoods(champion_trees_folder,
                           resamples_file, resample_size,
                           subsamples_separator=None, num_cores=None):
     champion_trees = [ContextTree.load_from_file(f) for f in list_files(champion_trees_folder)]
@@ -52,9 +46,7 @@ def calculate_likelihoods(temp_folder, champion_trees_folder,
         with Pool(num_cores) as p:
             result = list(tqdm.tqdm(p.imap(calc_likelihood_process, params), total=len(params)))
     rr = [r[0] for r in result]
-    xx = np.reshape(rr, (num_trees, num_resamples))
-    #xx = np.reshape(result, (num_trees, num_resamples))
-    return xx
+    return np.reshape(rr, (num_trees, num_resamples))
 
 
 def get_tree(trees_folder, idx):

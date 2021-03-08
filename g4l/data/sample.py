@@ -68,7 +68,7 @@ class Sample():
         for smpl in self.subsamples():
             dt = smpl.data
             ln = len(dt) - max_depth
-            for i in tqdm(range(ln), total=ln):
+            for i in range(ln):
                 arr = dt[i: i + max_depth + 1]
                 for j in range(len(arr)-1):
                     d[arr[j:-1]][self.A.index(arr[-1])] += 1

@@ -9,8 +9,7 @@ Example:
 
 ./smc -d 4 \
     -s examples/linguistic_case_study/folha.txt \
-    -t ../test/tmp \
-    -r ../test/results \
+    -f ../test/results \
     -j 0 \
     -p 4 \
     --num_cores 4 \
@@ -28,17 +27,17 @@ from g4l.data import Sample
 import logging
 
 
-def dir_path_force(temp_folder):
-    return dir_path(temp_folder, force=True)
+def dir_path_force(folder):
+    return dir_path(folder, force=True)
 
 
-def dir_path(temp_folder, force=False):
+def dir_path(folder, force=False):
     if force:
-        Path(temp_folder).mkdir(parents=True, exist_ok=True)
-    if os.path.isdir(temp_folder):
-        return temp_folder
+        Path(folder).mkdir(parents=True, exist_ok=True)
+    if os.path.isdir(folder):
+        return folder
     else:
-        raise NotADirectoryError(temp_folder)
+        raise NotADirectoryError(folder)
 
 
 def log_levels():
@@ -77,12 +76,12 @@ def write_champion_trees(meth):
         logging.info("c:%s\t%s" % (used_c, tree.to_str()))
 
 
-def run_smc(X):
+def run_smc_bic(X):
     logging.info("Estimating champion trees:")
     smc = SMC(args.max_depth,
               penalty_interval=tuple(args.penalty_interval),
               epsilon=args.epsilon,
-              cache_dir=args.temp_folder,
+              cache_dir=args.folder,
               scan_offset=args.scan_offset,
               df_method=args.df,
               perl_compatible=args.perl_compatible)
@@ -94,21 +93,22 @@ def run_smc(X):
     num_cores = 1
     if args.num_cores > 1:
         num_cores = args.num_cores
-    #import code; code.interact(local=dict(globals(), **locals()))
     n_sizes = tuple([int(len(X.data) * x) for x in args.n_sizes])
     tree_found, opt_idx = smc.optimal_tree(args.resamples,
                                            n_sizes,
                                            args.alpha,
                                            args.renewal_point,
                                            num_cores=num_cores)
+    #import code; code.interact(local=dict(globals(), **locals()))
+    tree_found.save(os.path.join(args.folder, 'optimal.tree'))
     logging.info("Tree found:")
     logging.info(tree_found.to_str(reverse=True))
 
 
-def run_lcb(X):
+def run_smc_lcb(X):
     logging.info("Estimating champion trees:")
     prune = Prune(args.max_depth,
-                  cache_dir=args.temp_folder)
+                  cache_dir=args.folder)
     prune.fit(X)
     write_champion_trees(prune)
 
@@ -153,8 +153,8 @@ if __name__ == '__main__':
                               default='0.01',
                               help='Alpha value for t-test')
 
-    parser_smc = subparsers.add_parser('smc', help='Smallest Maximizer Criterion parameters')
-    parser_smc.add_argument('-S', '--n_sizes',
+    parser_bic = subparsers.add_parser('bic', help='Smallest Maximizer Criterion parameters')
+    parser_bic.add_argument('-S', '--n_sizes',
                             nargs=2,
                             type=float,
                             metavar=('j1', 'j2'),
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                             help='Bootstrap sample sizes factor for j = 1, 2'
                             )
 
-    parser_smc.add_argument('-c', '--penalty_interval',
+    parser_bic.add_argument('-c', '--penalty_interval',
                             nargs=2,
                             type=float,
                             metavar=('pen_min', 'pen_max'),
@@ -177,7 +177,7 @@ if __name__ == '__main__':
                         type=float,
                         default='0.01',
                         help='Alpha value for t-test')
-    parser_smc.add_argument('-e', '--epsilon',
+    parser_bic.add_argument('-e', '--epsilon',
                             type=float,
                             default='0.01',
                             help='SMC stop condition value')
@@ -193,14 +193,10 @@ if __name__ == '__main__':
                         type=argparse.FileType('r'),
                         required=True,
                         help='Sample path')
-    parser.add_argument('-t', '--temp_folder',
+    parser.add_argument('-f', '--folder',
                         type=dir_path_force,
-                        default='./tmp',
-                        help='Path for temporary files')
-    parser.add_argument('-r', '--results_folder',
-                        type=dir_path_force,
-                        required=True,
-                        help='Path for results')
+                        default='.',
+                        help='Folder path for result files')
     parser.add_argument('-o', '--scan_offset',
                         type=int,
                         default='0',
@@ -229,10 +225,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     set_log(args.log_file, args.log_level)
-    sample_cache_file = os.path.join(args.temp_folder, 'sample.pkl')
+    sample_cache_file = os.path.join(args.folder, 'sample.pkl')
     {
-        'smc': run_smc,
-        'lcb': run_lcb
+        'bic': run_smc_bic,
+        'lcb': run_smc_lcb
     }[args.method](Sample(args.sample_path.name,
                           None, args.max_depth,
                           cache_file=sample_cache_file))
