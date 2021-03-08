@@ -2,6 +2,19 @@ Change Log
 ==========
 
 
-0.1.0 (5 mar 2021)
+0.1.0 (8 mar 2021)
 ------------------
 - First release
+
+
+0.1.1 (8 mar 2021)
+------------------
+- Installer fix
+
+0.1.2 (8 mar 2021)
+------------------
+- Requirements fix
+
+0.1.3 (8 mar 2021)
+------------------
+- Command-line Scripts - smc, ctm and samplegen

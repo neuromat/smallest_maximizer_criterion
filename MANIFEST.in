@@ -1,3 +1,5 @@
+global-include *.txt *.py *.mat *.sh
+global-include bin/smc bin/samplegen bin/ctm
 recursive-include examples *
 recursive-include fixtures *
 

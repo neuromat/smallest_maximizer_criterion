@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='smc',
-    version='0.1.1',
+    version='0.1.3',
     description='Smallest Maximizer Criterion',
     author='Arthur Tofani',
     author_email='arthur.tofani@usp.com',
@@ -20,7 +20,8 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     install_requires=required,
-    python_requires='>=3.6',
+    scripts=['bin/ctm', 'bin/smc', 'bin/samplegen'],
+    python_requires='>=3.7',
     #extras_require={
     #    'docs': ['numpydoc', 'sphinx!=1.3.1', 'sphinx_rtd_theme',
     #             'matplotlib >= 3.2.1',
