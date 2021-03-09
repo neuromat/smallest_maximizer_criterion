@@ -10,16 +10,49 @@ This study was motivated by the linguistic challenge of retrieving rhythmic feat
 
 
 ## Installation
-	`pip install -r requirements.txt`
+	`pip install g4l-smc`
 
 
 
-## Examples
+## Command-line executables
 
-#### Estimation by pruning
 
-run `python3 examples/estimation_by_pruning.py`
+### CTM
 
+The following command can be used in order to estimate a context tree using CTM algorithm with the BIC criteria:
+
+`ctm -s fixtures/sample20000.txt -c 0.5 -d 6  ./my_model.tree`
+
+Use `ctm --help` for more information.
+
+### SMC
+
+The following command can be used in order to estimate the optimal context tree using SMC algorithm:
+
+```
+smc -d 4 \
+    -s examples/linguistic_case_study/folha.txt \
+    -f .test/results \
+    -p 4 \
+    --num_cores 4 \
+    bic
+
+```
+
+Use `smc --help` for more information.
+
+
+
+### Sample Generation
+
+To generate a sample given a context tree, use the following command:
+
+```
+samplegen -t my_model.tree --size 5000 new_sample.txt
+
+```
+
+Use `smc --help` for more information.
 
 ## Citing
 
