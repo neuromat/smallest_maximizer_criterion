@@ -6,7 +6,7 @@ This study was motivated by the linguistic challenge of retrieving rhythmic feat
 
 
 ## Requirements
-	python 3.8
+	python 3.7
 
 
 ## Installation
