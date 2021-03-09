@@ -9,7 +9,7 @@ with open('requirements.txt') as f:
 
 setup(
     name='g4l-smc',
-    version='0.0.1',
+    version='0.0.2',
     description='Context tree estimation using the Smallest Maximizer Criterion (SMC)',
     author='Arthur Tofani',
     author_email='arthur.tofani@usp.br',
