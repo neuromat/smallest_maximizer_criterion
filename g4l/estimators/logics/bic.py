@@ -1,6 +1,7 @@
 import numpy as np
 from g4l.models import ContextTree
 from g4l.models.builders import incremental
+
 import logging
 from tqdm import tqdm
 

@@ -40,11 +40,11 @@ X = MatSamples(fld, 'model1',
                scan_offset=6).sample_by_idx(1)
 #
 c = 0
-#b = BIC(c, 6, scan_offset=0, df_method='perl', perl_compatible=True).fit(X).context_tree
+b = BIC(c, 6, scan_offset=0, df_method='perl', keep_data=True, perl_compatible=False).fit(X).context_tree
 #b = BIC(c, 6, scan_offset=6, df_method='perl', keep_data=True, perl_compatible=False).fit(X).context_tree
 #print(b.to_str())
 #df = b.df
-#import code; code.interact(local=dict(globals(), **locals()))
+import code; code.interact(local=dict(globals(), **locals()))
 
 
 smc = SMC(max_depth,
