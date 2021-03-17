@@ -4,16 +4,11 @@ Linguistic case study
 
 Usage: python ./linguistic_case_study.py
 '''
-import sys, os
+import sys
+import os
 sys.path.insert(0, os.path.abspath('..'))
-from g4l.estimators.bic import BIC
-from g4l.estimators.smc import SMC
-from g4l.estimators.prune import Prune
 from g4l.data import Sample
-from g4l.bootstrap.resampling import BlockResampling
-from g4l.bootstrap import Bootstrap
 import logging
-import numpy as np
 import linguistic_case_study as lng
 
 logging.basicConfig(
@@ -21,7 +16,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(message)s"
 )
 
-cache_folder = "linguistic_case_study/cache/smc_ml_compat_VER"
+cache_folder = "linguistic_case_study/cache/smc2"
 
 samples_folder = "linguistic_case_study"
 max_depth = 4
@@ -30,7 +25,7 @@ num_cores = 6
 penalty_interval = (0.1, 400)
 epsilon = 0.01
 renewal_point = '4'
-perl_compatible = False
+perl_compatible = True
 
 #(X, sample_file, cache_folder, instance_name='bp', num_cores=1):
 

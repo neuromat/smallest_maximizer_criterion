@@ -1,5 +1,5 @@
 from .base import Base
-from g4l.estimators.logics import bic as bic
+from .logics import bic
 
 
 class BIC(Base):

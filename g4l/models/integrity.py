@@ -80,3 +80,27 @@ def satisfies_completeness(t, X):
             logging.debug(tx + "%")
         possible_suffixes = [X.data[j-i-1:j] for i in range(min(j, t.max_depth))]
         return t.tree().node.isin(possible_suffixes).astype(int).sum()==1
+
+
+# from g4l.models import integrity
+# integrity.is_freq_consistent(df)
+# integrity.is_freq_consistent(df)
+
+def is_freq_consistent(context_tree):
+    df, tp = context_tree.df, context_tree.transition_probs
+    node0 = df[df.depth == 0]
+    assert len(node0) == 1, "There are more than one zero-depth nodes!"
+    parent_idx = node0.node_idx.values[0]
+    count_recursive(df, tp, parent_idx)
+
+
+def count_recursive(df, tp, parent_idx):
+    children = df[df.parent_idx == parent_idx]
+    parent_freq = df[df.node_idx == parent_idx].freq.values[0]
+    assert parent_freq == tp.loc[parent_idx].freq.sum(), "Transition prob freqs doesnt match"
+    assert tp.loc[parent_idx].prob.sum() > 0.999, 'Probabilities are inconsistent for node_idx %s' % parent_idx
+    if len(children) > 0:
+        children_freq_sum = children.freq.sum()
+        assert parent_freq == children_freq_sum, "Sum of children freqs doesnt match with node freq"
+        for idx, child in children.iterrows():
+            count_recursive(df, tp, idx)
