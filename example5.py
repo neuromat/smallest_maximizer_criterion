@@ -47,6 +47,7 @@ b = BIC(c, 6, scan_offset=0, df_method='perl', keep_data=True, perl_compatible=F
 import code; code.interact(local=dict(globals(), **locals()))
 
 
+
 smc = SMC(max_depth,
           penalty_interval=(0, 100),
           epsilon=0.01,

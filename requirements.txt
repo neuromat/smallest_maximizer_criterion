@@ -11,3 +11,5 @@ regex==2020.11.13
 scipy==1.6.0
 tables==3.6.1
 tqdm==4.56.0
+networkx==2.5
+pydot==1.4.1
