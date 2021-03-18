@@ -41,7 +41,7 @@ class Sample():
         if A is not None:
             self.A = [str(a) for a in A]
         else:
-            self.A = sorted(list(np.unique([c for c in self.data if c != self.subsamples_separator ])))
+            self.A = sorted(list(np.unique([c for c in self.data if c not in [self.subsamples_separator, ' '] ])))
 
     def _set_filename(self, filename):
         try:

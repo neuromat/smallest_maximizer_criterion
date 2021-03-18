@@ -1,15 +1,6 @@
 
 import matplotlib.pyplot as plt
 
-def bloxplot(smc_instance):
-    plt.figure(figsize=(24, 18))
-    df = smc_instance.df
-    for i, t in enumerate(smc_instance.champion_trees):
-        qlml1 = df[(df.tree_idx==i) & (df.sample_size=='sm')].lml_delta_div_n
-        qlml2 = df[(df.tree_idx==i) & (df.sample_size=='lg')].lml_delta_div_n
-        plt.subplot(4, np.ceil(len(champion_trees)/4), i+1)
-        plt.title('$t_{%s}$ - %s'% (i, len(t.to_str().split(' '))))
-        plt.boxplot([qlml1, qlml2])
 
 def log_likelihood_per_leaves(smc_instances, labels):
     plt.figure(figsize=(14, 6))
@@ -28,6 +19,7 @@ def plot2(tree, column_label='symbol', font_size=10,
           label_offset_y=10,
           horizontal_alignment='right',
           node_size=8,
+          ax=None,
           linewidths=1.0,
           node_color='black'):
     import networkx as nx
@@ -56,6 +48,7 @@ def plot2(tree, column_label='symbol', font_size=10,
                      node_color=node_color,
                      alpha=1,
                      with_labels=False,
+                     ax=ax,
                      linewidths=linewidths,
                      arrows=False)
     for i, node in df.iterrows():

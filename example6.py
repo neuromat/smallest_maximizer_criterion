@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-
+from g4l.reports.smc import SmcReport
+import numpy as np
 from g4l.estimators.smc import SMC
 from g4l.estimators.bic import BIC
 import os
@@ -28,7 +29,7 @@ penalty_interval = (0.1, 400)
 alpha = 0.01
 renewal_point = '4'
 perl_compatible = True
-tmp_folder = '/home/arthur/tmp/smc1_ep'
+tmp_folder = '/home/arthur/tmp/smc3_ep'
 
 X = Sample('examples/linguistic_case_study/publico.txt.bkp',
            [0, 1, 2, 3, 4],
@@ -50,19 +51,24 @@ smc = SMC(max_depth,
           perl_compatible=perl_compatible)
 smc.fit(X)
 
+n_sizes = (int(X.len() * 0.3), int(X.len() * 0.9))
 t_hat, opt_idx = smc.optimal_tree(num_resamples,
-                                  (int(X.len() * 0.3), int(X.len() * 0.9)),
+                                  n_sizes,
                                   alpha,
                                   renewal_point,
                                   num_cores=num_cores)
 
-
+t_hat.save(os.path.join(tmp_folder, 'optimal.tree')
 for i, tree in enumerate(smc.context_trees):
     c = smc.thresholds[i]
     print("%s\t%s\t%s" % (tree.num_contexts(), c, tree.to_str()))
 
 print("Optimal: " , t_hat.to_str(reverse=True) , " => ", t_hat.num_contexts())
-# import code; code.interact(local=dict(globals(), **locals()))
+
+
+np.save(os.path.join(tmp_folder, 'bic_c'), smc.thresholds)
+SmcReport(tmp_folder).create_summary(smc, X, n_sizes, None)
+print(tmp_folder)
 #
 
 #EP perl: '000 001 010 02 100 12 20 200 201 21 210 3 30 300 32 4 42 '

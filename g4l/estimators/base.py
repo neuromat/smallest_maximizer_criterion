@@ -41,6 +41,7 @@ class CollectionBase(Base):
     def __init__(self, cache_dir):
         self.cache_dir = cache_dir
         self.context_trees = []
+        self.thresholds = []
 
     def optimal_tree(self, num_resamples,
                      n_sizes,
