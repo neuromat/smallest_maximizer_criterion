@@ -28,8 +28,10 @@ num_resamples = 200
 penalty_interval = (0.1, 400)
 alpha = 0.01
 renewal_point = '4'
-perl_compatible = True
+perl_compatible = False
 tmp_folder = '/home/arthur/tmp/smc3_ep'
+report = SmcReport(tmp_folder)
+report.generate_report()
 
 X = Sample('examples/linguistic_case_study/publico.txt.bkp',
            [0, 1, 2, 3, 4],
@@ -58,16 +60,21 @@ t_hat, opt_idx = smc.optimal_tree(num_resamples,
                                   renewal_point,
                                   num_cores=num_cores)
 
-t_hat.save(os.path.join(tmp_folder, 'optimal.tree')
+t_hat.save(os.path.join(tmp_folder, 'optimal.tree'))
 for i, tree in enumerate(smc.context_trees):
     c = smc.thresholds[i]
     print("%s\t%s\t%s" % (tree.num_contexts(), c, tree.to_str()))
 
-print("Optimal: " , t_hat.to_str(reverse=True) , " => ", t_hat.num_contexts())
+print("Optimal: ", t_hat.to_str(reverse=True), " => ", t_hat.num_contexts())
 
 
 np.save(os.path.join(tmp_folder, 'bic_c'), smc.thresholds)
-SmcReport(tmp_folder).create_summary(smc, X, n_sizes, None)
+
+#import code; code.interact(local=dict(globals(), **locals()))
+report = SmcReport(tmp_folder)
+report.create_summary(smc, X, n_sizes, None)
+report.generate_report()
+import code; code.interact(local=dict(globals(), **locals()))
 print(tmp_folder)
 #
 

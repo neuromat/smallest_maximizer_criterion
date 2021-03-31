@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <title>SMC Report</title>
+</head>
+<body>
+
+  <div class='container'>
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Input
+      </h5>
+      <div class='card-body'>
+        <div class='card-text'>
+          <div class='row'>
+            <div class='col-sm-6'>
+              <h5 class='card-title'>Parameters</h5>
+              <table class='table'>
+                <tr>
+                  <th>Penalty interval</th>
+                  <td>(0, 2000)</td>
+                </tr>
+                <tr>
+                  <th>Epsilon:</th>
+                  <td>0.001</td>
+                </tr>
+                <tr>
+                  <th>Bootstrap resample sizes</th>
+                  <td>(31312, 972345)</td>
+                </tr>
+                <tr>
+                  <th>Max depth</th>
+                  <td>4</td>
+                </tr>
+
+                <tr>
+                  <th>compatibility mode:</th>
+                  <td>1</td>
+                </tr>
+              </table>
+            </div>
+            <div class='col-sm-6'>
+              <h5 class='card-title'>Sample</h5>
+              <table class='table'>
+                <tr>
+                  <th>Alphabet size</th>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <th>Length:</th>
+                  <td>65903</td>
+                </tr>
+                <tr>
+                  <th>Filename:</th>
+                  <td>
+                    <a href='file:///home/arthur/Documents/Neuromat/projects/SMC/results/python/ep/sample.txt', target='blank'>View</a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Champion trees
+      </h5>
+      <div class='card-body'>
+        <!--h4 class='card-title'>Champion trees</h4-->
+        <div class='card-text'>
+          <div class="row">
+            <div class="col-3">
+              <h6>Number of Contexts</h6>
+              <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+                <a class="nav-link active" id="v-pills-home-tab" data-toggle="pill" href="#v-pills-home" role="tab" aria-controls="v-pills-home" aria-selected="true">5</a>
+                <a class="nav-link" id="v-pills-profile-tab" data-toggle="pill" href="#v-pills-profile" role="tab" aria-controls="v-pills-profile" aria-selected="false">
+                  8
+                  <span class="badge badge-success">Optimal</span>
+                </a>
+                <a class="nav-link" id="v-pills-messages-tab" data-toggle="pill" href="#v-pills-messages" role="tab" aria-controls="v-pills-messages" aria-selected="false">n -> n2</a>
+                <a class="nav-link" id="v-pills-settings-tab" data-toggle="pill" href="#v-pills-settings" role="tab" aria-controls="v-pills-settings" aria-selected="false">n -> n2</a>
+              </div>
+            </div>
+            <div class="col-9">
+              <div class="tab-content" id="v-pills-tabContent">
+
+
+
+                <div class="tab-pane fade show active" id="v-pills-home" role="tabpanel" aria-labelledby="v-pills-home-tab">
+
+
+
+                  <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                      <a class="nav-item nav-link active" id="nav-home-tab" data-toggle="tab" href="#nav-home" role="tab" aria-controls="nav-home" aria-selected="true">Tree</a>
+                      <a class="nav-item nav-link" id="nav-contact-tab" data-toggle="tab" href="#nav-contact" role="tab" aria-controls="nav-contact" aria-selected="false">Nodes</a>
+
+                      <a class="nav-item nav-link" id="nav-profile-tab" data-toggle="tab" href="#nav-profile" role="tab" aria-controls="nav-profile" aria-selected="false">Transition probabilities</a>
+                    </div>
+                  </nav>
+                  <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-home" role="tabpanel" aria-labelledby="nav-home-tab">
+
+
+                      <div class='row'>
+                        <div class='col-sm-4'>
+                          <table class='table'>
+                            <tr>
+                              <th>Num. Contexts:</th>
+                              <td>13</td>
+                            </tr>
+                            <tr>
+                              <th>BIC penalty:</th>
+                              <td>0.423</td>
+                            </tr>
+
+                          </table>
+                        </div>
+                        <div class='col-sm-8'>
+
+                        </div>
+                      </div>
+
+                      ​<picture>
+                        <img src='images/trees/000042.png' class="img-fluid"/>
+                      </picture>
+
+                      <div class='tree-str'>
+                        <strong>Tree: </strong><br />
+                        <code>000 002 003 004 20 30 40 2 34 4</code>
+                      </div>
+
+
+                    </div>
+                    <div class="tab-pane fade" id="nav-profile" role="tabpanel" aria-labelledby="nav-profile-tab">
+
+
+                      <table class='table'>
+                        <tr>
+                          <th>w</th>
+                          <th>p(<code>0</code>|w)</th>
+                          <th>p(<code>1</code>|w)</th>
+                          <th>p(<code>2</code>|w)</th>
+                        </tr>
+                        <tr>
+                          <th><code>0000</code></th>
+                          <td>0.23</td>
+                          <td>0.46</td>
+                          <td>0.31</td>
+                        </tr>
+                        <tr>
+                          <th><code>2000</code></th>
+                          <td>0.19</td>
+                          <td>0.41</td>
+                          <td>0.40</td>
+                        </tr>
+                      </table>
+                    </div>
+                    <div class="tab-pane fade" id="nav-contact" role="tabpanel" aria-labelledby="nav-contact-tab">
+
+                      <table class='table'>
+                        <tr>
+                          <th>Node</th>
+                          <th>Freq</th>
+                          <th>Likelihood</th>
+                        </tr>
+                        <tr>
+                          <td><code>0010</code></td>
+                          <td>3453</td>
+                          <td>-353.45</td>
+                        </tr>
+                        <tr>
+                          <td><code>0010</code></td>
+                          <td>3453</td>
+                          <td>-353.45</td>
+                        </tr>
+                      </table>
+
+                    </div>
+                  </div>
+
+
+
+
+
+
+                </div>
+
+
+
+
+
+
+                <div class="tab-pane fade" id="v-pills-profile" role="tabpanel" aria-labelledby="v-pills-profile-tab">..d.</div>
+                <div class="tab-pane fade" id="v-pills-messages" role="tabpanel" aria-labelledby="v-pills-messages-tab">.f..</div>
+                <div class="tab-pane fade" id="v-pills-settings" role="tabpanel" aria-labelledby="v-pills-settings-tab">...</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+
+
+
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Champion trees log-likelihoods
+      </h5>
+      <div class='card-body'>
+        <div class='card-text text-center'>
+
+          <img src='images/L.png' class="img-fluid"/>
+
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

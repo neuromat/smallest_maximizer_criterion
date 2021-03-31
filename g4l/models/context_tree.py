@@ -230,6 +230,23 @@ class ContextTree():
 
         return self.tree().likelihood.sum()
 
+    def node_transitions(self, contexts_only=False):
+        """ Returns a table where each row is a node and each column is the transition
+            probability for a symbol of the alphabet """
+
+        import pandas as pd
+        tbl = self.df
+        if contexts_only:
+            tbl = self.tree()
+        nodes = tbl.set_index('node_idx').node
+        dfx = self.transition_probs.merge(nodes,
+                                          right_index=True,
+                                          left_index=True)
+        dfx = dfx.pivot(index='node',
+                        columns='next_symbol',
+                        values='prob').fillna(0).sort_values('node')
+        return pd.DataFrame(dfx.to_records()).set_index('node')
+
     def tree(self):
         """ Returns the tree with all active contexts ascending by nodes"""
 

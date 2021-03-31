@@ -80,6 +80,7 @@ def write_champion_trees(meth):
 
 def run_smc_bic(X):
     logging.info("Estimating champion trees:")
+
     smc = SMC(args.max_depth,
               penalty_interval=tuple(args.penalty_interval),
               epsilon=args.epsilon,
@@ -88,6 +89,7 @@ def run_smc_bic(X):
               df_method=args.df,
               perl_compatible=bool(args.perl_compatible))
     smc.fit(X)
+
     write_champion_trees(smc)
 
     logging.info("------------------------")

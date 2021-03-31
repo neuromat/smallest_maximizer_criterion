@@ -1,11 +1,13 @@
+import jinja2
 import glob
 import os
-import yaml
+import json
 import numpy as np
 from g4l.models import ContextTree
 from g4l.display import plot2
 import matplotlib.pyplot as plt
 import pandas as pd
+import logging
 
 
 class SmcReport:
@@ -14,42 +16,44 @@ class SmcReport:
         self.reports_folder = os.path.join(self.folder, 'reports')
         self.champion_trees = []
         self.thresholds = np.load(os.path.join(self.folder, 'bic_c.npy'))
-        #self.load_summary()
+        self.load_trees()
 
-    def generate(self):
+    def create_folders(self):
         os.makedirs(self.reports_folder, exist_ok=True)
-        self.champion_trees_report()
+        os.makedirs(os.path.join(self.reports_folder, 'images'), exist_ok=True)
+        os.makedirs(os.path.join(self.reports_folder, 'tables'), exist_ok=True)
 
-    def champion_trees_report(self):
-        self.load_trees()
-        ct = self.optimal_tree()
-        txt = '\n'.join([t.to_str(reverse=True) for t in self.champion_trees])
-        trees_file = os.path.join(self.reports_folder, 'trees.txt')
-        open(trees_file, 'w').write(txt + '\n')
-        #import code; code.interact(local=dict(globals(), **locals()))
-        open(trees_file, 'a').write('\n\nOptimal:\n %s\n' % ct.to_str(reverse=True) )
-
-    def trees_dataframe(self, n=10):
-        self.load_trees()
-        df = pd.DataFrame(columns=['c', 'ctxs', 'tree'])
-        for i, t in enumerate(list(reversed(self.champion_trees))):
-            df.loc[len(df)] = [self.thresholds[i], t.num_contexts(), t.to_str(reverse=True)]
-        return df.head(n)
-
-    def draw_likelihoods_boxplot(self, n_sizes, n=10):
-        trees = list(reversed(self.champion_trees))[:n]
-        plt.figure(figsize=(24, 18))
-
-        for i, t in enumerate(trees):
-            #qlml1 = df[(df.tree_idx==i) & (df.sample_size=='sm')].lml_delta_div_n
-            #qlml2 = df[(df.tree_idx==i) & (df.sample_size=='lg')].lml_delta_div_n
-            #plt.subplot(4, np.ceil(len(champion_trees)/4), i+1)
-            #plt.title('$t_{%s}$ - %s'% (i, len(t.to_str().split(' '))))
-            #plt.boxplot([qlml1, qlml2])
+    def create_summary(self, smc_instance, sample, n_sizes, args):
+        self.create_folders()
+        d = dict()
+        d['max_depth'] = smc_instance.max_depth
+        d['penalty_interval'] = smc_instance.penalty_interval
+        d['epsilon'] = smc_instance.epsilon
+        d['df_method'] = smc_instance.df_method
+        d['callback_fn'] = smc_instance.callback_fn
+        d['scan_offset'] = smc_instance.scan_offset
+        d['perl_compatible'] = smc_instance.perl_compatible
+        d['bootstrap_sizes'] = n_sizes
+        try:
+            d['args'] = vars(args).copy()
+            d['args']['sample_path'] = d['args']['sample_path'].name
+        except:
             pass
+        d['trees'] = []
+        opt = self.optimal_tree()
+        for i, t in enumerate(smc_instance.context_trees):
+            el = {'num_contexts': t.num_contexts(),
+                  'tree': t.to_str(reverse=True),
+                  'optimal': t.to_str() == opt.to_str(),
+                  'c': smc_instance.thresholds[i],
+                  'log_likelihood': str(round(t.log_likelihood(), 5))}
+            d['trees'].append(el)
+        d['trees'] = list(reversed(d['trees']))
+        with open(os.path.join(self.folder, 'smc.json'), 'w') as file:
+            json.dump(d, file)
 
-    def draw_tree(self, tree, title=None, column='symbol'):
-        plt.figure(figsize=(15, 6))
+    def draw_tree(self, tree, title=None, column='symbol', filename=None):
+        fig = plt.figure(figsize=(15, 6))
         ax1 = plt.subplot(1, 1, 1)
         plt.title(title)
         plot2(tree, column_label=column, font_size=10,
@@ -60,46 +64,73 @@ class SmcReport:
               ax=ax1,
               linewidths=1.0,
               node_color='black')
-        plt.show()
+        if filename is not None:
+            plt.savefig(filename, bbox_inches='tight')
+            plt.close(fig)
+        else:
+            plt.show()
 
-    def draw_likelihoods(self):
-        plt.figure(figsize=(15, 4))
+    def draw_likelihoods(self, filename=None):
+        fig = plt.figure(figsize=(15, 4))
         likelihoods = [t.log_likelihood() for t in reversed(self.champion_trees)]
         num_contexts = [t.num_contexts() for t in reversed(self.champion_trees)]
         plt.plot(num_contexts, likelihoods, '.', label="Champion trees")
         plt.plot([self.optimal_tree().num_contexts()], [self.optimal_tree().log_likelihood()], 'o', color='red',  label="Optimal tree")
         plt.legend()
-        plt.show()
+        if filename is not None:
+            plt.savefig(filename, bbox_inches='tight')
+            plt.close(fig)
+        else:
+            plt.show()
 
-    def create_summary(self, smc_instance, sample, n_sizes, args):
-        d = dict()
-        d['max_depth'] = smc_instance.max_depth
-        d['penalty_interval'] = smc_instance.penalty_interval
-        d['epsilon'] = smc_instance.epsilon
-        d['df_method'] = smc_instance.df_method
-        d['callback_fn'] = smc_instance.callback_fn
-        d['scan_offset'] = smc_instance.scan_offset
-        d['thresholds'] = smc_instance.thresholds
-        d['perl_compatible'] = smc_instance.perl_compatible
-        d['bootstrap_sizes'] = n_sizes
-        try:
-            d['args'] = vars(args).copy()
-            d['args']['sample_path'] = d['args']['sample_path'].name
-        except:
-            pass
+    def generate_report(self):
+        self.load_summary()
+        self.create_report_images()
+        self.fill_template()
 
-        d['trees'] = []
-        for i, t in enumerate(smc_instance.context_trees):
-            el = {'num_contexts': t.num_contexts(),
-                  'tree': t.to_str(reverse=True),
-                  'log_likelihood': str(round(t.log_likelihood(), 5))}
-            d['trees'].append(el)
-        with open(os.path.join(self.folder, 'smc.yml'), 'w') as file:
-            yaml.dump(d, file)
+    def fill_template(self):
+        template_path = os.path.dirname(os.path.realpath(__file__))
+        templateLoader = jinja2.FileSystemLoader(searchpath=template_path)
+        templateEnv = jinja2.Environment(loader=templateLoader)
+        template = templateEnv.get_template("template.html")
+        nodes, transitions = self.create_tables()
+        tr_keys = transitions[0][0].keys()
+        outputText = template.render(data=self.summary,
+                                     nodes=nodes,
+                                     transition_keys=list(tr_keys),
+                                     transitions=transitions)
+        html_file = os.path.join(self.folder, 'report.html')
+        with open(html_file, 'w') as file:
+            file.write(outputText + '\n')
+        logging.info("Report generated at %s" % html_file)
+
+        import code; code.interact(local=dict(globals(), **locals()))
+        #print(outputText)
+        pass
+
+    def create_tables(self):
+        nodes = []
+        transitions = []
+        for i, t in enumerate(self.champion_trees):
+            dfx = t.df[['node', 'freq', 'active', 'likelihood_pen', 'v_node', 'v_node_sum', 'indicator']]
+            transitions.append(list(t.node_transitions().reset_index().T.to_dict().values()))
+            ns = list(dfx.T.to_dict().values())
+            nodes.append(sorted(ns, key=lambda k: k['node'][::-1]))
+        return nodes, transitions
+
+    def create_report_images(self):
+        for i, tree in enumerate(self.champion_trees):
+            img_file = os.path.join(self.reports_folder,
+                                    'images',
+                                    '%s.png' % tree.num_contexts())
+
+            self.draw_tree(tree, title=None,
+                           column='symbol',
+                           filename=img_file)
 
     def load_summary(self):
-        with open(os.path.join(self.folder, 'smc.yml'), 'r') as file:
-            self.summary = yaml.load(file)
+        with open(os.path.join(self.folder, 'smc.json'), 'r') as file:
+            self.summary = json.load(file)
 
     def optimal_tree(self):
         f = os.path.join(self.folder, 'optimal.tree')
@@ -111,19 +142,3 @@ class SmcReport:
         for f in sorted(glob.glob(champion_trees_folder + "/*.tree")):
             ct = ContextTree.load_from_file(f)
             self.champion_trees.append(ct)
-
-    def likelihoods_bloxplot(self):
-        from g4l.estimators.base import jit_calculate_diffs
-        folder = self.folder
-        L = np.load(os.path.join(folder, 'likelihoods', 'L.npy'))
-        num_resample_sizes, num_trees, num_resamples = L.shape
-        d1, d2 = jit_calculate_diffs(self.summary['bootstrap_sizes'],
-                                     L,
-                                     num_resample_sizes,
-                                     num_trees,
-                                     num_resamples)
-        plt.figure(figsize=(24, 18))
-        for i, t in enumerate(self.champion_trees):
-            plt.subplot(4, np.ceil(len(self.champion_trees)/4), i+1)
-            plt.boxplot([d1[i], d2[i]])
-

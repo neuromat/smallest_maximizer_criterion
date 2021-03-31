@@ -88,7 +88,7 @@ def run_bic(X):
         import code; code.interact(local=dict(globals(), **locals()))
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
+    #parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(description='Estimates context tree')
     #subparsers = parser.add_subparsers(dest='action', help='Action')
     #subparsers.required = True

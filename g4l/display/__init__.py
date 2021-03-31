@@ -56,18 +56,9 @@ def plot2(tree, column_label='symbol', font_size=10,
         if node.node_idx != root_idx:
             plt.text(x+label_offset_x, y-label_offset_y,
                      s=node[column_label],
-                     #bbox=dict(facecolor='red', alpha=0.5),
                      fontsize=font_size,
                      horizontalalignment=horizontal_alignment)
-    #nx.draw_networkx_nodes(G, pos, nodelist=G.nodes, node_size=50, node_color="black", alpha=1, label=lbl)
-    #nx.draw_networkx_edges(G, pos, edgelist=G.edges, width=1, edge_color="k")
     plt.axis("off")
-    #nx.draw(G, pos=pos, with_labels=True, arrows=False)
-    #draw(G, pos=nx.planar_layout(G))
-    #nx.draw_networkx(G)
-
-    plt.show()
-
 
 
 def toytree(tree, layout='l', width=300, height=350):

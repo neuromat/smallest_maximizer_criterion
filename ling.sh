@@ -2,8 +2,7 @@ date
 
 python smc.py -d 4 \
     -s examples/linguistic_case_study/folha.txt.bkp \
-    -f /home/arthur/Documents/Neuromat/projects/SMC/results/python_pl_compat/bp \
-    --perl_compatible 1 \
+    -f /home/arthur/Documents/Neuromat/projects/SMC/results/python/bp \
     --num_cores 7 \
     --split \> \
     -p 4 \
@@ -12,8 +11,7 @@ python smc.py -d 4 \
 
 python smc.py -d 4 \
     -s examples/linguistic_case_study/publico.txt.bkp \
-    -f /home/arthur/Documents/Neuromat/projects/SMC/results/python_pl_compat/ep \
-    --perl_compatible 1 \
+    -f /home/arthur/Documents/Neuromat/projects/SMC/results/python/ep \
     -p 4 \
     --num_cores 7 \
     --split \> \
