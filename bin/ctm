@@ -65,7 +65,6 @@ def run_bic(X):
     if args.check_consistency == 1:
         keep = True
     bic = BIC(args.penalty, args.max_depth,
-              scan_offset=args.scan_offset,
               df_method=args.df,
               keep_data=keep,
               perl_compatible=args.perl_compatible)
@@ -119,10 +118,6 @@ if __name__ == '__main__':
                         type=int,
                         default=0,
                         help='Inspect tree')
-    parser.add_argument('--scan_offset',
-                        type=int,
-                        default='0',
-                        help='Start reading sample from this index on')
     parser.add_argument('--perl_compatible',
                         type=bool,
                         default=False,

@@ -1,6 +1,3 @@
-from . import compression
-from . import parallel
-from . import stats
 from hashlib import md5
 
 

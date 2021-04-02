@@ -43,7 +43,7 @@ import pandas as pd
 from g4l.estimators import BIC
 from g4l.estimators import SMC
 from g4l.estimators import Prune
-from g4l.data import persistence
+from g4l.util.mat import iterate_from_mat
 from tqdm import tqdm
 from g4l.bootstrap import Bootstrap
 from g4l.bootstrap.resampling import BlockResampling
@@ -267,7 +267,7 @@ def fetch_samples(model_name, sample_size, path, max_samples=math.inf, cache_dir
     i = -1
     key = '%s_%s' % (model_name, sample_size)
     filename = '%s/%s.mat' % (path, key)
-    for s in persistence.iterate_from_mat(filename, key, A, max_depth, cache_dir=cache_dir):
+    for s in iterate_from_mat(filename, key, A, max_depth, cache_dir=cache_dir):
         if i > max_samples:
             break
         i += 1

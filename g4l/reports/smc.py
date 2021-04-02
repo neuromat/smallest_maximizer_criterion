@@ -3,10 +3,9 @@ import glob
 import os
 import json
 import numpy as np
-from g4l.models import ContextTree
+from g4l.context_tree import ContextTree
 from g4l.display import plot2
 import matplotlib.pyplot as plt
-import pandas as pd
 import logging
 
 
@@ -31,7 +30,6 @@ class SmcReport:
         d['epsilon'] = smc_instance.epsilon
         d['df_method'] = smc_instance.df_method
         d['callback_fn'] = smc_instance.callback_fn
-        d['scan_offset'] = smc_instance.scan_offset
         d['perl_compatible'] = smc_instance.perl_compatible
         d['bootstrap_sizes'] = n_sizes
         try:

@@ -3,8 +3,8 @@ import shutil
 import tqdm
 import numpy as np
 from multiprocessing import Pool
-from g4l.models import ContextTree
-from g4l.data import Sample
+from g4l.context_tree import ContextTree
+from g4l.sample import Sample
 from itertools import product
 
 
@@ -23,7 +23,7 @@ def calc_likelihood_process(args):
                       data=data,
                       subsamples_separator=tree.sample.subsamples_separator,
                       cache_file=cache_file)
-    return tree.buffered_sample_likelihood(resample)
+    return tree.sample_likelihood(resample)
 
 
 def buffer_folder(resamples_file):
@@ -57,10 +57,9 @@ def list_files(trees_folder):
     tree_dir = os.listdir(trees_folder)
     return sorted([os.path.join(trees_folder, x) for x in tree_dir])
 
+
 def resamples(resamples_file):
-    with open(resamples_file) as f:
-        ret = f.read().split('\n')[:-1]
-    return ret
+    return open(resamples_file).read().split('\n')[:-1]
 
 
 def remove_folder(trees_folder):
