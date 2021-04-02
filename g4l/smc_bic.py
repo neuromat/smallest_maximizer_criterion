@@ -70,7 +70,7 @@ class SMC(SMCBase):
 
         """
         self.temp_cache = None
-        super().__init__(bootstrap_obj, cache_dir, num_cores=None)
+        super().__init__(bootstrap_obj, cache_dir, num_cores=num_cores)
         self.penalty_interval = penalty_interval
         self.epsilon = epsilon
         self.n_sizes = n_sizes
@@ -83,6 +83,8 @@ class SMC(SMCBase):
         self.context_trees = []
         self.estimate_trees(X)
         self.optimal_tree(X, self.n_sizes, self.alpha)
+        self.generate_report(X, self.n_sizes, self.alpha)
+
         return self
 
     def estimate_trees(self, X):

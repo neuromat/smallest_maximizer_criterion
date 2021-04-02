@@ -5,6 +5,7 @@ import os
 from .util import parallel as prl
 from .util import persistence as per
 from .util.stats import t_test
+from g4l.reports.smc import SmcReport
 from numba import jit
 import numpy as np
 
@@ -57,15 +58,15 @@ class SMCBase(EstimatorsBase):
 
         # Instantiates bootstrap
         # generates bootstrap samples
-        sizes = (int(X.len() * n_sizes[0]), int(X.len() * n_sizes[1]))
-        resamples_file = self.bootstrap.get_resamples(X, max(sizes),
+        self.sizes = (int(X.len() * n_sizes[0]), int(X.len() * n_sizes[1]))
+        resamples_file = self.bootstrap.get_resamples(X, max(self.sizes),
                                                       self.num_cores)
         # calculates likelihoods
-        L = self._calculate_likelihoods(resamples_file, sizes,
+        L = self._calculate_likelihoods(resamples_file, self.sizes,
                                         num_cores=self.num_cores)
 
         # calculates likelihood deltas
-        diffs = self._calculate_diffs(L, sizes)
+        diffs = self._calculate_diffs(L, self.sizes)
 
         # Select optimal tree among the champion trees using t-test
         opt_idx = self._find_change_of_regime(diffs, alpha)
@@ -75,6 +76,21 @@ class SMCBase(EstimatorsBase):
 
     def add_tree(self, new_tree):
         self.context_trees.append(new_tree)
+
+    def save_output(self, X, output_folder):
+        # Save champion trees to files
+        # self.write_champion_trees()
+        # Generates report
+        self.generate_report(X, output_folder)
+
+    def generate_report(self, X, output_folder):
+        report = SmcReport(output_folder)
+        report.create_summary(self, X, self.sizes)
+        report.generate_report()
+
+    def _resample_sizes(X, smpl_size_ratios):
+        """ Calculate bootstrap sample sizes given the source sample """
+        return tuple([int(len(X.data) * x) for x in smpl_size_ratios])
 
     def _find_change_of_regime(self, diffs, alpha):
         """

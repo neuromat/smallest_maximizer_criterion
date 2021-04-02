@@ -1,5 +1,4 @@
 import argparse
-from g4l.reports.smc import SmcReport
 import os
 from pathlib import Path
 import logging
@@ -56,6 +55,7 @@ def ctm_argparser():
     parser.add_argument('output', type=argparse.FileType('w'), help='output tree file (ex. my_model.tree)')
     return parser.parse_args()
 
+
 def dir_path_force(temp_folder):
     return dir_path(temp_folder, force=True)
 
@@ -100,27 +100,6 @@ def get_num_cores(args):
     if args.num_cores > 1:
         num_cores = args.num_cores
     return num_cores
-
-
-def n_sizes(X, args):
-    """ Calculate bootstrap sample sizes given the source sample """
-    return tuple([int(len(X.data) * x) for x in args.n_sizes])
-
-
-def write_champion_trees(meth):
-    logging.info("Champions tree found:")
-    for i, tree in enumerate(meth.context_trees):
-        try:
-            used_c = meth.thresholds[i]
-        except:
-            used_c = '-'
-        logging.info("c:%s\t%s" % (used_c, tree.to_str()))
-
-
-def generate_report(smc, X, n_sizes, args):
-    report = SmcReport(args.folder)
-    report.create_summary(smc, X, n_sizes, args)
-    report.generate_report()
 
 
 def smc_argparser():
