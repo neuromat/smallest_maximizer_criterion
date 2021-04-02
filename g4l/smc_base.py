@@ -21,7 +21,7 @@ class EstimatorsBase():
 
 class SMCBase(EstimatorsBase):
 
-    def __init__(self, bootstrap_obj, cache_dir, num_cores=None):
+    def __init__(self, bootstrap, cache_dir, n_sizes=(0.3, 0.9), alpha=0.01, num_cores=None):
         """
         Parameters
         ----------
@@ -50,15 +50,17 @@ class SMCBase(EstimatorsBase):
 
         self.cache_dir = cache_dir or per.tempdir()
         self.num_cores = num_cores
-        self.bootstrap = bootstrap_obj
         self.context_trees = []
+        self.bootstrap = bootstrap
         self.thresholds = []
+        self.n_sizes = n_sizes
+        self.alpha = alpha
 
-    def optimal_tree(self, X, n_sizes, alpha):
+    def find_optimal_tree(self, X):
 
         # Instantiates bootstrap
         # generates bootstrap samples
-        self.sizes = (int(X.len() * n_sizes[0]), int(X.len() * n_sizes[1]))
+        self.sizes = (int(X.len() * self.n_sizes[0]), int(X.len() * self.n_sizes[1]))
         resamples_file = self.bootstrap.get_resamples(X, max(self.sizes),
                                                       self.num_cores)
         # calculates likelihoods
@@ -69,24 +71,24 @@ class SMCBase(EstimatorsBase):
         diffs = self._calculate_diffs(L, self.sizes)
 
         # Select optimal tree among the champion trees using t-test
-        opt_idx = self._find_change_of_regime(diffs, alpha)
+        opt_idx = self._find_change_of_regime(diffs, self.alpha)
 
         # returns the selected tree and its index
         self.optimal_tree, self.opt_idx = self.context_trees[opt_idx], opt_idx
 
-    def add_tree(self, new_tree):
-        self.context_trees.append(new_tree)
-
     def save_output(self, X, output_folder):
-        # Save champion trees to files
-        # self.write_champion_trees()
         # Generates report
+        per.save_champion_trees(self.context_trees, output_folder)
+        self.optimal_tree.save(os.path.join(output_folder, 'optimal.tree'))
         self.generate_report(X, output_folder)
 
     def generate_report(self, X, output_folder):
         report = SmcReport(output_folder)
-        report.create_summary(self, X, self.sizes)
+        report.create_summary(self, X)
         report.generate_report()
+
+    def add_tree(self, new_tree):
+        self.context_trees.append(new_tree)
 
     def _resample_sizes(X, smpl_size_ratios):
         """ Calculate bootstrap sample sizes given the source sample """
@@ -145,7 +147,7 @@ class SMCBase(EstimatorsBase):
                                    num_resamples)
 
 
-@jit(nopython=True)
+@jit(nopython=True)  # Uses Numba just-in-time processing
 def jit_calculate_diffs(resample_sizes, L,
                         num_resample_sizes,
                         num_trees,

@@ -1,4 +1,5 @@
 import pytest
+import os
 from g4l.bootstrap import Bootstrap
 
 
@@ -8,11 +9,8 @@ def num_bs_resamples():
 
 
 @pytest.fixture()
-def cache_folder():
-    yield 'tests/tmp/bootstrap'
-
-
-@pytest.fixture()
-def bootstrap(num_bs_resamples, cache_folder):
+def bootstrap(num_bs_resamples, tmp_path):
     renewal_point = '1'
-    yield Bootstrap(cache_folder, num_bs_resamples, renewal_point)
+    yield Bootstrap(os.path.join(tmp_path, 'bs'),
+                    num_bs_resamples,
+                    renewal_point)

@@ -4,7 +4,7 @@ from pathlib import Path
 import logging
 
 
-def ctm_argparser():
+def ctm_argparser():  # pragma: no cover
     parser = argparse.ArgumentParser(description='Estimates context tree')
     parser.add_argument('-c', '--penalty', type=float, help='Penalty constant')
     parser.add_argument('-d', '--max_depth',
@@ -69,7 +69,7 @@ def dir_path(temp_folder, force=False):
         raise NotADirectoryError(temp_folder)
 
 
-def log_levels():
+def log_levels():  # pragma: no cover
     return {
         'quiet': None,
         'debug': logging.DEBUG,
@@ -79,7 +79,7 @@ def log_levels():
     }
 
 
-def set_log(log_file=None, lvl='info'):
+def set_log(log_file=None, lvl='info'):  # pragma: no cover
     if lvl == 'quiet':
         return
     log_handlers = []
@@ -102,7 +102,7 @@ def get_num_cores(args):
     return num_cores
 
 
-def smc_argparser():
+def smc_argparser():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(description='Estimates context tree')
     subparsers = parser.add_subparsers(dest='method', help='Estimation method')
@@ -194,5 +194,4 @@ def smc_argparser():
                         choices=list(log_levels().keys()),
                         default='info',
                         help='Log level')
-
-    args = parser.parse_args()
+    return parser.parse_args()

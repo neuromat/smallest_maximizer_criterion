@@ -1,7 +1,7 @@
 import os
 import warnings
 import pandas as pd
-from .util import hashstr
+from .util.caching.smc import hashstr
 from .resampling import BlockResampling
 warnings.simplefilter(action='ignore', category=pd.errors.PerformanceWarning)
 

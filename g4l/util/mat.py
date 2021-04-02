@@ -12,7 +12,7 @@ class MatSamples:
 
     def __init__(self, folder, model_name,
                  sample_size, A,
-                 max_depth):
+                 max_depth):  # pragma: no cover
         self.folder = folder
         self.model_name = model_name
         self.max_depth = max_depth
@@ -21,7 +21,7 @@ class MatSamples:
         self.key = '%s_%s' % (model_name, sample_size)
         self.filename = '%s/%s.mat' % (self.folder, self.key)
 
-    def fetch_samples(self, max_samples=math.inf):
+    def fetch_samples(self, max_samples=math.inf):  # pragma: no cover
         i = -1
         prm = self.filename, self.key, self.A, self.max_depth
         for s in iterate_from_mat(prm):
@@ -30,13 +30,13 @@ class MatSamples:
             i += 1
             yield i, s
 
-    def sample_by_idx(self, idx):
+    def sample_by_idx(self, idx):  # pragma: no cover
         samples = [x for x in self.fetch_samples(idx)]
         return samples[idx][1]
 
 
 def iterate_from_mat(filename, key, A,
-                     max_depth, cache_dir=None):
+                     max_depth, cache_dir=None):  # pragma: no cover
 
     """ Loads and yields samples from file """
 

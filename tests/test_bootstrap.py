@@ -1,5 +1,6 @@
 from tests.fixtures.sample import *
 from tests.fixtures.bootstrap import *
+from g4l.bootstrap import Bootstrap
 
 
 def test_resample_generation(bootstrap, sample):
@@ -9,4 +10,9 @@ def test_resample_generation(bootstrap, sample):
     content = open(f, 'r').read()[:-1]
     assert sum([len(x) for x in content.split('\n')]) == size * num_resamples
     #import code; code.interact(local=dict(globals(), **locals()))
+
+
+def test_initialization():
+    b = Bootstrap('cache_folder', 10, '3')
+    assert b.cache_folder == 'cache_folder'
 

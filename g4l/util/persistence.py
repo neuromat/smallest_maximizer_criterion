@@ -72,13 +72,12 @@ def tempdir():
 
 
 def save_champion_trees(context_trees, cache_dir):
-
     trees_folder = os.path.join(cache_dir, 'champion_trees')
     try:
         shutil.rmtree(trees_folder)
     except FileNotFoundError:
         pass
-    os.makedirs(trees_folder, exist_ok=True)
+    create_temp_folder(trees_folder)
     for i, tree in enumerate(context_trees):
         n = '%06d' % i
         tree.save(os.path.join(trees_folder, '%s.tree' % n))

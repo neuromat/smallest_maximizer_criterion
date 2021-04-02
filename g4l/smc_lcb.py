@@ -1,24 +1,26 @@
 import math
-from . import ContextTree
-from .smc import SMCBase
+from .context_tree import ContextTree
+from .smc_base import SMCBase
 import logging
 
 
 # Less contributive branches
 class SMC(SMCBase):
 
-    def __init__(self, max_depth, madx_trees=None, cache_dir=None):
-        self.max_depth = max_depth
+    def __init__(self, bootstrap_obj, cache_dir=None, n_sizes=(0.3, 0.9), alpha=0.01):
         cache_dir = cache_dir or self._tempdir()
-        super().__init__(cache_dir)
-        assert(max_depth > 0)
+        super().__init__(bootstrap_obj, cache_dir, n_sizes=n_sizes, alpha=alpha)
 
     def fit(self, X):
+        self.context_trees = []
         self.estimate_trees(X)
+
+        # this methods are defined in the superclass (smc_base)
+        self.find_optimal_tree(X)
 
     def estimate_trees(self, X):
         self.X = X
-        t = ContextTree.init_from_sample(X, self.max_depth)
+        t = ContextTree.init_from_sample(X)
         self.trees_constructed = 0
         self.initialize_pruning(t)
         self.perform_pruning(t)

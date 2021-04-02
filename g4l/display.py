@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 
 
-def log_likelihood_per_leaves(smc_instances, labels):
+def log_likelihood_per_leaves(smc_instances, labels):   # pragma: no cover
     plt.figure(figsize=(14, 6))
     for idx, instance in enumerate(smc_instances):
         ll = [x.log_likelihood() for x in instance.champion_trees]
@@ -21,7 +21,7 @@ def plot2(tree, column_label='symbol', font_size=10,
           node_size=8,
           ax=None,
           linewidths=1.0,
-          node_color='black'):
+          node_color='black'):   # pragma: no cover
     df = tree.df.copy()
     s1 = list(map(lambda c: set([c[x:] for x in range(len(c))]), df[(df.active==1)].node.values))
     s2 = set([''])
@@ -58,7 +58,7 @@ def plot2(tree, column_label='symbol', font_size=10,
     plt.axis("off")
 
 
-def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):
+def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):  # pragma: no cover
     if isinstance(tree, str):
       t = tree
     else:

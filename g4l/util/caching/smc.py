@@ -5,9 +5,9 @@ Caching methods for SMC
 
 import logging
 import os
+from hashlib import md5
 import pickle
-from g4l.models import ContextTree
-from g4l.util import hashstr
+from g4l.context_tree import ContextTree
 
 
 def load_cache(estimator, X):
@@ -81,7 +81,7 @@ def save_cache(estimator, X):
     folder, cachefile = cache_file(estimator, X)
     logging.info("Cached in folder %s" % folder)
     os.makedirs(folder, exist_ok=True)
-    dic = {'max_depth': estimator.max_depth,
+    dic = {'max_depth': X.max_depth,
            'penalty_interval': estimator.penalty_interval,
            'epsilon': estimator.epsilon,
            'cache_dir': estimator.cache_dir,
@@ -91,6 +91,10 @@ def save_cache(estimator, X):
         pickle.dump(dic, f)
     for i, t in enumerate(estimator.context_trees):
         t.save('%s/%s.tree' % (folder, i))
+
+
+def hashstr(strg):
+    return md5((strg).encode('utf-8')).hexdigest()
 
 
 # def clean_cache(estimator):

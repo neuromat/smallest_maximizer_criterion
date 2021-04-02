@@ -14,7 +14,6 @@ class SmcReport:
         self.folder = os.path.abspath(folder)
         self.reports_folder = os.path.join(self.folder, 'reports')
         self.champion_trees = []
-        self.thresholds = np.load(os.path.join(self.folder, 'bic_c.npy'))
         self.load_trees()
 
     def create_folders(self):
@@ -22,16 +21,15 @@ class SmcReport:
         os.makedirs(os.path.join(self.reports_folder, 'images'), exist_ok=True)
         os.makedirs(os.path.join(self.reports_folder, 'tables'), exist_ok=True)
 
-    def create_summary(self, smc_instance, sample, n_sizes, args):
+    def create_summary(self, smc_instance, sample, args=None):
         self.create_folders()
         d = dict()
-        d['max_depth'] = smc_instance.max_depth
+        d['max_depth'] = sample.max_depth
         d['penalty_interval'] = smc_instance.penalty_interval
         d['epsilon'] = smc_instance.epsilon
         d['df_method'] = smc_instance.df_method
-        d['callback_fn'] = smc_instance.callback_fn
         d['perl_compatible'] = smc_instance.perl_compatible
-        d['bootstrap_sizes'] = n_sizes
+        d['bootstrap_sizes'] = smc_instance.sizes
         try:
             d['args'] = vars(args).copy()
             d['args']['sample_path'] = d['args']['sample_path'].name
@@ -102,7 +100,7 @@ class SmcReport:
             file.write(outputText + '\n')
         logging.info("Report generated at %s" % html_file)
 
-        import code; code.interact(local=dict(globals(), **locals()))
+
         #print(outputText)
         pass
 

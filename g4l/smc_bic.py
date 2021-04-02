@@ -69,12 +69,13 @@ class SMC(SMCBase):
             Makes algorithm compatible with the paper's perl code
 
         """
-        self.temp_cache = None
-        super().__init__(bootstrap_obj, cache_dir, num_cores=num_cores)
+        super().__init__(bootstrap_obj, cache_dir,
+                         num_cores=num_cores,
+                         n_sizes=n_sizes,
+                         alpha=alpha)
+
         self.penalty_interval = penalty_interval
         self.epsilon = epsilon
-        self.n_sizes = n_sizes
-        self.alpha = alpha
         self.df_method = df_method
         self.perl_compatible = perl_compatible
         assert epsilon > 0, 'epsilon must be greater than zero'
@@ -82,8 +83,9 @@ class SMC(SMCBase):
     def fit(self, X):
         self.context_trees = []
         self.estimate_trees(X)
-        self.optimal_tree(X, self.n_sizes, self.alpha)
-        self.generate_report(X, self.n_sizes, self.alpha)
+
+        # this methods are defined in the superclass (smc_base)
+        self.find_optimal_tree(X)
 
         return self
 
