@@ -4,10 +4,37 @@ from operator import add
 
 
 def nodes_and_transitions(sample):
+    """Creates tables with contexts and transition probabilites
+
+    For a given sample, this method returns two Pandas dataframes.
+    The first one contains the node counts and likelihoods,
+    while the second one contains the transition probabilities.
+
+    === Example of node's initial DataFrame.
+    node_idx    node   freq  active  depth  parent_idx   likelihood
+           8    1010   5900       0      4           9 -3596.440982
+           9     010   8405       0      3          10 -5121.113204
+          10      10   8405       0      2          11 -5121.113204
+          11       0  11589       0      1          52 -6814.372550
+
+
+    === Example of transition probabilities DataFrame ===
+
+    idx next_symbol  freq      prob   likelihood
+      8           0  1761  0.298475 -2129.173188
+      8           1  4139  0.701525 -1467.267794
+      9           0  2506  0.298156 -3032.608109
+      9           1  5899  0.701844 -2088.505095
+     10           0  2506  0.298156 -3032.608109
+
+
+    Arguments:
+        sample {Sample} -- Sample object
+
+    Returns:
+        tuple(DataFrame, DataFrame) -- Counts and transitions tables
     """
-    Creates DataFrame object for contexts and transition probabilites
-    given the sample:
-    """
+
     df = pd.DataFrame()
     # count frequencies of each unique subsequence of size 1..max_depth
     df, transition_probs = count_subsequence_frequencies(df, sample)
@@ -16,39 +43,21 @@ def nodes_and_transitions(sample):
     # create parent relationship between nodes
     df = bind_parent_nodes(df)
     # calculate nodes likelihoods
-    df = calculate_likelihood(df, transition_probs)
+    df = calc_node_likelihood(df, transition_probs)
     # remove unuseful data
     df = cleanup(df, sample.max_depth)
     return df, transition_probs
 
 
 def remove_last_level(df, max_depth):
+    """ Removes max_depth + 1 nodes
+
+    Node frequencies are initially calculated for nodes
+    with length max_depth + 1 in order to efficiently extract
+    the transition. Since transitions were already calculated
+    we can drop the nodes with length == (max_depth + 1)
+    """
     return df[df.depth <= max_depth]
-
-
-def sum_log_likelihoods(df_children):
-    return (df_children.freq * np.log(df_children.node_prob)).sum()
-
-
-def transition_sum_log_probs(df_children):
-    return np.sum(np.log(df_children[df_children.node_prob > 0].node_prob))
-
-
-def merge_freqs(dicts):
-    d = dicts[0]
-    for d2 in dicts[1:]:
-        for k in d2.keys():
-            d[k] += d2[k]
-    return d
-
-
-def merge_trans(dicts):
-    d = dicts[0]
-    for d2 in dicts[1:]:
-        for k in d2.keys():
-            list(map(add, d[k], d2[k]))
-            d[k] += d2[k]
-    return d
 
 
 def count_subsequence_frequencies(df, sample):
@@ -68,34 +77,18 @@ def count_subsequence_frequencies(df, sample):
 
 def create_indexes(df):
     df['depth'] = df.node.str.len()
-    df.index.name = 'depth_idx'
-    df.reset_index(inplace=True)
+    df.reset_index(inplace=True, drop=True)
     df.index.name = 'node_idx'
     return df
 
 
-def calculate_transition_probs(df, dct_transition, dct_node_freq, A):
-    node_idxs = (df[['node']].reset_index()
-                             .set_index('node', drop=True)
-                             .to_dict()['node_idx'])
-    transition_columns = ['idx', 'next_symbol', 'freq', 'prob']
-    probs = pd.DataFrame(columns=transition_columns)
-    # TODO: make it more efficient
+def calc_node_likelihood(df, transition_probs):
+    probs = transition_probs
+    L = probs.freq[probs.freq > 0] * np.log(probs.prob[probs.freq > 0])
+    transition_probs['likelihood'] = L
 
-    for node in dct_transition.keys():
-        for a in A:
-            node_idx = node_idxs[node]
-            fr = dct_transition[node][A.index(a)]
-            prob = fr/dct_node_freq[node]
-            probs.loc[len(probs)] = [node_idx, a, fr, prob]
-    probs.freq = probs.freq.astype(int)
-    return probs
-
-
-def calculate_likelihood(df, transition_probs):
-    x = transition_probs
-    transition_probs['likelihood'] = x.freq[x.freq > 0] * np.log(x.prob[x.freq > 0])
-    df['likelihood'] = transition_probs.groupby(['idx']).apply(lambda s: s.likelihood.sum())
+    fn = lambda s: s.likelihood.sum()
+    df['likelihood'] = transition_probs.groupby(['idx']).apply(fn)
     return df
 
 
@@ -110,6 +103,7 @@ def calculate_num_child_nodes(df):
     Given a context tree dataframe, this method creates a column with
     the number of (immediate) children
     """
+
     df['active_children'] = 0
     num_child_nodes = (df[df.depth >= 1]
                        .reset_index(drop=False)
@@ -130,8 +124,9 @@ def calculate_num_child_nodes(df):
 
 def bind_parent_nodes(df):
     """
-    Connects nodes to their parents through the 'parent_idx' column
+    Creates a parent_idx column with references to the parent node index
     """
+
     pa = df.node.str.slice(start=1)
     parent_idxs = df.reset_index().set_index('node', drop=False).loc[pa.values].node_idx
     df['parent_idx'] = parent_idxs.values

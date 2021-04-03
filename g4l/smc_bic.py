@@ -1,16 +1,8 @@
-from .smc_base import SMCBase
-from .context_tree import ContextTree
-
-#from g4l.models import ContextTree
-from .bic import BIC
 import logging
 
-#from g4l.estimators.base import CollectionBase
-#from g4l.estimators.logics import smc as smc
-#from tempfile import TemporaryDirectory
-#import numpy as np
-#import os
-#import logging
+from .bic import BIC
+from .context_tree import ContextTree
+from .smc_base import SMCBase
 
 
 class SMC(SMCBase):
@@ -64,7 +56,7 @@ class SMC(SMCBase):
             The method used by BIC to calculate degrees_of_freedom. Options:
             - 'perl': uses the same df as the original implementation in perl
             - 'g4l': uses the method as described in the paper (slightly different)
-            - 'csizar_and_talata': uses df as described in Csizar and Talata (2006)
+            - 'ct06': uses df as described in Csizar and Talata (2006)
         perl_compatible : int
             Makes algorithm compatible with the paper's perl code
 
@@ -90,15 +82,16 @@ class SMC(SMCBase):
         return self
 
     def estimate_trees(self, X):
-        """
+        """Estimates the set of champion
+
         This method performs the algorithm describe in the section 4
         of the original paper
 
-        Parameters
-        ----------
-        X : g4l.data.Sample
-            A sample object
+        Arguments:
+            X {Sample} -- A sample
 
+        Returns:
+            SMC -- This object instance itself
         """
 
         self.thresholds = []
@@ -128,8 +121,6 @@ class SMC(SMCBase):
             self.add(tree_a, b)
             b = max_c
             tree_b = tree_f
-        logging.info('Finished CTM scanning')
-        return self
 
     def calc_bic(self, c):
         """
@@ -143,6 +134,7 @@ class SMC(SMCBase):
             The penalty value ( > 0) used by the bayesian information criteria
 
         """
+
         sample = self.initial_tree.sample
         self.trees_constructed += 1
 
@@ -164,6 +156,7 @@ class SMC(SMCBase):
             The penalty value used to estimate the tree
 
         """
+
         logging.info('%s\t%s' % (c, t.to_str()))
         self.add_tree(t)
         self.thresholds.append(c)
@@ -184,7 +177,7 @@ class SMC(SMCBase):
 
         if self.intervals is None:
             self.intervals = dict()
-        t = self.cached_trees(c)
+        t = self._cached_trees(c)
         if not t:
             t = self.calc_bic(c)
             self._add_tree(c, t)
@@ -193,7 +186,7 @@ class SMC(SMCBase):
             logging.debug("[skip] c=%s; \t\tt=%s" % (round(c, 4), t.to_str()))
         return t
 
-    def strategy_default(self, c):
+    def strategy_default(self, c):   # pragma: no cover
         """
         Computes the context tree using the BIC estimator for
         a given penalty value `c`
@@ -209,13 +202,28 @@ class SMC(SMCBase):
         logging.debug('c=%s; \t\tt=%s' % (round(c, 4), bic.to_str()))
         return bic
 
-    def cached_trees(self, k):
+    def _cached_trees(self, k):
+        """ Skips tree computation if the tree for the given constant
+            is already known (for speed-up purposes)
+            if i1 <= k <= i2, where i1, i2 are constant values
+            that were already computed and tree_{i1} ==  tree_{i2}
+        """
+
         for a, b in self.intervals.keys():
             if k >= a and b >= k:
                 return self.intervals[(a, b)]
         return None
 
     def _add_tree(self, k, t):
+        """ adds the tree to the interval
+
+        [description]
+
+        Arguments:
+            k {float} -- BIC constant used to compute the tree
+            t {ContextTree} -- a tree
+        """
+
         for i, t2 in enumerate(self.intervals.values()):
             if t.equals_to(t2):
                 rng = list(self.intervals)[i]

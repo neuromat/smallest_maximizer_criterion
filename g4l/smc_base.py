@@ -35,7 +35,7 @@ class SMCBase(EstimatorsBase):
             The method used by BIC to calculate degrees_of_freedom. Options:
             - 'perl': uses the same df as the original implementation in perl
             - 'g4l': uses the method as described in the paper (slightly different)
-            - 'csizar_and_talata': uses df as described in Csizar and Talata (2006)
+            - 'ct06': uses df as described in Csizar and Talata (2006)
         n_sizes : tuple<int, int>
             Bootstrap sample sizes. First element of tuple is the smallest
             size, whereas the second element is the largest one.
@@ -90,10 +90,6 @@ class SMCBase(EstimatorsBase):
     def add_tree(self, new_tree):
         self.context_trees.append(new_tree)
 
-    def _resample_sizes(X, smpl_size_ratios):
-        """ Calculate bootstrap sample sizes given the source sample """
-        return tuple([int(len(X.data) * x) for x in smpl_size_ratios])
-
     def _find_change_of_regime(self, diffs, alpha):
         """
         Performs t-test over each pair of deltas
@@ -140,18 +136,27 @@ class SMCBase(EstimatorsBase):
             return np.array(L)
 
     def _calculate_diffs(self, L, n_sizes):
-        num_resample_sizes, num_trees, num_resamples = L.shape
+        _, num_trees, num_resamples = L.shape
         return jit_calculate_diffs(n_sizes, L,
-                                   num_resample_sizes,
                                    num_trees,
                                    num_resamples)
 
 
 @jit(nopython=True)  # Uses Numba just-in-time processing
 def jit_calculate_diffs(resample_sizes, L,
-                        num_resample_sizes,
                         num_trees,
-                        num_resamples):
+                        num_resamples):  # pragma: no cover
+    """Calculates deltas between two arrays of log-likelihoods
+
+    Arguments:
+        resample_sizes {tuple(int, int)} -- Resample sizes (smaller, larger)
+        L {np.array} -- Log-likelihoods
+        num_trees {int} -- Number of champion trees
+        num_resamples {int} -- Number of resamples
+
+    Returns:
+        [type] -- [description]
+    """
     m = np.zeros((num_trees-1, num_resamples))
     diffs = (m, m.copy())
     l_current = np.zeros((num_resamples, 2))
@@ -159,7 +164,7 @@ def jit_calculate_diffs(resample_sizes, L,
         l_current[:, j] = L[j][0]
     for t in range(num_trees - 1):
         l_next = np.zeros((num_resamples, 2))
-        for j in range(num_resample_sizes):
+        for j in [0, 1]:
             l_next[:, j] = L[j][t+1]
             for b in range(num_resamples):
                 diffs[j][t, b] = (l_current[b, j] - l_next[b, j])

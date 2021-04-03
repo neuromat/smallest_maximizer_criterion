@@ -23,7 +23,7 @@ class SMC(SMCBase):
         t = ContextTree.init_from_sample(X)
         self.trees_constructed = 0
         self.initialize_pruning(t)
-        self.perform_pruning(t)
+        self.prune(t)
         return self
 
     def initialize_pruning(self, t):
@@ -58,7 +58,7 @@ class SMC(SMCBase):
         df.loc[leaf_counts.index, 'children_contrib'] = contrib
         self.update_parent_counts(df, leaf_counts.index.values)
 
-    def perform_pruning(self, t):
+    def prune(self, t):
         self.context_trees = []
         iteration_num = 0
         self.add_tree(t)

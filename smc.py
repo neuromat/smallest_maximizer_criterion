@@ -5,7 +5,7 @@ Runs estimators for the given parameters
 
 
 usage: smc.py [-h] [--split SPLIT] [-b RESAMPLES] [-a ALPHA] -d MAX_DEPTH [-p RENEWAL_POINT] -s SAMPLE_PATH [-f FOLDER] [-j PERL_COMPATIBLE]
-              [--df {csizar_and_talata,perl,g4l}] [--num_cores NUM_CORES] [-l LOG_FILE] [-i {quiet,debug,info,warning,error}]
+              [--df {ct06,perl,g4l}] [--num_cores NUM_CORES] [-l LOG_FILE] [-i {quiet,debug,info,warning,error}]
               {lcb,bic} ...
 
 Estimates context tree
@@ -32,7 +32,7 @@ optional arguments:
                         Folder path for result files
   -j PERL_COMPATIBLE, --perl_compatible PERL_COMPATIBLE
                         Keeps compatibility with original version in perl (def. False)
-  --df {csizar_and_talata,perl,g4l}
+  --df {ct06,perl,g4l}
                         Penalization strategy
   --num_cores NUM_CORES
                         Number of processors for parallel processing

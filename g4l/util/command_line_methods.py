@@ -36,7 +36,7 @@ def ctm_argparser():  # pragma: no cover
                         default=False,
                         help='Keeps compatibility with original version in perl (def. False)')
     parser.add_argument('--df',
-                        choices=['csizar_and_talata', 'perl', 'g4l'],
+                        choices=['ct06', 'perl', 'g4l'],
                         default='perl',
                         help='Penalization strategy')
     parser.add_argument('--num_cores',
@@ -178,7 +178,7 @@ def smc_argparser():  # pragma: no cover
                         default=False,
                         help='Keeps compatibility with original version in perl (def. False)')
     parser.add_argument('--df',
-                        choices=['csizar_and_talata', 'perl', 'g4l'],
+                        choices=['ct06', 'perl', 'g4l'],
                         default='perl',
                         help='Penalization strategy')
     parser.add_argument('--num_cores',

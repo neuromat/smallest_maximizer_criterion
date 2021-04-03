@@ -103,17 +103,6 @@ class Sample():
     def len(self):
         return self.data_len
 
-    def to_a(self):
-        if len(self.indexes) == 0:
-            self.indexes = [self.A.index(i) for i in self.data]
-        return self.indexes
-
-    def data_array(self):
-        if self.separator is None:
-            return list(self.data)
-        else:
-            return self.data.split(self.separator)
-
     def subsamples(self):
         sep = self.subsamples_separator
         if sep is None:
@@ -139,3 +128,8 @@ class Sample():
         df = pd.DataFrame.from_dict(d).T
         df['N'] = [dfreq[x] for x in list(df.index)]
         return df
+
+    # def to_a(self):
+    #     if len(self.indexes) == 0:
+    #         self.indexes = [self.A.index(i) for i in self.data]
+    #     return self.indexes

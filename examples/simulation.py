@@ -63,7 +63,7 @@ def run_simulation(tmp_path, results_path):
                           n_sizes=(0.3, 0.9),
                           alpha=0.01,
                           epsilon=0.01,
-                          df_method='csizar_and_talata',
+                          df_method='ct06',
                           perl_compatible=False,
                           num_cores=NUM_CORES)
                 smc.fit(sample)

@@ -2,9 +2,8 @@ import jinja2
 import glob
 import os
 import json
-import numpy as np
 from g4l.context_tree import ContextTree
-from g4l.display import plot2
+from g4l.display import plot2, node_transitions
 import matplotlib.pyplot as plt
 import logging
 
@@ -100,16 +99,12 @@ class SmcReport:
             file.write(outputText + '\n')
         logging.info("Report generated at %s" % html_file)
 
-
-        #print(outputText)
-        pass
-
     def create_tables(self):
         nodes = []
         transitions = []
         for i, t in enumerate(self.champion_trees):
             dfx = t.df[['node', 'freq', 'active', 'likelihood_pen', 'v_node', 'v_node_sum', 'indicator']]
-            transitions.append(list(t.node_transitions().reset_index().T.to_dict().values()))
+            transitions.append(list(node_transitions(t).reset_index().T.to_dict().values()))
             ns = list(dfx.T.to_dict().values())
             nodes.append(sorted(ns, key=lambda k: k['node'][::-1]))
         return nodes, transitions

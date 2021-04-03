@@ -20,8 +20,19 @@ class ContextTree():
 
     @classmethod
     def init_from_sample(cls, X, force_admissible=True):
-        """ Builds a full initial tree from a given sample """
+        """Builds a full initial tree from a given sample
 
+        Arguments:
+            X {Sample} -- A sample object
+
+        Keyword Arguments:
+            force_admissible {bool} -- If True, nodes
+            containing terminal one-child branches
+            will be pruned (default: {True})
+
+        Returns:
+            ContextTree -- An initial tree (with all internal nodes)
+        """
         contexts, transition_probs = nodes_and_transitions(X)
         t = ContextTree(X.max_depth, contexts, transition_probs, X)
         contexts = calculate_num_child_nodes(contexts)
@@ -32,37 +43,30 @@ class ContextTree():
 
     @classmethod
     def load_from_file(cls, file_path):
-        """ Loads model data from file """
+        """Loads model data from file
+
+        Arguments:
+            file_path {str} -- File path for an already estimated model
+
+        Returns:
+            ContextTree -- The loaded model
+        """
 
         X, max_depth, contexts, transition_probs = load_model(file_path)
         return ContextTree(max_depth, contexts, transition_probs, X)
 
-    def copy(self):
-        """ Creates a complete copy of the model """
-        return ContextTree(self.max_depth, self.df.copy(),
-                           self.transition_probs.copy(),
-                           source_sample=self.sample)
-
-    def save(self, file_path):
-        """ Saves model in a file """
-
-        save_model(self, file_path)
-
-    #    def _count_context_freqs(self, node, sample_data, A):
-    #        # get the index of each occurrence of each node
-    #        idxs = [m.end(0) for m in re.finditer(node, sample_data, overlapped=True)]
-    #        # count frequencies
-    #        ctr = Counter([sample_data[i] for i in idxs if i < len(sample_data)])
-    #        # return array with freqs for each symbol in alphabet
-    #        return [ctr[a] for a in A]
-    #
-    #    def calculate_node_transitions(self, sample_data, A):
-    #        all_contexts = list(self.df.node.values)
-    #        trs = [self._count_context_freqs(ctx, sample_data, A) for ctx in all_contexts]
-    #        transitions = np.hstack(trs).reshape(len(all_contexts), len(A))
-    #        return all_contexts, transitions
-
     def sample_likelihood(self, sample):
+        """Returns the log-likelihood of the model to the given sample
+
+        [description]
+
+        Arguments:
+            sample {Sample} -- A Sample object
+
+        Returns:
+            float -- A float value between -inf and 0
+        """
+
         contexts = self.tree().node.values
         trn_freqs = sample.F[sample.F.index.isin(contexts)][[int(x) for x in sample.A]]
         node_freqs = trn_freqs.T.sum()
@@ -71,7 +75,7 @@ class ContextTree():
         pos_freqs = N2[ind]
         sum_freqs = repmat(node_freqs.values, len(sample.A), 1).T[ind]
         L = np.sum(np.multiply(pos_freqs, np.log(pos_freqs) - np.log(sum_freqs)))
-        return L, (None, None)
+        return L
 
     def prune_unique_context_paths(self):
         while True:
@@ -90,16 +94,19 @@ class ContextTree():
             self.df.loc[l_nodes, 'active'] = 0
             self.df.loc[l_parents, 'active'] = 1
             self.df = df
-        #df.drop(index=nodes_to_remove.index, inplace=True)
-
-    def __str__(self):
-        return self.to_str()
 
     def to_str(self, reverse=False):
-        """ Represents context tree as a string
+        """Represents context tree as a string
 
-        TODO: add `reverse=False` parameter to display contexts as root->leaf
+        [description]
+
+        Keyword Arguments:
+            reverse {bool} -- Reverses node orientation (default: {False})
+
+        Returns:
+            str -- ex. ''
         """
+
         ret = ' '.join([s.strip() for s in self.leaves()])
         if reverse:
             s1 = sorted([x[::-1] for x in ret.split()])
@@ -108,7 +115,9 @@ class ContextTree():
         return ret.strip()
 
     def generate_sample(self, sample_size, A):
+
         """ Generates a sample using this model """
+
         trs = self.transition_probs.reset_index()
         trs.set_index(['idx', 'next_symbol'], inplace=True)
         contexts = self.tree().set_index('node')['node_idx']
@@ -135,23 +144,6 @@ class ContextTree():
 
         return self.tree().likelihood.sum()
 
-    def node_transitions(self, contexts_only=False):
-        """ Returns a table where each row is a node and each column is the
-            transition probability for a symbol of the alphabet """
-
-        import pandas as pd
-        tbl = self.df
-        if contexts_only:
-            tbl = self.tree()
-        nodes = tbl.set_index('node_idx').node
-        dfx = self.transition_probs.merge(nodes,
-                                          right_index=True,
-                                          left_index=True)
-        dfx = dfx.pivot(index='node',
-                        columns='next_symbol',
-                        values='prob').fillna(0).sort_values('node')
-        return pd.DataFrame(dfx.to_records()).set_index('node')
-
     def tree(self):
         """ Returns the tree with all active contexts ascending by nodes"""
 
@@ -169,6 +161,22 @@ class ContextTree():
 
         """ Matches the current context tree to another one """
         return self.to_str() == context_tree.to_str()
+
+    def copy(self):
+        """ Creates a complete copy of the model """
+
+        return ContextTree(self.max_depth, self.df.copy(),
+                           self.transition_probs.copy(),
+                           source_sample=self.sample)
+
+    def save(self, file_path):
+        """ Saves model in a file
+
+        Arguments:
+            file_path {str} -- File path for an already estimated model
+        """
+
+        save_model(self, file_path)
 
     def _next_symbol(self, node_idx, A, trs):
         s = trs.loc[node_idx].sample(1, weights='prob').index[0]

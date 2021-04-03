@@ -34,7 +34,7 @@ tests/result_images/
 **/cache/*
 **/cache/
 tmp/
-
+htmlcov/
 
 # Sphinx stuff
 docs/generated/

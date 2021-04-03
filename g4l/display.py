@@ -1,5 +1,23 @@
 import matplotlib.pyplot as plt
 import networkx as nx
+import pandas as pd
+
+
+def node_transitions(tree, contexts_only=False):
+    """ Returns a table where each row is a node and each column is the
+        transition probability for a symbol of the alphabet """
+
+    tbl = tree.df
+    if contexts_only:
+        tbl = tree.tree()
+    nodes = tbl.set_index('node_idx').node
+    dfx = tree.transition_probs.merge(nodes,
+                                      right_index=True,
+                                      left_index=True)
+    dfx = dfx.pivot(index='node',
+                    columns='next_symbol',
+                    values='prob').fillna(0).sort_values('node')
+    return pd.DataFrame(dfx.to_records()).set_index('node')
 
 
 def log_likelihood_per_leaves(smc_instances, labels):   # pragma: no cover
@@ -80,11 +98,11 @@ def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):  # pr
         ctx = contexts[i][::-1]
         ctxl = [(ctx[:i+1], c) for i, c in enumerate(ctx)]
         for node in ctxl:
-            color=None
-            if contexts2.count(node[0][::-1])==0:
-                color=diff_color
+            color = None
+            if contexts2.count(node[0][::-1]) == 0:
+                color = diff_color
             dot.node(name=node[0], label=node[1], color=color, fontcolor=color)
-            if(len(node[0]))==1:
+            if(len(node[0])) == 1:
                 if ('$', node[0]) not in d:
                     d.append(('$', node[0]))
                     dot.edge('$', node[0])
