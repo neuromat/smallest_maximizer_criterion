@@ -10,6 +10,6 @@ def test_init_from_file(sample):
 
 def test_sample_generation(sample):
     tree = BIC(0.08).fit(sample).context_tree
-    tree.generate_sample(1000, sample.A)
+    tree.generate_sample(1000)
     #import code; code.interact(local=dict(globals(), **locals()))
 

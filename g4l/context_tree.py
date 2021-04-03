@@ -89,10 +89,10 @@ class ContextTree():
             ret = ' '.join(s2)
         return ret.strip()
 
-    def generate_sample(self, sample_size, A):
+    def generate_sample(self, sample_size):
 
         """ Generates a sample using this model """
-
+        A = self.sample.A
         trs = self.transition_probs.reset_index()
         trs.set_index(['idx', 'next_symbol'], inplace=True)
         contexts = self.tree().set_index('node')['node_idx']

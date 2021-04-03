@@ -50,7 +50,7 @@ def test_sample_ep(sample_ep):
 
 def test_lipsum(sample_lipsum):
     bic = BIC(0).fit(sample_lipsum)
-    s = bic.context_tree.generate_sample(400, sample_lipsum.A)
+    s = bic.context_tree.generate_sample(400)
     print(s)
     #assert bic.context_tree.to_str() == ''
 

@@ -59,7 +59,7 @@ def set_log(log_file=None, lvl='info'):
 
 def create_samples(args):
     tree = ContextTree.load_from_file(args.tree.name)
-    x = tree.generate_sample(args.size, tree.sample.A) + '\n'
+    x = tree.generate_sample(args.size) + '\n'
     fl = os.path.abspath(args.output_file.name)
     open(fl, 'w').write(x)
     logging.info("Sample '%s' generated" % fl)
