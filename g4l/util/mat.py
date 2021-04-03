@@ -1,7 +1,7 @@
 import os
 import math
 import scipy.io as sio
-from g4l.data import Sample
+from g4l.sample import Sample
 
 
 class MatSamples:

@@ -42,6 +42,11 @@ def run_smc(source_file, cache_fld, instance_name):
               perl_compatible=perl_compatible,
               num_cores=num_cores)
     smc.fit(X)
+
+    out_path = os.path.join(str(cache_fld), 'out')
+    smc.save_output(X, out_path)
+
+
     print("--------------------------")
     optimal_tree = smc.optimal_tree
     champion_trees = smc.context_trees

@@ -7,7 +7,6 @@ import numpy as np
 import pandas as pd
 
 
-
 class Sample():
     filename = None
     A = None
