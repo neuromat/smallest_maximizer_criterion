@@ -19,16 +19,11 @@ class ContextTree():
         self.sample = source_sample
 
     @classmethod
-    def init_from_sample(cls, X, force_admissible=True):
+    def init_from_sample(cls, X):
         """Builds a full initial tree from a given sample
 
         Arguments:
             X {Sample} -- A sample object
-
-        Keyword Arguments:
-            force_admissible {bool} -- If True, nodes
-            containing terminal one-child branches
-            will be pruned (default: {True})
 
         Returns:
             ContextTree -- An initial tree (with all internal nodes)
@@ -37,8 +32,6 @@ class ContextTree():
         t = ContextTree(X.max_depth, contexts, transition_probs, X)
         contexts = calculate_num_child_nodes(contexts)
         contexts.loc[contexts.num_child_nodes.isna(), 'active'] = 1
-        if force_admissible:
-            t.prune_unique_context_paths()
         return t
 
     @classmethod
@@ -76,24 +69,6 @@ class ContextTree():
         sum_freqs = repmat(node_freqs.values, len(sample.A), 1).T[ind]
         L = np.sum(np.multiply(pos_freqs, np.log(pos_freqs) - np.log(sum_freqs)))
         return L
-
-    def prune_unique_context_paths(self):
-        while True:
-            df = calculate_num_child_nodes(self.df)
-            leaves = df[(df.active_children == 0) & (df.active == 1)]
-            parents_idx = [x for x in leaves.parent_idx.unique() if x not in [None, -1]]
-
-            lv_par = df.loc[parents_idx]  # single leaves' parents
-            lv_par = lv_par[lv_par.num_child_nodes == 1]
-            nodes_to_remove = df[df.parent_idx.isin(lv_par.index)]
-
-            if len(nodes_to_remove) == 0:
-                break
-            l_nodes = self.df.node_idx.isin(nodes_to_remove.node_idx)
-            l_parents = self.df.node_idx.isin(nodes_to_remove.parent_idx)
-            self.df.loc[l_nodes, 'active'] = 0
-            self.df.loc[l_parents, 'active'] = 1
-            self.df = df
 
     def to_str(self, reverse=False):
         """Represents context tree as a string

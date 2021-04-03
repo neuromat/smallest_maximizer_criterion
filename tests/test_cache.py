@@ -12,15 +12,11 @@ def test_smc_caching(bootstrap, sample, tmp_path):
     smc = SMC(bootstrap, penalty_interval=(0.01, 800), cache_dir=str(tmp_path))
     smc2 = SMC(bootstrap, penalty_interval=(0.01, 800), cache_dir=str(tmp_path))
     smc.fit(sample)
-    fld = str(os.path.join(tmp_path, 'cache'))
     caching.save_cache(smc, sample)
     caching.load_cache(smc2, sample)
     t1 = [t.to_str() for t in smc.context_trees]
     t2 = [t.to_str() for t in smc2.context_trees]
     assert [t for t in t1 if t in t2] == t1
     assert [t for t in t2 if t in t1] == t2
-
-    #import code; code.interact(local=dict(globals(), **locals()))
-
 
 

@@ -54,14 +54,6 @@ def make_tarfile(output_filename, source_dir):
             tar.add(os.path.join(source_dir, filename), arcname=filename)
 
 
-def _write_sample(h5obj, sample):
-    if sample is not None:
-        if sample.filename:
-            h5obj.attrs['sample.filename'] = sample.filename
-        if sample.A:
-            h5obj.attrs['sample.A'] = sample.A
-
-
 def create_temp_folder(temp_folder):
     Path(temp_folder).mkdir(parents=True, exist_ok=True)
 

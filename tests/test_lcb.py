@@ -6,7 +6,7 @@ from tests.fixtures.sample import *
 
 
 @pytest.mark.parametrize('num_bs_resamples', [100])
-def dtest_smc_lcb(bootstrap, sample, tmp_path):
+def test_smc_lcb(bootstrap, sample, tmp_path):
     correct_tree = '000 100 10 1'
     random.seed(12345)
     smc = SMC(bootstrap, cache_dir=str(tmp_path))

@@ -44,8 +44,14 @@ def sample_bp():
 def sample_ep():
     A = [0, 1, 2, 3, 4]
     max_depth = 4
-    filename = 'examples/linguistic_case_study/folha.txt'
+    filename = 'examples/linguistic_case_study/publico.txt'
     yield Sample(filename, A, max_depth, subsamples_separator='>')
+
+
+@pytest.fixture()
+def sample_lipsum():
+    filename = 'tests/files/lipsum.txt'
+    yield Sample(filename, None, 9)
 
 
 @pytest.fixture()

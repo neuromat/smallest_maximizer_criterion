@@ -1,5 +1,6 @@
 from .smc_base import EstimatorsBase
 from .estimators.bic import *
+from .tree_tables import calculate_num_child_nodes
 from .context_tree import ContextTree
 from .util import degrees_of_freedom as dof
 
@@ -59,7 +60,7 @@ class BIC(EstimatorsBase):
     def fit(self, X):
         """ Estimates Context Tree model using BIC """
 
-        full_tree = ContextTree.init_from_sample(X, force_admissible=False)
+        full_tree = ContextTree.init_from_sample(X)
         df, transition_probs = full_tree.df, full_tree.transition_probs
 
         deg_f = dof.degrees_of_freedom(self.df_method, full_tree)
@@ -67,6 +68,6 @@ class BIC(EstimatorsBase):
         df['likelihood_pen'] = penalty + df.likelihood
         full_tree.df = assign_values(X.max_depth, df[df.freq >= 1],
                                      self.perl_compatible)
-        full_tree.prune_unique_context_paths()
+        calculate_num_child_nodes(full_tree.df)
         self.context_tree = clean_columns(full_tree, self.keep_data)
         return self

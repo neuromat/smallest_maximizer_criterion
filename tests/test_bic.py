@@ -30,26 +30,30 @@ def test_perl_compatibility(sample_pl_compat):
 def test_df(sample):
     from g4l.context_tree import ContextTree
     from g4l.util.degrees_of_freedom import degrees_of_freedom as df
-    tree = ContextTree.init_from_sample(sample, force_admissible=False)
+    tree = ContextTree.init_from_sample(sample)
     assert len(df('g4l', tree)) == 53  # nodes have different dfs
     assert df('perl', tree) == -1
     assert df('ct06', tree) == -0.5
 
 
 def test_sample_bp(sample_bp):
-    bic = BIC(0.35).fit(sample_bp)
-    t = '0000 001 0010 100 2 20 200 2000 201 2010 21 210 3 30 300 4'
-    assert bic.context_tree.to_str() == t
+    bic = BIC(0.2982733078507897).fit(sample_bp)
+    t = '0000 2000 100 200 300 0010 2010 210 20 30 001 201 21 2 3 4'
+    assert bic.context_tree.to_str(reverse=True) == t
 
 
 def test_sample_ep(sample_ep):
-    bic = BIC(0.35).fit(sample_ep)
-    t = '0000 001 0010 100 2 20 200 2000 201 2010 21 210 3 30 300 4'
-    assert bic.context_tree.to_str() == t
+    bic = BIC(0.2654890885033804).fit(sample_ep)
+    t = '0000 2000 100 200 300 0010 2010 210 20 30 001 201 21 2 3 4'
+    assert bic.context_tree.to_str(reverse=True) == t
 
-def xtest_lipsum(sample_lipsum):
+
+def test_lipsum(sample_lipsum):
     bic = BIC(0).fit(sample_lipsum)
-    assert bic.context_tree.to_str() == ''
+    s = bic.context_tree.generate_sample(400, sample_lipsum.A)
+    print(s)
+    #assert bic.context_tree.to_str() == ''
+
 
 def test_sample_bp_empty_tree(sample_bp):
     bic = BIC(200).fit(sample_bp)
