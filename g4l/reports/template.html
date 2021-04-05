@@ -1,0 +1,247 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+  <title>SMC Report</title>
+</head>
+<body>
+
+  <div class='container'>
+
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Champion trees
+      </h5>
+      <div class='card-body'>
+        <!--h4 class='card-title'>Champion trees</h4-->
+        <div class='card-text'>
+          <div class="row">
+            <div class="col-2">
+              <h6># contexts</h6>
+              <div class="nav flex-column nav-pills" id="v-pills-tab" role="tablist" aria-orientation="vertical">
+
+
+                {% for tree in data.trees -%}
+                  {% set act = '' %}
+                  {% set ar = 'false' %}
+                  {% if tree.optimal %}
+                      {% set act = 'active' %}
+                      {% set ar = 'true' %}
+                  {% endif %}
+                  <a class="nav-link {{act}}" id="v-pills-tree-{{tree.num_contexts}}-tab" data-toggle="pill" href="#v-pills-tree-{{tree.num_contexts}}" role="tab" aria-controls="v-pills-tree-{{tree.num_contexts}}" aria-selected="{{ar}}">{{tree.num_contexts}}
+                  {% if tree.optimal %}
+                    <span class="badge badge-success">Optimal</span>
+                  {% endif %}
+                  </a>
+                {% endfor -%}
+
+
+
+              </div>
+            </div>
+            <div class="col-10">
+              <div class="tab-content" id="v-pills-tabContent">
+
+
+                {% for i in range(data.trees | length ) -%}
+                  {% set tree = data.trees[i] %}
+                  {% set act = '' %}
+                  {% if tree.optimal %}
+                      {% set act = 'show active' %}
+                  {% endif %}
+
+                <div class="tab-pane fade {{act}}" id="v-pills-tree-{{tree.num_contexts}}" role="tabpanel" aria-labelledby="v-pills-tree-{{tree.num_contexts}}-tab">
+
+                  <nav>
+                    <div class="nav nav-tabs" id="nav-tab" role="tablist">
+
+                      <a class="nav-item nav-link active" id="nav-tree-{{tree.num_contexts}}-tab" data-toggle="tab" href="#nav-tree-{{tree.num_contexts}}" role="tab" aria-controls="nav-tree-{{tree.num_contexts}}" aria-selected="true">Tree</a>
+
+
+                      <a class="nav-item nav-link" id="nav-contact-{{tree.num_contexts}}-tab" data-toggle="tab" href="#nav-contact-{{tree.num_contexts}}" role="tab" aria-controls="nav-contact-{{tree.num_contexts}}" aria-selected="false">Nodes</a>
+
+
+                      <a class="nav-item nav-link" id="nav-transitions-{{tree.num_contexts}}-tab" data-toggle="tab" href="#nav-transitions-{{tree.num_contexts}}" role="tab" aria-controls="nav-transitions-{{tree.num_contexts}}" aria-selected="false">Transition probabilities</a>
+
+                    </div>
+                  </nav>
+                  <div class="tab-content" id="nav-tabContent">
+                    <div class="tab-pane fade show active" id="nav-tree-{{tree.num_contexts}}" role="tabpanel" aria-labelledby="nav-tree-{{tree.num_contexts}}-tab">
+
+
+
+                      ​<picture>
+                        <img src='reports/images/{{tree.num_contexts}}.png' class="img-fluid"/>
+                      </picture>
+
+                      <div class='tree-str'>
+                        <strong>Tree: </strong><br />
+                        <code>{{tree.tree}}</code>
+                      </div>
+                      <div class='tree-str'>
+                        <strong>Num. Contexts: </strong> {{tree.num_contexts}}
+                      </div>
+                      <div class='tree-str'>
+                        <strong>BIC penalty: </strong> {{tree.c}}
+                      </div>
+
+                    </div>
+
+
+                    <div class="tab-pane fade" id="nav-transitions-{{tree.num_contexts}}" role="tabpanel" aria-labelledby="nav-transitions-{{tree.num_contexts}}-tab">
+
+                      <table class='table'>
+
+                        <tr>
+                          <th>w</th>
+                          {% for k in transition_keys[1:] -%}
+                          <th>p(<code>{{k}}</code>|w)</th>
+                          {% endfor %}
+                        </tr>
+                        {% for row in transitions[i] -%}
+                        <tr>
+                          <th><code>{{row.node}}</code></th>
+                          {% for k in transition_keys[1:] -%}
+                          <td>{{ "%.4f"|format(row[k]) }}</td>
+                          {% endfor %}
+                        </tr>
+                        {% endfor %}
+                      </table>
+
+                    </div>
+                    <div class="tab-pane fade" id="nav-contact-{{tree.num_contexts}}" role="tabpanel" aria-labelledby="nav-contact-{{tree.num_contexts}}-tab">
+
+
+                      <table class='table'>
+
+                        <tr>
+                          <th>Node</th>
+                          <th># Occurrences</th>
+                          <th>Active</th>
+                          <th>Log-Likelihood</th>
+                          <th>V_node</th>
+                          <th>V_children_sum</th>
+                          <th>I</th>
+                        </tr>
+                        {% for row in nodes[i] -%}
+                        <tr>
+                          <th><code>{{row.node}}</code></th>
+                          <td>{{row.freq}}</td>
+                          <td class='active-{{row.active}}'>{{row.active}}</td>
+                          <td>{{ "%.4f"|format(row.likelihood_pen) }}</td>
+                          <td>{{ "%.4f"|format(row.v_node) }}</td>
+                          <td>{{ "%.4f"|format(row.v_node_sum) }}</td>
+                          <td class='indicator-{{row.indicator}}'>{{row.indicator}}</td>
+                        </tr>
+                        {% endfor %}
+                      </table>
+
+
+                    </div>
+                  </div>
+
+                </div>
+                {% endfor -%}
+
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Input
+      </h5>
+      <div class='card-body'>
+        <div class='card-text'>
+          <div class='row'>
+            <div class='col-sm-6'>
+              <h5 class='card-title'>Parameters</h5>
+              <table class='table'>
+                <tr>
+                  <th>Penalty interval</th>
+                  <td>({{data.penalty_interval[0]}}, {{data.penalty_interval[1]}})</td>
+                </tr>
+                <tr>
+                  <th>Epsilon:</th>
+                  <td>{{data.epsilon}}</td>
+                </tr>
+                <tr>
+                  <th>Bootstrap resample sizes</th>
+                  <td>({{data.bootstrap_sizes[0]}}, {{data.bootstrap_sizes[1]}})</td>
+                </tr>
+                <tr>
+                  <th>compatibility mode:</th>
+                  <td>{{data.perl_compatible}}</td>
+                </tr>
+                <tr>
+                  <th>Max depth</th>
+                  <td>{{data.max_depth}}</td>
+                </tr>
+
+              </table>
+            </div>
+            <div class='col-sm-6'>
+              <h5 class='card-title'>Sample</h5>
+              <table class='table'>
+                <tr>
+                  <th>Alphabet size</th>
+                  <td>5</td>
+                </tr>
+                <tr>
+                  <th>Length:</th>
+                  <td>65903</td>
+                </tr>
+                <tr>
+                  <th>Filename:</th>
+                  <td>
+                    <a href='file:///home/arthur/Documents/Neuromat/projects/SMC/results/python/ep/sample.txt', target='blank'>View</a>
+                  </td>
+                </tr>
+              </table>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    <br />
+
+
+
+    <br />
+    <div class='card'>
+      <h5 class="card-header">
+        Champion trees log-likelihoods
+      </h5>
+      <div class='card-body'>
+        <div class='card-text text-center'>
+
+          <img src='images/L.png' class="img-fluid"/>
+
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+
+  <!-- Optional JavaScript -->
+  <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+  <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -11,3 +11,10 @@ Change Log
 ------------------
 - Added context tree viewer command-line
 
+
+0.0.4 (16 mar 2021)
+------------------
+- Added reports
+- Better command-line calls
+- Summary at results folder
+

@@ -10,11 +10,11 @@ dist
 build
 eggs
 parts
-bin
 var
 sdist
 develop-eggs
 .installed.cfg
+smc.code-workspace
 
 # Installer logs
 pip-log.txt
@@ -34,7 +34,7 @@ tests/result_images/
 **/cache/*
 **/cache/
 tmp/
-
+htmlcov/
 
 # Sphinx stuff
 docs/generated/
