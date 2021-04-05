@@ -41,7 +41,7 @@ def plot2(tree, column_label='symbol', font_size=10,
           linewidths=1.0,
           node_color='black'):   # pragma: no cover
     df = tree.df.copy()
-    s1 = list(map(lambda c: set([c[x:] for x in range(len(c))]), df[(df.active==1)].node.values))
+    s1 = list(map(lambda c: set([c[x:] for x in range(len(c))]), df[(df.active == 1)].node.values))
     s2 = set([''])
     for s in s1:
         s2.update(s)
@@ -67,7 +67,7 @@ def plot2(tree, column_label='symbol', font_size=10,
                      linewidths=linewidths,
                      arrows=False)
     for i, node in df.iterrows():
-        x,y=pos[node.node_idx]
+        x, y = pos[node.node_idx]
         if node.node_idx != root_idx:
             plt.text(x+label_offset_x, y-label_offset_y,
                      s=node[column_label],
@@ -78,9 +78,9 @@ def plot2(tree, column_label='symbol', font_size=10,
 
 def draw_tree(tree, size='10,10', previous_tree=None, diff_color='black'):  # pragma: no cover
     if isinstance(tree, str):
-      t = tree
+        t = tree
     else:
-      t = tree.to_str()
+        t = tree.to_str()
     if previous_tree is None:
         t2 = t
     else:

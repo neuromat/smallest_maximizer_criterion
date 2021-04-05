@@ -43,7 +43,7 @@ optional arguments:
 
 Example:
 
-[SMC]
+[SMC using BIC]
 
 python smc.py -d 4 \
     -s examples/linguistic_case_study/folha.txt \
@@ -52,6 +52,16 @@ python smc.py -d 4 \
     -p 4 \
     --num_cores 4 \
     bic
+
+
+[SMC using least-contributive branch criterium]
+
+python smc.py -d 4 \
+    -s examples/linguistic_case_study/folha.txt \
+    -f ../test/results/bp \
+    -p 4 \
+    --num_cores 4 \
+    lcb
 
 """
 

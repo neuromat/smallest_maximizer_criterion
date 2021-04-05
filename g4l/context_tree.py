@@ -107,7 +107,7 @@ class ContextTree():
             smpl += symb
             suffixes = [smpl[-i:] for i in range(1, self.max_depth+1)]
             node_idx = contexts[contexts.index.isin(suffixes)].iloc[0]
-        return smpl
+        return smpl[:sample_size]
 
     def num_contexts(self):
         """ Returns the number of contexts """
