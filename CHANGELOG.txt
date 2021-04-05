@@ -18,3 +18,11 @@ Change Log
 - Better command-line calls
 - Summary at results folder
 
+0.1.0 (5 apr 2021)
+------------------
+- Refactoring
+- Removed garbage code
+- Commented methods
+- Added HTML Reports for SMC
+- Test coverage
+
