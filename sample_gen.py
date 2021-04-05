@@ -6,7 +6,12 @@ Generates samples for a tree
 Example:
 
 
-./samplegen -t bic.tree  -s 5000 sample.txt
+
+python ctm.py -s tests/files/lipsum.txt -c 0 -d 6  ../lorem_ipsum.tree
+
+python sample_gen.py -t ../lorem_ipsum.tree  -s 5000 ../lipsum_sample.txt
+
+cat ../lipsum_sample.txt
 
 """
 
@@ -14,7 +19,7 @@ Example:
 import argparse
 import os
 from pathlib import Path
-from g4l.models import ContextTree
+from g4l.context_tree import ContextTree
 import logging
 
 

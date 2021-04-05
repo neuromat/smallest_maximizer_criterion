@@ -10,7 +10,14 @@ This study was motivated by the linguistic challenge of retrieving rhythmic feat
 
 
 ## Installation
+### Using pip
+
 	`pip install g4l-smc`
+
+
+### Direct download and run
+	Download and extract the zip package to a folder
+	Run `pip install -r requirements.txt`
 
 
 
@@ -32,8 +39,10 @@ The following command can be used in order to estimate the optimal context tree 
 ```
 python smc.py -d 4 \
     -s examples/linguistic_case_study/folha.txt \
-    -f ../test/results \
+    -f ../test/results/bp \
+    -A '0 1 2 3 4' \
     -p 4 \
+    --split \> \
     --num_cores 4 \
     bic
 
@@ -41,18 +50,20 @@ python smc.py -d 4 \
 
 Use `python smc --help` for more information.
 
+#### Reports
 
+A full html report will be available in the results folder passed as `-f` argument
 
 ### Sample Generation
 
 To generate a sample given a context tree, use the following command:
 
-```
-samplegen -t my_model.tree --size 5000 new_sample.txt
+Use CTM to estimate a model:
+`python ctm.py -s tests/files/lipsum.txt -c 0 -d 6  ../lorem_ipsum.tree`
 
-```
+Generate a sample from the model
+`python sample_gen.py -t ../lorem_ipsum.tree  -s 5000 ../lipsum_sample.txt`
 
-Use `smc --help` for more information.
 
 ## Citing
 
@@ -64,22 +75,29 @@ Galves, Antonio & Galves, Charlotte & Garcia, Jesus & Garcia, Nancy & Leonardi, 
 Bibtex version:
 
 ```
-@article{article,
-author = {Galves, Antonio and Galves, Charlotte and Garcia,
-          Jesus and Garcia, Nancy and Leonardi, Florencia},
-year = {2009},
-month = {02},
-title = {Context tree selection and linguistic rhythm retrieval from written
-texts},
-volume = {6},
-journal = {The Annals of Applied Statistics},
-doi = {10.1214/11-AOAS511}
+@article{Galves2012,
+archivePrefix = {arXiv},
+arxivId = {0902.3619},
+author = {Galves, Antonio and Galves, Charlotte and Garc{\'{i}}a, Jes{\'{u}}s E. and Garcia, Nancy L. and Leonardi, Florencia},
+doi = {10.1214/11-AOAS511},
+eprint = {0902.3619},
+issn = {19326157},
+journal = {Annals of Applied Statistics},
+keywords = {BIC,European and Brazilian Portuguese,Linguistic rhythm,Model selection,Smallest maximizer criterion,Variable length Markov chains},
+mendeley-groups = {Neuromat},
+number = {1},
+pages = {186--209},
+title = {{Context tree selection and linguistic rhythm retrieval from written texts}},
+volume = {4},
+year = {2012}
 }
+
 ```
 
 ## Running tests
 
-Run `pytest -s`
+Run `pytest --cov=g4l -s tests/test_lcb.py`
+
 
 ## License
 

@@ -1,20 +1,58 @@
 #!/usr/bin/env python
 
-"""
-Runs CTM/BIC for the given parameters
+""" Runs CTM/BIC for the given parameters
+
+CTM is the algorithm that implements efficiently the Bayesian Information Criterion estimator
+
+usage: ctm.py [-h] [-c PENALTY] -d MAX_DEPTH [-A ALPHABET] -s SAMPLE_PATH [-k KEEP] [--split SPLIT] [--check_consistency CHECK_CONSISTENCY] [--inspect INSPECT]
+              [--perl_compatible PERL_COMPATIBLE] [--df {ct06,perl,g4l}] [--num_cores NUM_CORES] [-l LOG_FILE] [-i {quiet,debug,info,warning,error}]
+              output
+
+Estimates context tree
+
+positional arguments:
+  output                output tree file (ex. my_model.tree)
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -c PENALTY, --penalty PENALTY
+                        Penalty constant
+  -d MAX_DEPTH, --max_depth MAX_DEPTH
+                        Max tree depth
+  -A ALPHABET, --alphabet ALPHABET
+                        Symbols of the alphabet. Ex. '0 1 2 3 4'
+  -s SAMPLE_PATH, --sample_path SAMPLE_PATH
+                        Sample path
+  -k KEEP, --keep KEEP  Set 1 if you want to keep the full nodes details
+  --split SPLIT         Split sample character
+  --check_consistency CHECK_CONSISTENCY
+                        Check consistency
+  --inspect INSPECT     Inspect tree
+  --perl_compatible PERL_COMPATIBLE
+                        Keeps compatibility with original version in perl (def. False)
+  --df {ct06,perl,g4l}  Penalization strategy
+  --num_cores NUM_CORES
+                        Number of processors for parallel processing
+  -l LOG_FILE, --log_file LOG_FILE
+                        Log file path
+  -i {quiet,debug,info,warning,error}, --log_level {quiet,debug,info,warning,error}
+                        Log level
+
+
 
 Example:
 
-python ctm.py -s fixtures/sample20000.txt -c 0.5 -d 6  ./output.tree
+python ctm.py -s fixtures/sample20000.txt -c 0.5 -d 6  ../output.tree
+
 
 """
 
-import logging
-import os
 
+import logging
 from g4l.bic import BIC
 from g4l.sample import Sample
 from g4l.util.command_line_methods import ctm_argparser, set_log
+from g4l.util.command_line_methods import keep, save_file, check_consistency
 
 
 def run_ctm(X, args):
@@ -22,44 +60,24 @@ def run_ctm(X, args):
     # Instantiates BIC object with received parameters
     bic = BIC(args.penalty,
               df_method=args.df,
-              keep_data=_keep(),
+              keep_data=keep(args),
               perl_compatible=args.perl_compatible)
     bic.fit(X)
     tree = bic.context_tree
     logging.info("Tree found:")
     logging.info(tree.to_str(reverse=True))
-    _save_file(tree)
-    _check_consistency(tree)
+    save_file(tree, args)
+    check_consistency(tree, args)
 
-
-def _save_file(tree):
-    filename = os.path.abspath(args.output.name)
-    tree.save(filename)
-    logging.info("File saved at: %s" % filename)
-
-
-def _check_consistency(tree):
-    if args.check_consistency == 1:
-        try:
-            from g4l.models import integrity
-            integrity.is_freq_consistent(tree)
-        except AssertionError as e:
-            msg = "Consistency problems detected in the resulting tree"
-            logging.error(msg)
-            logging.error(str(e))
-
-
-def _keep():
-    keep = bool(args.keep)
-    if args.check_consistency == 1:
-        keep = True
-    return keep
 
 
 if __name__ == '__main__':
     args = ctm_argparser()
     set_log(args.log_file, args.log_level)
-    sample = Sample(args.sample_path.name, None, args.max_depth,
+    A = args.alphabet
+    if A:
+        A = A.split(' ')
+    sample = Sample(args.sample_path.name, A, args.max_depth,
                     perl_compatible=args.perl_compatible,
                     subsamples_separator=args.split)
     run_ctm(sample, args)
