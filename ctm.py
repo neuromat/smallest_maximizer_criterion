@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 
-"""
-Runs CTM/BIC for the given parameters
+""" Runs CTM/BIC for the given parameters
 
-usage: ctm.py [-h] [-c PENALTY] -d MAX_DEPTH -s SAMPLE_PATH [-k KEEP] [--split SPLIT] [--check_consistency CHECK_CONSISTENCY] [--inspect INSPECT]
+CTM is the algorithm that implements efficiently the Bayesian Information Criterion estimator
+
+usage: ctm.py [-h] [-c PENALTY] -d MAX_DEPTH [-A ALPHABET] -s SAMPLE_PATH [-k KEEP] [--split SPLIT] [--check_consistency CHECK_CONSISTENCY] [--inspect INSPECT]
               [--perl_compatible PERL_COMPATIBLE] [--df {ct06,perl,g4l}] [--num_cores NUM_CORES] [-l LOG_FILE] [-i {quiet,debug,info,warning,error}]
               output
 
@@ -18,6 +19,8 @@ optional arguments:
                         Penalty constant
   -d MAX_DEPTH, --max_depth MAX_DEPTH
                         Max tree depth
+  -A ALPHABET, --alphabet ALPHABET
+                        Symbols of the alphabet. Ex. '0 1 2 3 4'
   -s SAMPLE_PATH, --sample_path SAMPLE_PATH
                         Sample path
   -k KEEP, --keep KEEP  Set 1 if you want to keep the full nodes details
@@ -34,6 +37,7 @@ optional arguments:
                         Log file path
   -i {quiet,debug,info,warning,error}, --log_level {quiet,debug,info,warning,error}
                         Log level
+
 
 
 Example:
@@ -70,7 +74,10 @@ def run_ctm(X, args):
 if __name__ == '__main__':
     args = ctm_argparser()
     set_log(args.log_file, args.log_level)
-    sample = Sample(args.sample_path.name, None, args.max_depth,
+    A = args.alphabet
+    if A:
+        A = A.split(' ')
+    sample = Sample(args.sample_path.name, A, args.max_depth,
                     perl_compatible=args.perl_compatible,
                     subsamples_separator=args.split)
     run_ctm(sample, args)

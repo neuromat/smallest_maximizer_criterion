@@ -60,7 +60,8 @@ class SMCBase(EstimatorsBase):
 
         # Instantiates bootstrap
         # generates bootstrap samples
-        self.sizes = (int(X.len() * self.n_sizes[0]), int(X.len() * self.n_sizes[1]))
+        self.sizes = (int(X.len() * self.n_sizes[0]),
+                      int(X.len() * self.n_sizes[1]))
         resamples_file = self.bootstrap.get_resamples(X, max(self.sizes),
                                                       self.num_cores)
         # calculates likelihoods

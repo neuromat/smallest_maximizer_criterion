@@ -7,9 +7,11 @@ import logging
 # Less contributive branches
 class SMC(SMCBase):
 
-    def __init__(self, bootstrap_obj, cache_dir=None, n_sizes=(0.3, 0.9), alpha=0.01):
+    def __init__(self, bootstrap_obj, cache_dir=None,
+                 n_sizes=(0.3, 0.9), alpha=0.01, num_cores=None):
         cache_dir = cache_dir or self._tempdir()
-        super().__init__(bootstrap_obj, cache_dir, n_sizes=n_sizes, alpha=alpha)
+        super().__init__(bootstrap_obj, cache_dir,
+                         n_sizes=n_sizes, alpha=alpha, num_cores=num_cores)
 
     def fit(self, X):
         self.context_trees = []

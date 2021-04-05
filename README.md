@@ -32,7 +32,7 @@ The following command can be used in order to estimate the optimal context tree 
 ```
 python smc.py -d 4 \
     -s examples/linguistic_case_study/folha.txt \
-    -f .test/results \
+    -f ../test/results \
     -p 4 \
     --num_cores 4 \
     bic

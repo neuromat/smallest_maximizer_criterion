@@ -24,10 +24,17 @@ class SmcReport:
         self.create_folders()
         d = dict()
         d['max_depth'] = sample.max_depth
-        d['penalty_interval'] = smc_instance.penalty_interval
-        d['epsilon'] = smc_instance.epsilon
-        d['df_method'] = smc_instance.df_method
-        d['perl_compatible'] = smc_instance.perl_compatible
+        try:
+            d['penalty_interval'] = smc_instance.penalty_interval
+            d['epsilon'] = smc_instance.epsilon
+            d['df_method'] = smc_instance.df_method
+            d['perl_compatible'] = smc_instance.perl_compatible
+        except:
+            d['penalty_interval'] = ''
+            d['epsilon'] = ''
+            d['df_method'] = ''
+            d['perl_compatible'] = ''
+
         d['bootstrap_sizes'] = smc_instance.sizes
         try:
             d['args'] = vars(args).copy()
@@ -37,10 +44,14 @@ class SmcReport:
         d['trees'] = []
         opt = self.optimal_tree()
         for i, t in enumerate(smc_instance.context_trees):
+            try:
+                c = smc_instance.thresholds[i]
+            except:
+                c = ''
             el = {'num_contexts': t.num_contexts(),
                   'tree': t.to_str(reverse=True),
                   'optimal': t.to_str() == opt.to_str(),
-                  'c': smc_instance.thresholds[i],
+                  'c': c,
                   'log_likelihood': str(round(t.log_likelihood(), 5))}
             d['trees'].append(el)
         d['trees'] = list(reversed(d['trees']))
@@ -103,7 +114,14 @@ class SmcReport:
         nodes = []
         transitions = []
         for i, t in enumerate(self.champion_trees):
-            dfx = t.df[['node', 'freq', 'active', 'likelihood_pen', 'v_node', 'v_node_sum', 'indicator']]
+            try:
+                dfx = t.df[['node', 'freq', 'active', 'likelihood_pen', 'v_node', 'v_node_sum', 'indicator']]
+            except:
+                t.df['likelihood_pen'] = ''
+                t.df['v_node'] = ''
+                t.df['v_node_sum'] = ''
+                t.df['indicator'] = ''
+                dfx = t.df[['node', 'freq', 'active', 'likelihood_pen', 'v_node', 'v_node_sum', 'indicator']]
             transitions.append(list(node_transitions(t).reset_index().T.to_dict().values()))
             ns = list(dfx.T.to_dict().values())
             nodes.append(sorted(ns, key=lambda k: k['node'][::-1]))

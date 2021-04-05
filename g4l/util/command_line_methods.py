@@ -11,6 +11,10 @@ def ctm_argparser():  # pragma: no cover
                         type=int,
                         required=True,
                         help='Max tree depth')
+    parser.add_argument('-A', '--alphabet',
+                        type=str,
+                        default=None,
+                        help="Symbols of the alphabet. Ex. '0 1 2 3 4' ")
     parser.add_argument('-s', '--sample_path',
                         type=argparse.FileType('r'),
                         required=True,
@@ -105,7 +109,7 @@ def get_num_cores(args):
 def save_file(tree, args):
     filename = os.path.abspath(args.output.name)
     tree.save(filename)
-    logging.info("File saved at: %s" % filename)
+    logging.info("Model saved at: %s" % filename)
 
 
 def check_consistency(tree, args):
@@ -132,24 +136,25 @@ def smc_argparser():  # pragma: no cover
     subparsers = parser.add_subparsers(dest='method', help='Estimation method')
     subparsers.required = True
 
-    parser_prune = subparsers.add_parser('lcb', help='Prune by the Less Contributive Branch')
-    parser_prune.add_argument('-S', '--n_sizes',
-                              nargs=2,
-                              type=float,
-                              metavar=('j1', 'j2'),
-                              default=(0.3, 0.9),
-                              help='Bootstrap sample sizes factor for j = 1, 2'
-                              )
-    parser_prune.add_argument('-b', '--resamples',
-                              type=int,
-                              default='200',
-                              help='Number of bootstrap samples used')
-    parser_prune.add_argument('-a', '--alpha',
-                              type=float,
-                              default='0.01',
-                              help='Alpha value for t-test')
+    parser_bic = subparsers.add_parser('bic', help='Prune using the Bayesian Information Criterion')
+    parser_lcb = subparsers.add_parser('lcb', help='Prune by the Less Contributive Branch')
+    parser_lcb.add_argument('-S', '--n_sizes',
+                            nargs=2,
+                            type=float,
+                            metavar=('j1', 'j2'),
+                            default=(0.3, 0.9),
+                            help='Bootstrap sample sizes factor for j = 1, 2'
+                            )
+    parser_lcb.add_argument('-b', '--resamples',
+                            type=int,
+                            default='200',
+                            help='Number of bootstrap samples used')
+    parser_lcb.add_argument('-a', '--alpha',
+                            type=float,
+                            default='0.01',
+                            help='Alpha value for t-test')
 
-    parser_bic = subparsers.add_parser('bic', help='Smallest Maximizer Criterion parameters')
+
     parser_bic.add_argument('-S', '--n_sizes',
                             nargs=2,
                             type=float,
@@ -193,6 +198,10 @@ def smc_argparser():  # pragma: no cover
                         type=argparse.FileType('r'),
                         required=True,
                         help='Sample path')
+    parser.add_argument('-A', '--alphabet',
+                        type=str,
+                        default=None,
+                        help="Symbols of the alphabet. Ex. '0 1 2 3 4' ")
     parser.add_argument('-f', '--folder',
                         type=dir_path_force,
                         default='.',
