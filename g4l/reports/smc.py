@@ -4,6 +4,7 @@ import os
 import json
 from g4l.context_tree import ContextTree
 from g4l.display import plot2, node_transitions
+from g4l.util import persistence as per
 import matplotlib.pyplot as plt
 import logging
 
@@ -128,11 +129,10 @@ class SmcReport:
         return nodes, transitions
 
     def create_report_images(self):
+        img_fld = os.path.join(self.reports_folder, 'images')
+        per.create_temp_folder(img_fld)
         for i, tree in enumerate(self.champion_trees):
-            img_file = os.path.join(self.reports_folder,
-                                    'images',
-                                    '%s.png' % tree.num_contexts())
-
+            img_file = os.path.join(img_fld, '%s.png' % tree.num_contexts())
             self.draw_tree(tree, title=None,
                            column='symbol',
                            filename=img_file)
