@@ -1,5 +1,7 @@
 # Smallest Maximizer Criterion
+Context tree estimation using Smallest Maximizer Criterion (SMC)
 
+[![Python application](https://github.com/neuromat/smallest_maximizer_criterion/actions/workflows/python-app.yml/badge.svg)](https://github.com/neuromat/smallest_maximizer_criterion/actions/workflows/python-app.yml)
 
 ## Requirements
 	python 3.7
