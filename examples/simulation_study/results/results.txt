@@ -1,0 +1,11 @@
+============== Simulation results =======================
+                         ct  opt
+model_name sample_size
+model1     5000         100   27
+           10000        100   45
+           20000        100   80
+model2     5000         100   64
+           10000        100   84
+           20000        100   93
+
+python simulation.py  31846,14s user 957,88s system 239% cpu 3:48:20,07 total
