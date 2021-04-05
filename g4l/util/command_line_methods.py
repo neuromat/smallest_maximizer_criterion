@@ -102,6 +102,30 @@ def get_num_cores(args):
     return num_cores
 
 
+def save_file(tree, args):
+    filename = os.path.abspath(args.output.name)
+    tree.save(filename)
+    logging.info("File saved at: %s" % filename)
+
+
+def check_consistency(tree, args):
+    if args.check_consistency == 1:
+        try:
+            from g4l.models import integrity
+            integrity.is_freq_consistent(tree)
+        except AssertionError as e:
+            msg = "Consistency problems detected in the resulting tree"
+            logging.error(msg)
+            logging.error(str(e))
+
+
+def keep(args):
+    keep = bool(args.keep)
+    if args.check_consistency == 1:
+        keep = True
+    return keep
+
+
 def smc_argparser():  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser = argparse.ArgumentParser(description='Estimates context tree')

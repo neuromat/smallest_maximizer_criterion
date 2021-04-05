@@ -21,16 +21,16 @@ This study was motivated by the linguistic challenge of retrieving rhythmic feat
 
 The following command can be used in order to estimate a context tree using CTM algorithm with the BIC criteria:
 
-`python bin/ctm.py -s fixtures/sample20000.txt - 0.5 -d 6  ./my_model.tree`
+`python ctm.py -s fixtures/sample20000.txt - 0.5 -d 6  ./my_model.tree`
 
-Use `python bin/ctm.py --help` for more information.
+Use `python ctm.py --help` for more information.
 
 ### SMC
 
 The following command can be used in order to estimate the optimal context tree using SMC algorithm:
 
 ```
-python bin/smc.py -d 4 \
+python smc.py -d 4 \
     -s examples/linguistic_case_study/folha.txt \
     -f .test/results \
     -p 4 \
@@ -39,7 +39,7 @@ python bin/smc.py -d 4 \
 
 ```
 
-Use `python bin/smc --help` for more information.
+Use `python smc --help` for more information.
 
 
 

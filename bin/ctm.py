@@ -5,7 +5,6 @@ Runs CTM/BIC for the given parameters
 
 Example:
 
-
 python ctm.py -s fixtures/sample20000.txt -c 0.5 -d 6  ./output.tree
 
 """

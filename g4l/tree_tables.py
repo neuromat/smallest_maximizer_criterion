@@ -104,7 +104,9 @@ def create_transitions_table(df, sample):
     Returns:
         DataFrame -- the transitions table
     """
+
     tbl = sample.F[[i for i in range(len(sample.A))]].astype(int)
+
     tbl['idx'] = df.reset_index().set_index('node')['node_idx']
     tbl = tbl.melt(id_vars=['idx'], var_name='next_symbol', value_name='freq')
     tbl = tbl.sort_values(['idx', 'next_symbol']).reset_index(drop=True).set_index('idx')
