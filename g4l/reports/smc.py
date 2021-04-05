@@ -133,9 +133,12 @@ class SmcReport:
         per.create_temp_folder(img_fld)
         for i, tree in enumerate(self.champion_trees):
             img_file = os.path.join(img_fld, '%s.png' % tree.num_contexts())
-            self.draw_tree(tree, title=None,
-                           column='symbol',
-                           filename=img_file)
+            try:
+                self.draw_tree(tree, title=None,
+                               column='symbol',
+                               filename=img_file)
+            except:
+                pass
 
     def load_summary(self):
         with open(os.path.join(self.folder, 'smc.json'), 'r') as file:
