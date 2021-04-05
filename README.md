@@ -59,9 +59,11 @@ A full html report will be available in the results folder passed as `-f` argume
 To generate a sample given a context tree, use the following command:
 
 Use CTM to estimate a model:
+
 `python ctm.py -s tests/files/lipsum.txt -c 0 -d 6  ../lorem_ipsum.tree`
 
 Generate a sample from the model
+
 `python sample_gen.py -t ../lorem_ipsum.tree  -s 5000 ../lipsum_sample.txt`
 
 
