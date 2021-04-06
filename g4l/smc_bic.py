@@ -1,66 +1,49 @@
-import logging
+""" Implements the Smallest Maximizer Criterion algorithm
 
+Context tree selection and linguistic rhythm retrieval from written texts.
+Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2012).
+Annals of Applied Statistics, 4(1), 186–209.
+https://doi.org/10.1214/11-AOAS511
+"""
+
+import logging
 from .bic import BIC
 from .context_tree import ContextTree
 from .smc_base import SMCBase
 
 
 class SMC(SMCBase):
-    """
-    Context tree selection using the Smallest Maximizer Criterion
-    Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2010).
-    Context tree selection and linguistic rhythm retrieval from written texts.
-    Annals of Applied Statistics, 4(1), 186–209.
-    https://doi.org/10.1214/11-AOAS511
-
-    Download available at https://arxiv.org/abs/0902.3619
-
-    ...
-
-    Attributes
-    ----------
-    context_trees : list
-        All champion trees found by the estimator
-
-    thresholds : list
-        The constant values used by BIC estimator to produce the
-        context trees in the attribute `context_trees`.
-
-
-    Methods
-    -------
-    fit(X)
-        Estimates champion trees for the given sample X
-    """
-
     def __init__(self, bootstrap_obj, penalty_interval=(0.1, 400),
                  n_sizes=(0.3, 0.9), alpha=0.01,
                  epsilon=0.01, cache_dir=None, df_method='perl',
                  perl_compatible=False, num_cores=None):
-        """
-        Parameters
-        ----------
-        penalty interval : tuple
-            minimum and maximum values for the penalization constant used in
-            the BIC estimator
-        epsilon : float
-            This value sets an stop condition when scanning for new trees
-            between two penalty intervals in the BIC criteria
-        cache_dir : str
-            When this variable is set with a valid path, the `fit` method will
-            work cached; for any set of initial paramaters and sample X, there
-            will exist a folder that receives the computed champion trees. In
-            any further call using the same arguments, the method will returns
-            the cached information.
-        df_method : str
-            The method used by BIC to calculate degrees_of_freedom. Options:
-            - 'perl': uses the same df as the original implementation in perl
-            - 'g4l': uses the method as described in the paper (slightly different)
-            - 'ct06': uses df as described in Csizar and Talata (2006)
-        perl_compatible : int
-            Makes algorithm compatible with the paper's perl code
+        """Initializes the estimator
 
+        Arguments:
+            bootstrap_obj {Boostrap} -- A previously configured bootstrap
+                                        object
+
+        Keyword Arguments:
+            penalty_interval {tuple} -- The interval of BIC constants
+                                        to be scanned (default: {(0.1, 400)})
+            n_sizes {tuple} -- Bootstrap sample sizes. First element of tuple
+                               is the smallest size, whereas the second element
+                               is the largest one. (default: {(0.3, 0.9)})
+            alpha {number} -- Stop condition parameter for t-test phase.
+                              (default: {0.01})
+            epsilon {number} -- Stop condition parameter for BIC constant
+                                scanning. (default: {0.01})
+            cache_dir {str} -- Directory for temporary files. The program
+                               creates one by itself if none is set
+                               (default: {None})
+            df_method {str} -- Degree of freedom strategy (default: {'perl'})
+            perl_compatible {bool} -- Makes algorithm compatible with the
+                                      original perl implementation.
+                                      (default: {False})
+            num_cores {int} -- Number of cores for parallel processing
+                               (default: {None})
         """
+
         super().__init__(bootstrap_obj, cache_dir,
                          num_cores=num_cores,
                          n_sizes=n_sizes,

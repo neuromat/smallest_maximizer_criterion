@@ -1,3 +1,11 @@
+""" Implements the Smallest Maximizer Criterion algorithm
+
+Context tree selection and linguistic rhythm retrieval from written texts.
+Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2012).
+Annals of Applied Statistics, 4(1), 186–209.
+https://doi.org/10.1214/11-AOAS511
+"""
+
 from abc import ABCMeta, abstractmethod
 import logging
 import os

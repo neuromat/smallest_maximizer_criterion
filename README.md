@@ -11,10 +11,6 @@ python 3.7
 
 ## Installation
 
-### Using pip
-
-	`pip install g4l-smc`
-
 
 ### Direct download and run
 
@@ -22,17 +18,13 @@ Download and extract the zip package to a folder
 
 Run `pip install -r requirements.txt`
 
+### Using pip
+
+    `pip install g4l-smc`
+
 
 
 ## Command-line executables
-
-### CTM
-
-The following command can be used in order to estimate a context tree using CTM algorithm with the BIC criteria:
-
-`python ctm.py -s fixtures/sample20000.txt - 0.5 -d 6  ./my_model.tree`
-
-Use `python ctm.py --help` for more information.
 
 
 ### SMC
@@ -53,9 +45,19 @@ python smc.py -d 4 \
 
 Use `python smc --help` for more information.
 
+
+### CTM
+
+The following command can be used in order to estimate a context tree using CTM algorithm with the BIC criteria:
+
+`python ctm.py -s fixtures/sample20000.txt - 0.5 -d 6  ./my_model.tree`
+
+Use `python ctm.py --help` for more information.
+
+
 #### Reports
 
-A full html report will be available in the results folder passed as `-f` argument
+A full html report will be available in the results folder (passed as `-f` argument)
 
 ### Sample Generation
 
@@ -76,17 +78,15 @@ Generate a sample from the model
 
 Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2012). Context tree selection and linguistic rhythm retrieval from written texts. Annals of Applied Statistics, 4(1), 186–209. [https://doi.org/10.1214/11-AOAS511](https://doi.org/10.1214/11-AOAS511)
 
-
 <a id="2">[2]</a>
 
 Csiszar, I., & Talata, Z. (2006). Context tree estimation for not necessarily finite memory processes, via BIC and MDL. IEEE Transactions on Information Theory, 52(3), 1007–1016. [https://doi.org/10.1109/TIT.2005.864431](https://doi.org/10.1109/TIT.2005.864431)
-
 
 ## Citing
 
 Please cite the following publication when using this algorithm:
 
-Galves, Antonio & Galves, Charlotte & Garcia, Jesus & Garcia, Nancy & Leonardi, Florencia. (2009). Context tree selection and linguistic rhythm retrieval from written texts. The Annals of Applied Statistics. 6. 10.1214/11-AOAS511.
+Galves, A., Galves, C., García, J. E., Garcia, N. L., & Leonardi, F. (2012). Context tree selection and linguistic rhythm retrieval from written texts. Annals of Applied Statistics, 4(1), 186–209. [https://doi.org/10.1214/11-AOAS511](https://doi.org/10.1214/11-AOAS511)
 
 
 Bibtex version:
@@ -113,7 +113,7 @@ year = {2012}
 
 ## Running tests
 
-Run `pytest --cov=g4l -s tests/test_lcb.py`
+Run `pytest --cov=g4l -s tests`
 
 
 ## License
