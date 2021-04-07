@@ -26,7 +26,7 @@ Context tree estimation using Smallest Maximizer Criterion (SMC)
 
 The following command can be used in order to estimate a context tree using CTM algorithm with the BIC criteria:
 
-`python ctm.py -s fixtures/sample20000.txt - 0.5 -d 6  ./my_model.tree`
+`python ctm.py -s fixtures/sample20000.txt -c 0.5 -d 6  ./my_model.tree`
 
 Use `python ctm.py --help` for more information.
 
